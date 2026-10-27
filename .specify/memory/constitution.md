@@ -1,50 +1,123 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+## Sync Impact Report
+- Version change: 0.0.0 → 1.0.0
+- This is the initial ratification; no previous version exists.
+- Added principles: I. Stack, II. Clean Architecture, III. Datos sobre código,
+  IV. Persistencia, V. Gestión de estado, VI. Pruebas,
+  VII. Dependencias y decisiones de la IA, VIII. Interfaz,
+  IX. Idioma y terminología, X. Flujo de trabajo, XI. Seguridad y alcance
+- Added sections: Restricciones de la v1, Flujo de desarrollo, Governance
+- Removed sections: (none)
+- Follow-up TODOs: (none)
+-->
+
+# HaidongGumdo Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Stack
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+- Flutter y Dart, en el canal **stable** más reciente con soporte vigente
+  al iniciar el proyecto.
+- La versión del SDK queda fijada en `pubspec.yaml`. Una actualización
+  mayor de Flutter o Dart DEBE contar con aprobación explícita del
+  responsable del proyecto.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### II. Clean Architecture
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+- Capas separadas: **dominio**, **datos** y **presentación**.
+- El dominio es Dart puro: NO DEBE importar Flutter ni paquetes de
+  infraestructura.
+- Las dependencias apuntan hacia el dominio, nunca al revés.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### III. Datos sobre código
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+- Patrones, niveles y glosario se definen como **datos** (JSON de solo
+  lectura incluido en la app).
+- Agregar un patrón o un nivel NO DEBE requerir cambios en la lógica del
+  dominio, salvo que introduzca un tipo de señal nuevo.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### IV. Persistencia
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+- Sin backend en la v1.
+- La configuración del usuario se guarda en **JSON local**.
+- Toda persistencia pasa por **interfaces de repositorio definidas en el
+  dominio**. Un backend futuro DEBE ser solo otra implementación, sin
+  tocar el dominio.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### V. Gestión de estado
+
+- **Riverpod** es la solución de gestión de estado del proyecto.
+
+### VI. Pruebas
+
+- Las pruebas se escriben **después del código**, pero son **obligatorias
+  para el dominio** antes de cerrar cada historia de usuario.
+- Las pruebas se derivan de los **criterios de aceptación de la spec**,
+  no del código ya escrito.
+- Las reglas de secuencia aleatoria, el máximo de N repeticiones seguidas
+  y la invariante de tiempos DEBEN tener pruebas.
+- La fuente de aleatoriedad y el reloj se **inyectan** en el dominio,
+  para que las pruebas sean deterministas.
+
+### VII. Dependencias y decisiones de la IA
+
+- La IA **NO agrega paquetes por su cuenta**. Propone opciones con pros,
+  contras y una recomendación; el responsable del proyecto aprueba.
+- Cada decisión aprobada queda registrada en `docs/decisions/` (formato
+  ADR).
+
+### VIII. Interfaz
+
+- Alto contraste y legibilidad a distancia: el oponente virtual, el sable
+  y las señales DEBEN tener contornos definidos.
+- Orientación horizontal preferente.
+
+### IX. Idioma y terminología
+
+- Código e identificadores en **inglés**. Interfaz en **español** para
+  esta versión.
+- Los términos coreanos se usan siempre exactamente como en el glosario
+  (romanización + hangul).
+
+### X. Flujo de trabajo
+
+- Una rama por spec y Pull Request a `main`.
+- Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`,
+  `test:`).
+
+### XI. Seguridad y alcance
+
+- Sin autenticación ni autorización en la v1.
+
+## Restricciones de la v1
+
+- Sin backend: toda persistencia es local (Principio IV).
+- Sin autenticación ni autorización (Principio XI).
+- Interfaz en español únicamente (Principio IX).
+
+## Flujo de desarrollo
+
+- Una rama por spec; merge a `main` vía Pull Request.
+- Conventional Commits obligatorios (ver Principio X).
+- Los paquetes nuevos requieren aprobación explícita (ver Principio VII).
+- Las pruebas del dominio DEBEN pasar antes de cerrar la historia
+  (ver Principio VI).
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+- Esta constitution es el documento de mayor jerarquía del proyecto.
+  Ante un conflicto con cualquier otra práctica o documento, prevalece
+  la constitution.
+- Solo el responsable del proyecto aprueba cambios a esta constitution.
+  La IA puede proponerlos, pero NO aplicarlos.
+- La constitution se versiona con semver. Cada cambio DEBE indicar qué
+  principio se modificó.
+- Procedimiento de enmienda:
+  1. Propuesta documentada (qué cambia y por qué).
+  2. Aprobación del responsable del proyecto.
+  3. Actualización del archivo con nuevo número de versión y fecha.
+- Revisión de cumplimiento: cada Pull Request DEBE verificar que no
+  contradice los principios vigentes.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-10-26 | **Last Amended**: 2026-10-26
