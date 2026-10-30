@@ -6,6 +6,24 @@
   "type": "object",
   "required": ["version", "glossary", "voiceCommands", "levels", "patterns"],
   "additionalProperties": false,
+  "$defs": {
+    "point": {
+      "description": "[x, y] en coordenadas de pantalla relativas a la figura: origen en el centro de la figura, unidad = media altura de la figura; x crece hacia la derecha de la pantalla, y hacia abajo (cabeza ≈ -1, pies = 1).",
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "type": "number", "minimum": -2, "maximum": 2 }
+    },
+    "saberPose": {
+      "type": "object",
+      "required": ["hilt", "tip"],
+      "additionalProperties": false,
+      "properties": {
+        "hilt": { "$ref": "#/$defs/point" },
+        "tip": { "$ref": "#/$defs/point" }
+      }
+    }
+  },
   "properties": {
     "version": { "type": "integer", "minimum": 1 },
     "glossary": {
@@ -59,7 +77,7 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["id", "order", "name", "stanceTermId", "cutTermId", "cutAnimation"],
+        "required": ["id", "order", "name", "stanceTermId", "cutTermId", "cut"],
         "additionalProperties": false,
         "properties": {
           "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
@@ -67,7 +85,16 @@
           "name": { "type": "string", "minLength": 1 },
           "stanceTermId": { "type": "string" },
           "cutTermId": { "type": "string" },
-          "cutAnimation": { "enum": ["overheadVertical"] }
+          "cut": {
+            "type": "object",
+            "required": ["start", "end", "mirroredBySide"],
+            "additionalProperties": false,
+            "properties": {
+              "start": { "$ref": "#/$defs/saberPose" },
+              "end": { "$ref": "#/$defs/saberPose" },
+              "mirroredBySide": { "type": "boolean" }
+            }
+          }
         }
       }
     }
@@ -86,7 +113,7 @@
         { "id": "level_1", "order": 1, "name": "Nivel 1", "responseLabel": "Defensa", "purpose": "Calentamiento", "responseTypes": ["defense"] }
       ],
       "patterns": [
-        { "id": "frontal", "order": 1, "name": "Frontal", "stanceTermId": "chochon_se", "cutTermId": "chungmyon_begi", "cutAnimation": "overheadVertical" }
+        { "id": "frontal", "order": 1, "name": "Frontal", "stanceTermId": "chochon_se", "cutTermId": "chungmyon_begi", "cut": { "start": { "hilt": [0, -0.9], "tip": [0, -1.6] }, "end": { "hilt": [0, -0.2], "tip": [0, -0.35] }, "mirroredBySide": false } }
       ]
     }
   ]

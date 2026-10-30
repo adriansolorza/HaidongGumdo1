@@ -11,7 +11,7 @@ El oponente virtual, el sable y las señales deben tener contornos definidos y a
 
 ## Decisión
 
-Dibujar al oponente, el sable y las señales con `CustomPainter` de Flutter, sin paquetes. El ángulo del sable durante el corte se calcula a partir del progreso del corte que entrega el dominio.
+Dibujar al oponente, el sable y las señales con `CustomPainter` de Flutter, sin paquetes. La posición del sable durante el corte se calcula a partir del progreso del corte que entrega el dominio.
 
 ## Alternativas
 
@@ -22,4 +22,4 @@ Dibujar al oponente, el sable y las señales con `CustomPainter` de Flutter, sin
 
 ## Consecuencias
 
-- Cada animación de corte nueva (p. ej. *Hwengdan ilgôm begi*, Spec 003) requiere su propio cálculo en el painter. El catálogo la referencia por clave (`cutAnimation`).
+- El painter interpola la empuñadura y la punta del sable entre las posiciones que define el catálogo para cada patrón (`cut`: `start`, `end`, `mirroredBySide`). Un corte nuevo expresable así (p. ej. *Hwengdan ilgôm begi*, Spec 003) es solo datos; uno que no lo sea requiere ampliar el painter y el modelo.

@@ -63,12 +63,12 @@ Instante 0 = el usuario pulsa Iniciar.
 - **Decision**: Un asset JSON de solo lectura, `assets/catalog/catalog.json`, que contiene:
   - el **glosario**: términos con romanización y hangul;
   - los **comandos de voz** (`start` → *Si-jak*, `end` → *Guman*);
-  - los **patrones**: postura y corte por id de término, animación del corte por clave;
+  - los **patrones**: postura y corte por id de término, y el movimiento del corte como datos (`cut`: posiciones inicial y final de la empuñadura y la punta, y reflejo por lado);
   - los **niveles**: orden, nombre, propósito y tipos de respuesta.
 
   El dominio lo lee con el puerto `CatalogRepository`. La capa de datos lo implementa con `rootBundle` y lo traduce a entidades. Esquema: [contracts/catalog.schema.json](./contracts/catalog.schema.json).
-- **Rationale**: Principios III y IX. La pantalla de selección lista lo que hay en el catálogo (FR-004). Un nivel o patrón que reutiliza tipos de respuesta y animaciones ya conocidos es solo datos (SC-009).
-- **Límite**: un **tipo de respuesta** nuevo (evasión, contraataque) o una **animación de corte** nueva (transversal) sí requiere código: la regla de colocación de la señal en el dominio y un painter en la presentación. Eso cae en la excepción del Principio III.
+- **Rationale**: Principios III y IX. La pantalla de selección lista lo que hay en el catálogo (FR-004). Un nivel o patrón que reutiliza tipos de respuesta ya conocidos es solo datos (SC-009), incluido un corte nuevo que se pueda expresar como interpolación lineal de la empuñadura y la punta entre dos posiciones (p. ej. el transversal, con `mirroredBySide: true`). El escorzo del corte frontal se representa acercando la punta a la empuñadura.
+- **Límite**: un **tipo de respuesta** nuevo (evasión, contraataque) sí requiere código: la regla de colocación de la señal en el dominio y su dibujo en la presentación. Eso cae en la excepción del Principio III. Un corte que no se pueda expresar con `CutMotion` (p. ej. con desplazamiento del cuerpo) requeriría ampliar el modelo o enmendar el Principio III.
 - **Alternatives considered**:
   - Catálogo en código Dart: viola el Principio III.
   - YAML: requiere un paquete extra.
@@ -112,7 +112,7 @@ Instante 0 = el usuario pulsa Iniciar.
 - **Decision**:
   - `OpponentPainter` dibuja una figura estilizada de frente (cabeza, torso y brazos) con el sable como trazo grueso. Todo lleva **contorno negro de al menos 4 dp sobre fondo oscuro** (Principio VIII).
   - El color del sable (blanco, amarillo, azul o rojo) sale del snapshot.
-  - El corte *Chungmyôn begi* interpola el ángulo del sable desde *Chochôn-se* (sobre la cabeza) hasta la horizontal frontal, según `cutProgress` ∈ [0,1].
+  - El corte *Chungmyôn begi* interpola la empuñadura y la punta del sable desde *Chochôn-se* (sable vertical sobre la cabeza) hasta el fin del corte (manos al pecho, sable en escorzo apuntando al usuario), según `cutProgress` ∈ [0,1] y las posiciones de `pattern.cut` del catálogo.
   - `SignalPainter` dibuja el símbolo de sable de defensa en el lado indicado, con al menos **30 % del alto de la pantalla** y contorno.
   - Colores saturados: azul `#1E6BFF`, rojo `#FF2D2D`, amarillo `#FFD400` y blanco `#FFFFFF`, sobre `#121212`.
 - **Rationale**: El control exacto de contornos y del ángulo en función del tiempo garantiza la legibilidad a 3 m (FR-025) y la duración del corte (FR-010).

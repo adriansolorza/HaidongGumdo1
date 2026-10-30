@@ -40,7 +40,7 @@ El núcleo es un **motor de línea de tiempo puro** en el dominio, sin temporiza
 |---|---|---|
 | I. Stack | Flutter 3.47.7 / Dart 3.13.5 stable, fijados en `pubspec.yaml` | ✅ |
 | II. Clean Architecture | `lib/domain` (Dart puro), `lib/data` y `lib/presentation`; los puertos se definen en el dominio. Se verifica con el `grep` de quickstart §1 | ✅ |
-| III. Datos sobre código | Niveles, patrones, glosario y comandos de voz en `assets/catalog/catalog.json`. Solo un tipo de respuesta o una animación de corte nuevos requieren código (excepción del principio) | ✅ |
+| III. Datos sobre código | Niveles, patrones, glosario y comandos de voz en `assets/catalog/catalog.json`. Solo un tipo de respuesta (señal) nuevo requiere código, tal como permite el principio. El corte es un dato (`CutMotion`) | ✅ |
 | IV. Persistencia | Sin backend. No hay datos que persistir en 001; el repositorio de configuración llega en la 004 | ✅ |
 | V. Gestión de estado | `flutter_riverpod` | ✅ |
 | VI. Pruebas | Pruebas del dominio derivadas de los CA y de G1–G10; reglas de aleatoriedad, N e invariante cubiertas; reloj y aleatoriedad inyectados | ✅ |
@@ -93,9 +93,9 @@ lib/
 ├── app.dart                         # MaterialApp, tema oscuro, rutas
 ├── domain/                          # Dart puro: sin imports de Flutter ni de paquetes
 │   ├── catalog/
-│   │   ├── catalog.dart             # Catalog, GlossaryTerm, Level, Pattern
+│   │   ├── catalog.dart             # Catalog, GlossaryTerm, Level, Pattern, CutMotion
 │   │   ├── catalog_exception.dart
-│   │   └── enums.dart               # ResponseType, CutAnimation, VoiceCommand
+│   │   └── enums.dart               # ResponseType, VoiceCommand
 │   ├── exercise/
 │   │   ├── exercise_engine.dart     # start / advanceTo / cancel
 │   │   ├── exercise_status.dart     # enum + tabla de transiciones
@@ -144,7 +144,8 @@ test/
 │   ├── exercise_engine_states_test.dart
 │   └── exercise_engine_simulation_test.dart   # SC-003, SC-004, SC-006
 ├── data/
-│   └── catalog_json_mapper_test.dart
+│   ├── catalog_json_mapper_test.dart
+│   └── flutter_tts_voice_announcer_test.dart  # FR-029, FR-030
 └── presentation/
     ├── selection_screen_test.dart   # FR-004, SC-009
     └── exercise_screen_test.dart    # cancelación, ciclo de vida, efectos

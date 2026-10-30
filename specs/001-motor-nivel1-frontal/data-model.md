@@ -49,7 +49,21 @@ El origen es `assets/catalog/catalog.json` ([contracts/catalog.schema.json](./co
 | `name` | `String` | "Frontal" |
 | `stanceTermId` | `String` | Existe en el glosario (`chochon_se`) |
 | `cutTermId` | `String` | Existe en el glosario (`chungmyon_begi`) |
-| `cutAnimation` | `CutAnimation` | Clave conocida por la presentación (`overheadVertical`) |
+| `cut` | `CutMotion` | Posición inicial y final del sable (empuñadura y punta) y si se refleja según el lado |
+
+### `CutMotion` y `SaberPose` (value objects)
+
+Coordenadas de pantalla relativas a la figura: origen en el centro de la figura, unidad = media altura de la figura; `x` crece hacia la derecha de la pantalla y `y` hacia abajo (cabeza ≈ −1, pies = 1). Cada componente en [−2, 2]. Las manos del oponente se dibujan en `hilt`.
+
+| Tipo | Campo | Tipo | Reglas |
+|---|---|---|---|
+| `SaberPose` | `hilt` | `Point2` (`x`, `y`: `double`) | Posición de la empuñadura (manos) |
+| `SaberPose` | `tip` | `Point2` | Posición visible de la punta. Acercarla a `hilt` representa el escorzo (sable apuntando al usuario) |
+| `CutMotion` | `start` | `SaberPose` | Postura del patrón (progreso 0). Frontal: `hilt (0, −0.9)`, `tip (0, −1.6)`: sable vertical sobre la cabeza |
+| `CutMotion` | `end` | `SaberPose` | Fin del corte (progreso 1). Frontal: `hilt (0, −0.2)`, `tip (0, −0.35)`: manos al pecho, sable apuntando al usuario |
+| `CutMotion` | `mirroredBySide` | `bool` | `true` si el corte sale hacia el lado del ataque ("puede salir hacia ambos lados"); con lado `left` se invierte el signo de `x`. Frontal: `false` |
+
+Durante el corte, `hilt` y `tip` se interpolan linealmente entre `start` y `end` según `cutProgress`.
 
 ### Enums del dominio
 
@@ -57,11 +71,10 @@ El origen es `assets/catalog/catalog.json` ([contracts/catalog.schema.json](./co
 |---|---|---|
 | `ResponseType` | `defense` | `evasion` (002), `counter` (006) |
 | `Side` | `right`, `left` (vistos desde el usuario) | — |
-| `CutAnimation` | `overheadVertical` | `transversal` (003) |
 | `VoiceCommand` | `start`, `end` | — |
 | `SaberColor` | `white`, `yellow`, `blue`, `red` | — |
 
-Agregar un valor a `ResponseType` o `CutAnimation` es un cambio de código permitido (excepción del Principio III). Agregar niveles o patrones que reutilizan valores existentes es solo datos.
+Agregar un valor a `ResponseType` es un cambio de código permitido (excepción del Principio III: tipo de señal nuevo). Agregar niveles o patrones, incluidos cortes nuevos expresables con `CutMotion`, es solo datos.
 
 ---
 

@@ -20,7 +20,7 @@ No hay ningún texto de nivel o patrón escrito en el código de la pantalla. La
 | Elemento | Comportamiento |
 |---|---|
 | Oponente virtual | Centrado. En `ready` está en reposo; desde *Si-jak* toma al instante la postura del patrón (FR-010a) |
-| Sable | Color según `snapshot.saberColor`. En la fase `cut`, el ángulo se interpola con `cutProgress` (FR-010) |
+| Sable | Color según `snapshot.saberColor`. En la fase `cut`, la empuñadura y la punta se interpolan entre `pattern.cut.start` y `pattern.cut.end` con `cutProgress` (FR-010, data-model.md `CutMotion`) |
 | Señal | En `warning` y `cut`: símbolo de sable de defensa en `signal.screenSide`, con al menos 30 % del alto de la pantalla (FR-015, FR-016) |
 | Cuenta regresiva | Número grande (3, 2, 1) en `countdown` (FR-009) |
 | Tiempo restante | Discreto, en una esquina; no compite con la señal |

@@ -169,7 +169,7 @@ Como practicante, quiero que el ejercicio se cancele de forma limpia si lo deten
 
 **Estados y cancelación**
 
-- **FR-020**: El ejercicio MUST tener un conjunto explícito de estados con transiciones definidas: **Listo → Cuenta regresiva → En curso** (con fases _Guardia_, _Aviso_ y _Corte_) **→ Finalizando** (completando el último ataque) **→ Terminado**; y desde Cuenta regresiva, En curso o Finalizando **→ Cancelado**. Toda transición no listada MUST rechazarse. El modelo MUST permitir agregar un estado _Pausado_ en una spec futura sin rediseñar los estados existentes.
+- **FR-020**: El ejercicio MUST tener un conjunto explícito de estados con transiciones definidas: **Listo → Cuenta regresiva → En curso** (con fases _Guardia_, _Aviso_ y _Corte_); **En curso → Finalizando** (se cumple la duración con un ataque en curso) **→ Terminado** (fin de su corte); **En curso → Terminado** (se cumple la duración sin ataque en curso, FR-013); y desde Cuenta regresiva, En curso o Finalizando **→ Cancelado**. Toda transición no listada MUST rechazarse. El modelo MUST permitir agregar un estado _Pausado_ en una spec futura sin rediseñar los estados existentes.
 - **FR-021**: El usuario MUST poder detener el ejercicio en cualquier momento entre la cuenta regresiva y _Guman_. Detenerlo lo cancela.
 - **FR-022** _(CL2)_: Si la app pasa a segundo plano o el usuario sale de ella durante un ejercicio, el ejercicio MUST cancelarse. Al volver, MUST mostrarse la pantalla de selección.
 - **FR-023**: Un ejercicio cancelado MUST NOT reproducir _Guman_ ni ningún otro sonido o señal posterior a la cancelación.
@@ -205,7 +205,7 @@ Como practicante, quiero que el ejercicio se cancele de forma limpia si lo deten
 - **SC-001**: Desde que abre la app, un usuario inicia un ejercicio con una sola acción (pulsar Iniciar) y en menos de 10 s.
 - **SC-002**: En 200 ataques observados, el 100 % muestra el símbolo de defensa en el lado correcto según el color del sable (azul → izquierda, rojo → derecha).
 - **SC-003**: En 1 000 ejercicios simulados de 3 min con N = 5, ninguno contiene más de 5 ataques seguidos al mismo lado. Con N = 1, el 100 % alterna los lados.
-- **SC-004**: En ejercicios simulados, ambos lados aparecen en proporción de 50 % ± 5 % sobre al menos 10 000 ataques, y ningún par de ejercicios de 3 min produce la misma secuencia completa de lados.
+- **SC-004**: En ejercicios simulados, ambos lados aparecen en proporción de 50 % ± 5 % sobre al menos 10 000 ataques, y, en 1 000 ejercicios simulados de 3 min con semillas distintas, ninguna secuencia completa de lados se repite.
 - **SC-005**: El tiempo de aviso, la duración del corte y el intervalo entre ataques observados se desvían menos de 50 ms de los valores previstos, y el 100 % de los intervalos sorteados cae entre 1.0 s y 2.5 s con los valores por defecto.
 - **SC-006**: _Guman_ nunca suena antes de cumplirse la duración. Con los valores por defecto, suena como máximo 1.2 s (aviso + corte) después.
 - **SC-007**: En una prueba de legibilidad a 3 m, al menos 2 de cada 3 observadores identifican correctamente el color del sable y el lado de la señal en al menos el 95 % de los ataques.
