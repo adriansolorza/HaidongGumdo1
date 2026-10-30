@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "haidonggumdo/catalog.schema.json",
+  "title": "Catálogo de niveles, patrones y glosario",
+  "description": "Asset de solo lectura en assets/catalog/catalog.json. Las referencias a términos (stanceTermId, cutTermId y voiceCommands) deben existir en glossary; se validan al cargar.",
+  "type": "object",
+  "required": ["version", "glossary", "voiceCommands", "levels", "patterns"],
+  "additionalProperties": false,
+  "$defs": {
+    "point": {
+      "description": "[x, y] en coordenadas de pantalla relativas a la figura: origen en el centro de la figura, unidad = media altura de la figura; x crece hacia la derecha de la pantalla, y hacia abajo (cabeza ≈ -1, pies = 1).",
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "type": "number", "minimum": -2, "maximum": 2 }
+    },
+    "saberPose": {
+      "type": "object",
+      "required": ["hilt", "tip"],
+      "additionalProperties": false,
+      "properties": {
+        "hilt": { "$ref": "#/$defs/point" },
+        "tip": { "$ref": "#/$defs/point" }
+      }
+    }
+  },
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "glossary": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "romanization", "meaning"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+          "romanization": { "type": "string", "minLength": 1 },
+          "hangul": { "type": "string", "minLength": 1 },
+          "meaning": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "voiceCommands": {
+      "type": "object",
+      "required": ["start", "end"],
+      "additionalProperties": false,
+      "properties": {
+        "start": { "type": "string" },
+        "end": { "type": "string" }
+      }
+    },
+    "levels": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "order", "name", "responseLabel", "purpose", "responseTypes"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+          "order": { "type": "integer", "minimum": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "responseLabel": { "type": "string", "minLength": 1 },
+          "purpose": { "type": "string", "minLength": 1 },
+          "responseTypes": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "enum": ["defense"] }
+          }
+        }
+      }
+    },
+    "patterns": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "order", "name", "stanceTermId", "cutTermId", "cut"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+          "order": { "type": "integer", "minimum": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "stanceTermId": { "type": "string" },
+          "cutTermId": { "type": "string" },
+          "cut": {
+            "type": "object",
+            "required": ["start", "end", "mirroredBySide"],
+            "additionalProperties": false,
+            "properties": {
+              "start": { "$ref": "#/$defs/saberPose" },
+              "end": { "$ref": "#/$defs/saberPose" },
+              "mirroredBySide": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "version": 1,
+      "glossary": [
+        { "id": "si_jak", "romanization": "Si-jak", "hangul": "시작", "meaning": "Voz de inicio" },
+        { "id": "guman", "romanization": "Guman", "hangul": "그만", "meaning": "Voz de fin" },
+        { "id": "chochon_se", "romanization": "Chochôn-se", "hangul": "초천세", "meaning": "Postura con el sable sobre la cabeza" },
+        { "id": "chungmyon_begi", "romanization": "Chungmyôn begi", "hangul": "정면베기", "meaning": "Corte frontal" }
+      ],
+      "voiceCommands": { "start": "si_jak", "end": "guman" },
+      "levels": [
+        { "id": "level_1", "order": 1, "name": "Nivel 1", "responseLabel": "Defensa", "purpose": "Calentamiento", "responseTypes": ["defense"] }
+      ],
+      "patterns": [
+        { "id": "frontal", "order": 1, "name": "Frontal", "stanceTermId": "chochon_se", "cutTermId": "chungmyon_begi", "cut": { "start": { "hilt": [0, -0.9], "tip": [0, -1.6] }, "end": { "hilt": [0, -0.2], "tip": [0, -0.35] }, "mirroredBySide": false } }
+      ]
+    }
+  ]
+}
