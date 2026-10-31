@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "glossary": [
+    { "id": "si_jak", "romanization": "Si-jak", "hangul": "시작", "meaning": "Voz de inicio" },
+    { "id": "guman", "romanization": "Guman", "hangul": "그만", "meaning": "Voz de fin" },
+    { "id": "chochon_se", "romanization": "Chochôn-se", "hangul": "초천세", "meaning": "Postura con el sable sobre la cabeza" },
+    { "id": "chungmyon_begi", "romanization": "Chungmyôn begi", "hangul": "정면베기", "meaning": "Corte frontal" }
+  ],
+  "voiceCommands": { "start": "si_jak", "end": "guman" },
+  "levels": [
+    { "id": "level_1", "order": 1, "name": "Nivel 1", "responseLabel": "Defensa", "purpose": "Calentamiento", "responseTypes": ["defense"] }
+  ],
+  "patterns": [
+    {
+      "id": "frontal",
+      "order": 1,
+      "name": "Frontal",
+      "stanceTermId": "chochon_se",
+      "cutTermId": "chungmyon_begi",
+      "cut": {
+        "start": { "hilt": [0, -0.9], "tip": [0, -1.6] },
+        "end": { "hilt": [0, -0.2], "tip": [0, -0.35] },
+        "mirroredBySide": false
+      }
+    }
+  ]
+}
