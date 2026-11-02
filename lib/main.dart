@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
+import 'presentation/providers.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,6 +12,17 @@ Future<void> main() async {
     DeviceOrientation.landscapeLeft,
     DeviceOrientation.landscapeRight,
   ]);
-  // La preparación de la voz se agrega en T040.
-  runApp(const ProviderScope(child: HaidongGumdoApp()));
+  // Voz preparada al arrancar para que Si-jak coincida con el fin de la
+  // cuenta (R8). Si algo falla, la app arranca igual sin voz.
+  final container = ProviderContainer();
+  try {
+    final catalog = await container.read(catalogProvider.future);
+    await container.read(voiceAnnouncerProvider).prepare(catalog);
+  } catch (_) {}
+  runApp(
+    UncontrolledProviderScope(
+      container: container,
+      child: const HaidongGumdoApp(),
+    ),
+  );
 }

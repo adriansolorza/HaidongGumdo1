@@ -1,0 +1,78 @@
+import 'dart:async';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../domain/catalog/enums.dart';
+import '../../domain/exercise/exercise_engine.dart';
+import '../../domain/exercise/exercise_event.dart';
+import '../../domain/exercise/exercise_parameters.dart';
+import '../../domain/exercise/exercise_snapshot.dart';
+import '../../domain/exercise/exercise_status.dart';
+import '../../domain/exercise/session.dart';
+import '../providers.dart';
+
+final exerciseControllerProvider =
+    NotifierProvider<ExerciseController, ExerciseSnapshot>(
+      ExerciseController.new,
+    );
+
+/// Une el motor con el reloj y aplica los efectos de cada evento
+/// (contracts/ui-screens.md, "Efectos secundarios").
+final class ExerciseController extends Notifier<ExerciseSnapshot> {
+  ExerciseEngine? _engine;
+  Session? _session;
+
+  @override
+  ExerciseSnapshot build() {
+    final parameters = ExerciseParameters.defaults();
+    return ExerciseSnapshot(
+      status: ExerciseStatus.ready,
+      saberColor: SaberColor.white,
+      elapsed: Duration.zero,
+      remaining: ExerciseEngine.countdownLength + parameters.duration,
+    );
+  }
+
+  /// Empieza un ejercicio nuevo con los parámetros por defecto.
+  void start(Session session) {
+    final engine = ExerciseEngine(
+      session: session,
+      parameters: ExerciseParameters.defaults(),
+      random: ref.read(randomSourceProvider),
+    );
+    _engine = engine;
+    _session = session;
+    ref.read(elapsedClockProvider).start();
+    engine.start();
+    unawaited(ref.read(screenWakeLockProvider).enable());
+    state = engine.advanceTo(Duration.zero).snapshot;
+  }
+
+  /// Avanza el motor hasta el tiempo del reloj. Se llama en cada cuadro.
+  void onFrame() {
+    final engine = _engine;
+    if (engine == null || engine.status.isTerminal) return;
+    final tick = engine.advanceTo(ref.read(elapsedClockProvider).elapsed);
+    final voice = ref.read(voiceAnnouncerProvider);
+    for (final event in tick.events) {
+      switch (event) {
+        case StartVoice():
+          voice.announce(VoiceCommand.start);
+        case EndVoice():
+          voice.announce(VoiceCommand.end);
+        case SignalShown() || CutStarted() || CutEnded() || Cancelled():
+          break;
+      }
+    }
+    state = tick.snapshot;
+    if (tick.snapshot.status == ExerciseStatus.finished) {
+      unawaited(ref.read(screenWakeLockProvider).disable());
+    }
+  }
+
+  /// Otro ejercicio con la misma sesión (FR-014).
+  void repeat() {
+    final session = _session;
+    if (session != null) start(session);
+  }
+}

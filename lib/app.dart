@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'presentation/selection/selection_screen.dart';
 import 'presentation/strings_es.dart';
 import 'presentation/theme.dart';
 
@@ -12,8 +13,7 @@ class HaidongGumdoApp extends StatelessWidget {
       title: StringsEs.appTitle,
       theme: buildAppTheme(),
       debugShowCheckedModeBanner: false,
-      // Temporal hasta que exista la pantalla de selección (T036).
-      home: const Scaffold(),
+      home: const SelectionScreen(),
     );
   }
 }
