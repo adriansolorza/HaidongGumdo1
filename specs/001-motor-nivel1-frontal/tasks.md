@@ -121,10 +121,10 @@ Un solo proyecto Flutter en la raíz del repositorio (plan.md, "Structure Decisi
 
 ### Implementación de datos (US1)
 
-- [ ] T029 [P] [US1] Crear `DartRandomSource implements RandomSource` en `lib/data/platform/dart_random_source.dart` sobre `dart:math` `Random()`; `nextInt` lanza `ArgumentError` si `maxExclusive < 1`
-- [ ] T030 [P] [US1] Crear `StopwatchClock implements ElapsedClock` en `lib/data/platform/stopwatch_clock.dart` sobre `Stopwatch` de `dart:core`: `start()` hace `reset()` + `start()`; `elapsed` devuelve `stopwatch.elapsed`
-- [ ] T031 [P] [US1] Crear `FlutterTtsVoiceAnnouncer implements VoiceAnnouncer` en `lib/data/platform/flutter_tts_voice_announcer.dart` (research R8, FR-029, FR-030): `prepare(catalog)` idempotente; si `isLanguageAvailable('ko-KR')` es `true` → `setLanguage('ko-KR')` y textos = `hangul` de los términos de `catalog.voiceTerm(start/end)`; si no → no cambia el idioma y textos = `romanization`; `announce(command)` llama a `speak(texto)` sin `await` (fire-and-forget con `unawaited`); todas las llamadas envueltas en `try/catch` que no relanza, y si `prepare` falló `announce` no hace nada; `stop()` llama a `tts.stop()` con `try/catch`
-- [ ] T032 [P] [US1] Crear `WakelockPlusScreenWakeLock implements ScreenWakeLock` en `lib/data/platform/wakelock_plus_screen_wake_lock.dart` (research R9): `enable()` → `WakelockPlus.enable()`, `disable()` → `WakelockPlus.disable()`, ambos con `try/catch` que no relanza
+- [X] T029 [P] [US1] Crear `DartRandomSource implements RandomSource` en `lib/data/platform/dart_random_source.dart` sobre `dart:math` `Random()`; `nextInt` lanza `ArgumentError` si `maxExclusive < 1`
+- [X] T030 [P] [US1] Crear `StopwatchClock implements ElapsedClock` en `lib/data/platform/stopwatch_clock.dart` sobre `Stopwatch` de `dart:core`: `start()` hace `reset()` + `start()`; `elapsed` devuelve `stopwatch.elapsed`
+- [X] T031 [P] [US1] Crear `FlutterTtsVoiceAnnouncer implements VoiceAnnouncer` en `lib/data/platform/flutter_tts_voice_announcer.dart` (research R8, FR-029, FR-030): `prepare(catalog)` idempotente; si `isLanguageAvailable('ko-KR')` es `true` → `setLanguage('ko-KR')` y textos = `hangul` de los términos de `catalog.voiceTerm(start/end)`; si no → no cambia el idioma y textos = `romanization`; `announce(command)` llama a `speak(texto)` sin `await` (fire-and-forget con `unawaited`); todas las llamadas envueltas en `try/catch` que no relanza, y si `prepare` falló `announce` no hace nada; `stop()` llama a `tts.stop()` con `try/catch`
+- [X] T032 [P] [US1] Crear `WakelockPlusScreenWakeLock implements ScreenWakeLock` en `lib/data/platform/wakelock_plus_screen_wake_lock.dart` (research R9): `enable()` → `WakelockPlus.enable()`, `disable()` → `WakelockPlus.disable()`, ambos con `try/catch` que no relanza
 
 ### Implementación de la presentación (US1)
 
