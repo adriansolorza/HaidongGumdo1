@@ -70,6 +70,21 @@ final class ExerciseController extends Notifier<ExerciseSnapshot> {
     }
   }
 
+  /// Cancela el ejercicio activo (FR-021–FR-023). Devuelve `true` solo si esta
+  /// llamada lo canceló; `false` si no había ejercicio activo (idempotente).
+  Future<bool> cancel() async {
+    final engine = _engine;
+    if (engine == null || engine.status.isTerminal) return false;
+    // Los puertos se leen antes de esperar: tras un `await` el provider puede
+    // estar ya liberado (p. ej. al cerrar la app desde la pantalla del ejercicio).
+    final voice = ref.read(voiceAnnouncerProvider);
+    final wakeLock = ref.read(screenWakeLockProvider);
+    state = engine.cancel().snapshot;
+    await voice.stop();
+    await wakeLock.disable();
+    return true;
+  }
+
   /// Otro ejercicio con la misma sesión (FR-014).
   void repeat() {
     final session = _session;

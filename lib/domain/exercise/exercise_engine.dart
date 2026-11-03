@@ -95,7 +95,16 @@ final class ExerciseEngine {
 
   /// countdown | running | finishing → cancelled. Emite `cancelled`.
   /// StateError en ready; no hace nada en finished o cancelled.
-  ExerciseTick cancel() => throw UnimplementedError('Se implementa en T047');
+  ExerciseTick cancel() {
+    if (_status == ExerciseStatus.ready) {
+      throw StateError('cancel antes de start()');
+    }
+    if (_status.isTerminal) {
+      return ExerciseTick(snapshot: _snapshot(), events: const []);
+    }
+    _transition(ExerciseStatus.cancelled);
+    return ExerciseTick(snapshot: _snapshot(), events: [Cancelled(_elapsed)]);
+  }
 
   /// Próximo instante pendiente de la línea de tiempo. Con instantes iguales,
   /// el orden es: fin del corte, inicio del corte, señal, fin nominal.

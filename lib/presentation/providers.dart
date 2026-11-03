@@ -51,7 +51,10 @@ final class SelectedSessionNotifier extends Notifier<Session?> {
   Session? build() {
     final catalog = ref.watch(catalogProvider).value;
     if (catalog == null) return null;
-    return Session(level: catalog.levels.first, pattern: catalog.patterns.first);
+    return Session(
+      level: catalog.levels.first,
+      pattern: catalog.patterns.first,
+    );
   }
 
   void selectLevel(Level level) {

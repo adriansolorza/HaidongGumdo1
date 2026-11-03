@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,11 +26,30 @@ class ExerciseScreen extends ConsumerStatefulWidget {
 class _ExerciseScreenState extends ConsumerState<ExerciseScreen>
     with SingleTickerProviderStateMixin {
   late final Ticker _ticker;
+  late final ExerciseController _controller;
+  late final AppLifecycleListener _lifecycle;
 
   @override
   void initState() {
     super.initState();
+    // En dispose ya no se puede usar ref: se guarda el controlador aquí.
+    _controller = ref.read(exerciseControllerProvider.notifier);
     _ticker = createTicker(_onTick)..start();
+    // Segundo plano cancela (FR-022). `inactive` no: la barra de
+    // notificaciones también lo dispara (R10).
+    _lifecycle = AppLifecycleListener(
+      onHide: _cancelAndLeave,
+      onPause: _cancelAndLeave,
+    );
+  }
+
+  /// Única rutina de cancelación: Detener, onHide y onPause. Android emite
+  /// onHide y onPause seguidos; solo la llamada que cancela navega.
+  Future<void> _cancelAndLeave() async {
+    final cancelled = await _controller.cancel();
+    if (cancelled && mounted) {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    }
   }
 
   void _onTick(Duration _) {
@@ -38,7 +59,10 @@ class _ExerciseScreenState extends ConsumerState<ExerciseScreen>
 
   @override
   void dispose() {
+    _lifecycle.dispose();
     _ticker.dispose();
+    // Salida sin Detener (p. ej. botón Atrás de Android): no dejar nada sonando.
+    unawaited(_controller.cancel());
     super.dispose();
   }
 
@@ -89,6 +113,17 @@ class _ExerciseScreenState extends ConsumerState<ExerciseScreen>
               ),
             ),
           ),
+          if (_isActive(snapshot.status))
+            Positioned(
+              top: 16,
+              left: 24,
+              child: SafeArea(
+                child: OutlinedButton(
+                  onPressed: _cancelAndLeave,
+                  child: const Text(StringsEs.stop),
+                ),
+              ),
+            ),
           if (snapshot.status == ExerciseStatus.finished)
             Positioned(
               left: 0,
@@ -99,8 +134,9 @@ class _ExerciseScreenState extends ConsumerState<ExerciseScreen>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     FilledButton(
-                      onPressed: () =>
-                          ref.read(exerciseControllerProvider.notifier).repeat(),
+                      onPressed: () => ref
+                          .read(exerciseControllerProvider.notifier)
+                          .repeat(),
                       child: const Text(StringsEs.repeat),
                     ),
                     const SizedBox(width: 24),
@@ -116,6 +152,12 @@ class _ExerciseScreenState extends ConsumerState<ExerciseScreen>
       ),
     );
   }
+
+  /// Detener solo se ofrece mientras el ejercicio se puede cancelar.
+  static bool _isActive(ExerciseStatus status) =>
+      status == ExerciseStatus.countdown ||
+      status == ExerciseStatus.running ||
+      status == ExerciseStatus.finishing;
 
   /// En reposo hasta *Si-jak*; después, la postura del patrón (FR-010a).
   static bool _inStance(ExerciseStatus status) =>
