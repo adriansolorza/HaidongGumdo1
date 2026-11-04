@@ -1,6 +1,6 @@
 # Implementation Plan: Motor del ejercicio + Nivel 1 + Patrón frontal
 
-**Branch**: `001-motor-nivel1-frontal` | **Date**: 2026-10-28 | **Spec**: [spec.md](./spec.md)
+**Branch**: `001-motor-nivel1-frontal` | **Date**: 2026-10-28 (revisado 2026-11-03) | **Spec**: [spec.md](./spec.md)
 
 **Input**: Feature specification from `specs/001-motor-nivel1-frontal/spec.md`
 
@@ -8,7 +8,7 @@
 
 ## Summary
 
-App Android en Flutter que ejecuta un ejercicio de reacción de Nivel 1 (defensa) con el Patrón frontal. Tiene una cuenta regresiva y la voz *Si-jak*; después, ataques del oponente virtual con el lado aleatorio (máximo N repeticiones seguidas), la señal de defensa del lado contrario al color del sable y un corte animado de duración exacta. El ejercicio cierra con *Guman*.
+App Android en Flutter que ejecuta un ejercicio de reacción de Nivel 1 (defensa) con el Patrón frontal. Tiene una cuenta regresiva y la voz *Si-jak*; después, ataques del oponente virtual con el lado aleatorio (máximo N repeticiones seguidas), la señal de defensa del lado contrario al color del sable y el movimiento del oponente: en guardia en *Chayôn-se*, sube animado a *Chochôn-se* con la señal, corta con duración exacta y regresa animado a *Chayôn-se*. El ejercicio cierra con *Guman*.
 
 El núcleo es un **motor de línea de tiempo puro** en el dominio, sin temporizadores. La presentación le pasa el tiempo transcurrido en cada cuadro y el motor devuelve el snapshot y los eventos. Así el comportamiento es determinista y fácil de probar (reloj y aleatoriedad inyectados). Los estados son explícitos para poder agregar la pausa más adelante. Niveles, patrones y glosario salen de un catálogo JSON, de modo que las specs 002–006 agreguen sobre todo datos.
 
@@ -52,6 +52,28 @@ El núcleo es un **motor de línea de tiempo puro** en el dominio, sin temporiza
 
 **Resultado (antes de Phase 0)**: PASA, sin violaciones.
 **Re-check después de Phase 1**: PASA. El diseño (puertos, catálogo, motor puro) no introduce dependencias del dominio hacia Flutter ni paquetes sin ADR.
+**Re-check tras la revisión 2026-11-03**: PASA. La postura de guardia es un dato más del patrón (Principio III); los tiempos de la subida y el regreso se calculan en el dominio y se prueban con el reloj manual (Principio VI); no hay paquetes nuevos.
+
+## Revisión 2026-11-03: correcciones tras probar la US1
+
+La sesión de clarificación del 2026-11-03 cambia la postura de partida, anima los cambios de postura y cambia la forma del símbolo de la señal. Reemplaza lo que decía el plan original sobre FR-010a ("la postura aparece de inmediato"). Decisiones:
+
+- **D1. Guardia como dato del patrón.** Cada patrón declara su postura de guardia: `guardTermId` (`chayon_se`) y `guard` (`SaberPose`), junto a la postura de ataque (`stanceTermId`, `cut.start`) y el corte (`cut`). El glosario del catálogo agrega `chayon_se` ("Chayôn-se", "자연세"). El reposo genérico que hoy dibuja `OpponentPainter` desaparece: antes de *Si-jak* y después de *Guman* el oponente está en la guardia del patrón (FR-008).
+- **D2. Chayôn-se visto de frente.** Las manos van a la altura del ombligo y la punta apunta al usuario, así que la hoja se ve en escorzo, muy corta: `hilt (0, 0.05)`, `tip (0, −0.3)`. Es la postura que más tiempo se ve (sable amarillo en guardia), así que el color MUST seguir leyéndose a 3 m (FR-025, SC-007). Para eso, `OpponentPainter` dibuja en `tip` la **punta vista de frente**: un disco del color del sable con contorno de `kOutlineWidth`. Su diámetro crece a medida que la hoja visible se acorta: 0 con una hoja de 0.8 u o más, 0.3 u (≈ 8 % del alto de la pantalla) con 0.2 u o menos, y lineal entre ambos. Con la guardia frontal (0.35 u visibles) mide ≈ 0.22 u. Como depende de la longitud y no de la postura, la punta crece y se encoge sin saltos durante la subida, el corte y el regreso, y sirve también para el fin del corte (manos al pecho). Las constantes viven en el painter (presentación), no en el catálogo. Si la prueba de 3 m (T058) falla, se ajustan esas constantes.
+- **D3. Tiempos de la subida y el regreso en el dominio.** El snapshot expone `motion` (`OpponentMotion`: postura de origen, postura de destino, progreso en [0,1] y lado del ataque). La presentación solo interpola entre las posturas del catálogo; no calcula tiempos. Tramos de cada ataque:
+  - **Subida** (FR-010 paso 2): `guard → stance` durante la primera mitad del aviso, [`signalAt`, `signalAt + warningTime/2`).
+  - **Arriba**: quieto en `stance` durante la segunda mitad del aviso.
+  - **Corte**: `stance → cutEnd` con `cutProgress` (sin cambios).
+  - **Regreso** (FR-010 paso 4): `cutEnd → guard` durante 500 ms (`ParameterLimits.intervalFloorMargin`), [`cutEndAt`, `cutEndAt + 500 ms`). Como la señal siguiente nunca llega antes de `cutStartAt + cutSpeed + 500 ms = cutEndAt + 500 ms`, el regreso siempre termina a más tardar con la señal siguiente, con cualquier parámetro válido.
+  - **Guardia**: quieto en `guard`.
+
+  Los tiempos del ejercicio (aviso, corte, intervalo, *Guman*) no cambian (FR-010a), así que las pruebas de US1 y US2 siguen valiendo.
+- **D4. Fin del ejercicio.** En `finished` y `cancelled` el oponente aparece en `guard` con el sable blanco, sin animar el regreso: el ejercicio ya terminó y el `Ticker` se detiene. Esto resuelve el caso que la clarificación dejó abierto (*Guman* justo al terminar un corte).
+- **D5. Reflejo por lado.** Con `cut.mirroredBySide` y lado `left`, se refleja `x` de `stance` y `cutEnd`, pero no de `guard`, que es común a ambos lados. `OpponentMotion.side` conserva el lado del último ataque durante el regreso, cuando ya no hay ataque en curso.
+- **D6. Símbolo de la señal en planta (FR-025a).** `SignalPainter` dibuja el sable vertical con la punta arriba, visto desde arriba: hoja recta y estrecha (se ve el lomo) que termina en punta, guarda como una barra ovalada vista de canto, y empuñadura más gruesa que la hoja (ancho de la hoja ≈ 0.75 × ancho de la empuñadura). Mantiene el alto ≥ 30 %, el relleno blanco y el contorno. El sable del oponente no cambia de forma.
+- **D7. Selección.** La lista de patrones muestra las tres posturas desde el glosario: `<guardia> → <postura> → <corte>` (FR-003).
+
+Los documentos de diseño que dependen de esto se actualizan en las tareas de la fase "Correcciones tras probar la US1": `contracts/catalog.schema.json`, `contracts/ui-screens.md`, research.md R12 y quickstart.md.
 
 ## Project Structure
 
@@ -86,20 +108,21 @@ pubspec.yaml
 analysis_options.yaml
 assets/
 └── catalog/
-    └── catalog.json                 # Nivel 1, Patrón frontal, glosario, comandos de voz
+    └── catalog.json                 # Nivel 1, Patrón frontal (guardia, postura, corte), glosario, comandos de voz
 
 lib/
 ├── main.dart                        # ProviderScope, orientación horizontal, prepare() de la voz
 ├── app.dart                         # MaterialApp, tema oscuro, rutas
 ├── domain/                          # Dart puro: sin imports de Flutter ni de paquetes
 │   ├── catalog/
-│   │   ├── catalog.dart             # Catalog, GlossaryTerm, Level, Pattern, CutMotion
+│   │   ├── catalog.dart             # Catalog, GlossaryTerm, Level, Pattern (con guard), CutMotion
 │   │   ├── catalog_exception.dart
 │   │   └── enums.dart               # ResponseType, VoiceCommand
 │   ├── exercise/
 │   │   ├── exercise_engine.dart     # start / advanceTo / cancel
 │   │   ├── exercise_status.dart     # enum + tabla de transiciones
 │   │   ├── exercise_snapshot.dart   # ExerciseSnapshot, ExerciseTick, AttackPhase, SaberColor
+│   │   ├── opponent_motion.dart     # OpponentMotion, PoseKey (revisión 2026-11-03)
 │   │   ├── exercise_event.dart
 │   │   ├── exercise_parameters.dart # límites, valores por defecto, invariante, validate()
 │   │   ├── attack.dart              # Attack, Side
@@ -142,6 +165,7 @@ test/
 │   ├── signal_placement_test.dart
 │   ├── exercise_engine_timeline_test.dart
 │   ├── exercise_engine_states_test.dart
+│   ├── exercise_engine_motion_test.dart       # subida, arriba, corte, regreso (revisión 2026-11-03)
 │   └── exercise_engine_simulation_test.dart   # SC-003, SC-004, SC-006
 ├── data/
 │   ├── catalog_json_mapper_test.dart

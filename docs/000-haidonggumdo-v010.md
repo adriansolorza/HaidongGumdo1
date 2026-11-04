@@ -19,6 +19,7 @@
 |---|---|
 | *Si-jak* (시작) | Voz de inicio |
 | *Guman* (그만) | Voz de fin |
+| *Chayôn-se* (자연세, 自然勢) | Postura natural o corta (guardia): sable al frente, manos a la altura del ombligo y punta dirigida hacia el oponente |
 | *Chochôn-se* (초천세) | Postura con el sable sobre la cabeza |
 | *Sodose* | Postura con el sable a un costado del cuerpo |
 | *Chungmyôn begi* (정면베기) | Corte frontal |

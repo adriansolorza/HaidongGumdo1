@@ -191,7 +191,45 @@ Un solo proyecto Flutter en la raíz del repositorio (plan.md, "Structure Decisi
 
 ---
 
-## Phase 5: Polish & Cross-Cutting Concerns
+## Phase 5: Correcciones tras probar la US1
+
+**Purpose**: Aplicar la sesión de clarificación del 2026-11-03 (spec.md): guardia en *Chayôn-se*, subida animada a *Chochôn-se* en la primera mitad del aviso, regreso animado de 500 ms y símbolo de la señal en planta (FR-008, FR-010, FR-010a, FR-025a). Diseño en plan.md ("Revisión 2026-11-03", D1–D7) y data-model.md (`Pattern.guard`, `OpponentMotion`). Los tiempos del ejercicio no cambian: las pruebas de US1 y US2 deben seguir en verde sin cambiar sus expectativas de tiempo.
+
+**Independent Test**: Iniciar un ejercicio y observarlo desde 3 m: el oponente está en *Chayôn-se* (punta hacia el usuario) con el color legible; con cada señal sube a *Chochôn-se*, se queda quieto arriba, corta y regresa animado a *Chayôn-se* antes de la siguiente señal. El símbolo de la señal se ve como un sable visto desde arriba.
+
+### Documentos de diseño
+
+- [ ] T060 [P] Actualizar `specs/001-motor-nivel1-frontal/contracts/catalog.schema.json`: en `patterns.items`, agregar `guardTermId` (string) y `guard` (`$ref: #/$defs/saberPose`) a `required` y `properties`; mencionar `guardTermId` en la `description` de las referencias que deben existir en `glossary`; actualizar el ejemplo con el término `chayon_se` ("Chayôn-se", "자연세", "Postura natural o corta (guardia)") y `guard: {hilt: [0, 0.05], tip: [0, -0.3]}` del patrón `frontal`
+- [ ] T061 [P] Actualizar `contracts/ui-screens.md` (fila "Oponente virtual": guardia en *Chayôn-se*, subida, arriba, corte y regreso según `snapshot.motion`; fila "Señal": símbolo en planta, FR-025a; lista "Patrón" con las tres posturas), research.md R12 (punta vista de frente, D2; tramos animados, D3; símbolo en planta, D6) y quickstart.md §2–§3 (pasos para observar la guardia, la subida, la pausa arriba y el regreso, y la legibilidad del color en *Chayôn-se* a 3 m). No tocar las secciones ajenas a la revisión
+
+### Dominio
+
+- [ ] T062 Agregar a `Pattern` en `lib/domain/catalog/catalog.dart` los campos `guardTermId` (`String`) y `guard` (`SaberPose`), incluidos en `==`/`hashCode` (data-model.md). Ajustar los lugares que construyen `Pattern` para que compilen: `test/domain/fakes/test_session.dart` y `test/domain/exercise_parameters_test.dart` (guardia frontal de D2). **Se hace junto con T065, en el mismo commit**: `lib/data/catalog/catalog_json_mapper.dart` construye `Pattern` y no compila hasta que T065 lo actualiza
+- [ ] T063 [P] Crear `lib/domain/exercise/opponent_motion.dart`: `enum PoseKey { guard, stance, cutEnd }` y `OpponentMotion` inmutable con `from`, `to`, `progress` (`double` en [0,1]) y `side` (`Side?`), con `==`/`hashCode` y una constante `OpponentMotion.atGuard` (`guard → guard`, 0, `null`)
+- [ ] T064 Agregar `final OpponentMotion motion` a `ExerciseSnapshot` en `lib/domain/exercise/exercise_snapshot.dart` (incluido en `==`/`hashCode`) y calcularlo en `_snapshot()` de `lib/domain/exercise/exercise_engine.dart` según la tabla de data-model.md (depende de T063): subida en [`signalAt`, `signalAt + warningTime/2`) con la mitad en microsegundos enteros; arriba hasta `cutStartAt`; corte con `cutProgress`; regreso en [`cutEndAt`, `cutEndAt + ParameterLimits.intervalFloorMargin`) usando el último ataque (que el motor ya conserva hasta la señal siguiente) y su lado; `atGuard` en `ready`, `countdown`, `finished`, `cancelled` y en guardia quieta (D4). Actualizar también el snapshot inicial de `ExerciseController.build()` en `lib/presentation/exercise/exercise_controller.dart` con `motion: OpponentMotion.atGuard`. Sin cambios en eventos, transiciones ni tiempos
+
+### Datos
+
+- [ ] T065 Actualizar el catálogo (depende de T062): en `assets/catalog/catalog.json`, agregar el término `chayon_se` ("Chayôn-se", "자연세", "Postura natural o corta (guardia)") y en el patrón `frontal` `guardTermId: "chayon_se"` y `guard: {hilt: [0, 0.05], tip: [0, -0.3]}`; en `lib/data/catalog/catalog_json_mapper.dart`, leer y validar `guardTermId` (existe en el glosario) y `guard` (mismas reglas que las posturas de `cut`), con la ruta del campo en el mensaje de `CatalogException`. Ajustar el JSON de prueba de `test/data/catalog_json_mapper_test.dart` y `test/presentation/selection_screen_test.dart` para que incluya los campos nuevos
+- [ ] T066 [P] Agregar a `test/data/catalog_json_mapper_test.dart` (depende de T065): el asset real tiene 5 términos, incluido "Chayôn-se" / "자연세" exactos (FR-003), y el patrón `frontal` tiene `guardTermId == 'chayon_se'` y la guardia de D2; `guardTermId` inexistente → `CatalogException`; `guard` ausente o con un punto fuera de [−2, 2] → `CatalogException`
+
+### Presentación
+
+- [ ] T067 Reescribir `OpponentPainter` en `lib/presentation/exercise/painters/opponent_painter.dart` (depende de T062, T064; plan.md D2, D5): recibe `saberColor`, `SaberPose guard`, `CutMotion cut` y `OpponentMotion motion` (en lugar de `inStance`, `side` y `cutProgress`); elimina el reposo genérico `_restPose`; resuelve cada `PoseKey` a `guard`, `cut.start` o `cut.end`, refleja `x` de `stance` y `cutEnd` si `cut.mirroredBySide && motion.side == Side.left`, e interpola `hilt` y `tip` con `motion.progress`. Dibuja la punta vista de frente con un método estático público `tipDiameter(double visibleLength)` (0 con ≥ 0.8 u, 0.3 u con ≤ 0.2 u, lineal entre ambos), relleno del color del sable y contorno `kOutlineWidth`. `shouldRepaint` compara los cuatro campos. En `lib/presentation/exercise/exercise_screen.dart`, pasar `widget.session.pattern.guard` y `snapshot.motion`
+- [ ] T068 [P] Rediseñar el símbolo en `lib/presentation/exercise/painters/signal_painter.dart` (FR-025a, plan.md D6): sable vertical con la punta arriba visto en planta: hoja recta y estrecha que termina en punta, guarda como barra ovalada vista de canto y empuñadura más gruesa (ancho de la hoja ≈ 0.75 × ancho de la empuñadura); se mantienen el alto ≥ 30 %, el relleno blanco, el contorno y la colocación por `signal.screenSide`
+- [ ] T069 En `lib/presentation/selection/selection_screen.dart`, mostrar en cada patrón `<guardia> → <postura> → <corte>` con `catalog.term(guardTermId)`, `stanceTermId` y `cutTermId` (plan.md D7; depende de T065). Actualizar la expectativa del catálogo real en `test/presentation/selection_screen_test.dart` a "Chayôn-se (자연세) → Chochôn-se (초천세) → Chungmyôn begi (정면베기)"
+
+### Pruebas (derivadas de la clarificación 2026-11-03, escritas después del código)
+
+- [ ] T070 Escribir `test/domain/exercise_engine_motion_test.dart` con `ManualClock`, `ScriptedRandomSource` y los parámetros por defecto (FR-008, FR-010 pasos 2 y 4; depende de T064): `atGuard` en `ready` y `countdown`; en la señal (4.0 s con sorteo 0) `guard → stance` con progreso 0, 0.5 en 4.175 s y `stance → stance` desde 4.35 s hasta 4.7 s; corte `stance → cutEnd` con `progress == cutProgress`; regreso `cutEnd → guard` con progreso 0 en 5.2 s, 0.5 en 5.45 s y `atGuard` desde 5.7 s; el lado del regreso es el del ataque; con `warningTime = 330 ms` la subida dura 165 ms; con el intervalo mínimo (sorteo 0) la señal siguiente llega justo cuando el regreso termina; en una simulación con `SeededRandomSource` (100 ejercicios de 180 s, valores por defecto, y otra con `cutSpeed = 1000 ms` y `attackInterval = 1500 ms`) en cada par de ataques consecutivos se cumple `prev.cutEndAt + 500 ms ≤ next.signalAt` (el regreso termina a más tardar con la señal siguiente), y en el instante `signalAt` el movimiento es `guard → stance` con progreso 0; en `finished` (también tras `finishing`) y `cancelled` el movimiento es `atGuard` (D4); los eventos y tiempos de exercise_engine_timeline_test.dart no cambian
+- [ ] T071 [P] Escribir `test/presentation/opponent_painter_test.dart` (depende de T067): `tipDiameter` vale 0 con 0.8 u y 1.0 u, 0.3 u con 0.2 u y 0.1 u, y 0.225 u con 0.35 u (guardia frontal); `shouldRepaint` es `true` si cambia el color, la guardia, el corte o el movimiento, y `false` con los mismos valores; pintar en un `Canvas` de 1600×900 con la guardia frontal y cada `PoseKey` no lanza
+- [ ] T072 Ejecutar `flutter analyze` y `flutter test` completos; deben pasar todas las pruebas de US1 y US2 sin cambiar sus expectativas de tiempo ni de eventos
+
+**Checkpoint**: `flutter test` en verde. El responsable confirma en el dispositivo que el oponente parte de *Chayôn-se*, sube con la señal, se queda arriba, corta y regresa antes de la señal siguiente; que el color del sable se lee a 3 m en *Chayôn-se*; y que el símbolo de la señal se reconoce como sable.
+
+---
+
+## Phase 6: Polish & Cross-Cutting Concerns
 
 **Purpose**: Verificaciones de la constitution, documentación y validación manual.
 
@@ -213,7 +251,8 @@ Un solo proyecto Flutter en la raíz del repositorio (plan.md, "Structure Decisi
 - **Foundational (Phase 2)**: Depende de Setup. BLOQUEA ambas historias.
 - **US1 (Phase 3)**: Depende de Foundational. Es el MVP.
 - **US2 (Phase 4)**: Depende de Foundational y de **US1** (cancela el motor, el controlador y la pantalla del ejercicio que crea US1). Se puede probar por separado, pero no implementar en paralelo con US1.
-- **Polish (Phase 5)**: Depende de US1 y US2.
+- **Correcciones tras probar la US1 (Phase 5)**: Depende de US1 y US2 (cambia el motor, el catálogo y los painters que crean). No cambia los tiempos ni los estados.
+- **Polish (Phase 6)**: Depende de US1, US2 y de las correcciones de la Phase 5 (la validación manual de T057 y T058 se hace sobre la versión corregida).
 
 ### Dependencias clave entre tareas
 
@@ -227,6 +266,8 @@ T037, T038 + T034 → T039
 T033 → T040
 T028 → T041–T045; T035 → T046; T031 → T059
 T028 → (US2) T047 → T048 → T049 → T050–T051
+(Correcciones) T062 → T065 → T066, T069; T063 → T064 → T070
+T062, T064 → T067 → T071; T068, T060, T061 independientes; T066–T071 → T072
 ```
 
 ### Within Each User Story
@@ -241,6 +282,7 @@ T028 → (US2) T047 → T048 → T049 → T050–T051
 - Foundational: T006 ∥ T007; luego T009 ∥ T010 ∥ T012; T015, T016, T017, T018 en paralelo una vez listas sus dependencias.
 - US1: T022 ∥ T025; luego T023 ∥ T024 ∥ T026; T029 ∥ T030 ∥ T031 ∥ T032 (no dependen del motor); T037 ∥ T038; pruebas T041 ∥ T042 ∥ T043 ∥ T046 ∥ T059.
 - US2: T050 ∥ T051 (archivos distintos) una vez hechas T047–T049.
+- Correcciones: T060 ∥ T061 ∥ T063 ∥ T068 ∥ (T062 + T065 juntas); luego T064; T066 ∥ T067 ∥ T069; pruebas T070 ∥ T071.
 
 ---
 
@@ -284,7 +326,8 @@ Task: "T043 test/domain/signal_placement_test.dart"
 1. Setup + Foundational → base lista (`flutter test test/data` en verde).
 2. US1 → ejercicio completo → demo (MVP).
 3. US2 → cancelación limpia por botón y segundo plano → demo.
-4. Polish → verificaciones de la constitution, README, validación manual → PR a `main`.
+4. Correcciones tras probar la US1 → guardia, subida y regreso animados, símbolo en planta → demo con el responsable.
+5. Polish → verificaciones de la constitution, README, validación manual → PR a `main`.
 
 ### Notas
 

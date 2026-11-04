@@ -47,11 +47,13 @@ El origen es `assets/catalog/catalog.json` ([contracts/catalog.schema.json](./co
 | `id` | `String` | Único (p. ej. `frontal`) |
 | `order` | `int` | ≥ 1; único |
 | `name` | `String` | "Frontal" |
-| `stanceTermId` | `String` | Existe en el glosario (`chochon_se`) |
+| `guardTermId` | `String` | Postura de guardia; existe en el glosario (`chayon_se`) |
+| `stanceTermId` | `String` | Postura de ataque; existe en el glosario (`chochon_se`) |
 | `cutTermId` | `String` | Existe en el glosario (`chungmyon_begi`) |
-| `cut` | `CutMotion` | Posición inicial y final del sable (empuñadura y punta) y si se refleja según el lado |
+| `guard` | `SaberPose` | Sable en la postura de guardia (reposo antes de *Si-jak*, guardia entre ataques y fin) |
+| `cut` | `CutMotion` | Posición inicial (postura de ataque) y final del sable (empuñadura y punta) y si se refleja según el lado |
 
-### `CutMotion` y `SaberPose` (value objects)
+### `SaberPose`, guardia y `CutMotion` (value objects)
 
 Coordenadas de pantalla relativas a la figura: origen en el centro de la figura, unidad = media altura de la figura; `x` crece hacia la derecha de la pantalla y `y` hacia abajo (cabeza ≈ −1, pies = 1). Cada componente en [−2, 2]. Las manos del oponente se dibujan en `hilt`.
 
@@ -59,11 +61,12 @@ Coordenadas de pantalla relativas a la figura: origen en el centro de la figura,
 |---|---|---|---|
 | `SaberPose` | `hilt` | `Point2` (`x`, `y`: `double`) | Posición de la empuñadura (manos) |
 | `SaberPose` | `tip` | `Point2` | Posición visible de la punta. Acercarla a `hilt` representa el escorzo (sable apuntando al usuario) |
+| `Pattern` | `guard` | `SaberPose` | Postura de guardia. Frontal (*Chayôn-se*): `hilt (0, 0.05)`, `tip (0, −0.3)`: manos a la altura del ombligo y punta hacia el usuario, en escorzo. La presentación dibuja la punta vista de frente para que el color se lea a 3 m (plan.md, D2) |
 | `CutMotion` | `start` | `SaberPose` | Postura del patrón (progreso 0). Frontal: `hilt (0, −0.9)`, `tip (0, −1.6)`: sable vertical sobre la cabeza |
 | `CutMotion` | `end` | `SaberPose` | Fin del corte (progreso 1). Frontal: `hilt (0, −0.2)`, `tip (0, −0.35)`: manos al pecho, sable apuntando al usuario |
-| `CutMotion` | `mirroredBySide` | `bool` | `true` si el corte sale hacia el lado del ataque ("puede salir hacia ambos lados"); con lado `left` se invierte el signo de `x`. Frontal: `false` |
+| `CutMotion` | `mirroredBySide` | `bool` | `true` si el corte sale hacia el lado del ataque ("puede salir hacia ambos lados"); con lado `left` se invierte el signo de `x` de `start` y `end`, nunca el de `guard`. Frontal: `false` |
 
-Durante el corte, `hilt` y `tip` se interpolan linealmente entre `start` y `end` según `cutProgress`.
+Durante cada tramo animado (subida, corte y regreso), `hilt` y `tip` se interpolan linealmente entre las dos posturas según el progreso de `OpponentMotion`.
 
 ### Enums del dominio
 
@@ -136,11 +139,38 @@ Propiedades derivadas y reglas:
 
 ### `AttackPhase` (dentro de `running` y `finishing`)
 
-| Fase | Intervalo de tiempo | Sable | Señal |
+| Fase | Intervalo de tiempo | Sable | Señal | Oponente (`motion`) |
+|---|---|---|---|---|
+| `guard` | Entre el fin de un corte (o *Si-jak*) y la siguiente señal | `yellow` | Ninguna | Regreso `cutEnd → guard` en [`cutEndAt`, `cutEndAt + 500 ms`); después, quieto en `guard` |
+| `warning` | [`signalAt`, `cutStartAt`) | `blue` (derecha) / `red` (izquierda) | Visible | Subida `guard → stance` en la primera mitad; quieto en `stance` en la segunda |
+| `cut` | [`cutStartAt`, `cutEndAt`) | `blue` / `red` | Visible | Corte `stance → cutEnd` con `cutProgress` |
+
+Las fases y sus límites no cambian con la revisión 2026-11-03: la subida y el regreso ocurren dentro de `warning` y `guard`.
+
+### `OpponentMotion` (revisión 2026-11-03)
+
+Movimiento del oponente en un instante. El dominio calcula los tiempos; la presentación interpola entre las posturas del patrón.
+
+| Campo | Tipo | Reglas |
+|---|---|---|
+| `from` | `PoseKey` | Postura de origen |
+| `to` | `PoseKey` | Postura de destino; igual a `from` cuando está quieto |
+| `progress` | `double` | En [0, 1]; 0 cuando está quieto |
+| `side` | `Side?` | Lado del ataque al que pertenece el tramo (para `mirroredBySide`); se conserva durante el regreso. `null` antes del primer ataque y en estados terminales |
+
+`enum PoseKey { guard, stance, cutEnd }`, que corresponden a `pattern.guard`, `pattern.cut.start` y `pattern.cut.end`.
+
+| Estado o tramo | Intervalo | `from → to` | `progress` |
 |---|---|---|---|
-| `guard` | Entre el fin de un corte (o *Si-jak*) y la siguiente señal | `yellow` | Ninguna |
-| `warning` | [`signalAt`, `cutStartAt`) | `blue` (derecha) / `red` (izquierda) | Visible |
-| `cut` | [`cutStartAt`, `cutEndAt`) | `blue` / `red` | Visible |
+| `ready`, `countdown` | — | `guard → guard` | 0 |
+| Subida | [`signalAt`, `signalAt + warningTime/2`) | `guard → stance` | `(t − signalAt) / (warningTime/2)` |
+| Arriba | [`signalAt + warningTime/2`, `cutStartAt`) | `stance → stance` | 0 |
+| Corte | [`cutStartAt`, `cutEndAt`) | `stance → cutEnd` | `cutProgress` |
+| Regreso | [`cutEndAt`, `cutEndAt + 500 ms`) | `cutEnd → guard` | `(t − cutEndAt) / 500 ms` |
+| Guardia | Resto de `guard` | `guard → guard` | 0 |
+| `finished`, `cancelled` | — | `guard → guard` | 0 (sin animar el regreso, plan.md D4) |
+
+`warningTime/2` se calcula en microsegundos enteros (350 ms por defecto, 165 ms con el mínimo de 330 ms). Los 500 ms del regreso son `ParameterLimits.intervalFloorMargin`: como `nextSignalAt ≥ cutEndAt + 500 ms`, el regreso siempre termina a más tardar con la señal siguiente.
 
 ### `Attack`
 
@@ -180,6 +210,7 @@ Propiedades derivadas y reglas:
 | `currentAttack` | `Attack?` |
 | `signal` | `Signal?` (en `warning` y `cut`) |
 | `cutProgress` | `double?` en [0,1] (solo en `cut`) |
+| `motion` | `OpponentMotion` (siempre presente; ver arriba) |
 | `elapsed` | `Duration` (desde que se pulsó Iniciar) |
 | `remaining` | `Duration` (hasta E, nunca negativo) |
 
