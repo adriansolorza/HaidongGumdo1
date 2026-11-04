@@ -40,6 +40,7 @@ Catalog _testCatalog() => const CatalogJsonMapper().fromJsonString(
     'version': 1,
     'glossary': [
       {'id': 'start', 'romanization': 'Start', 'meaning': 'Inicio'},
+      {'id': 'guard', 'romanization': 'Guard', 'hangul': '다', 'meaning': 'G'},
       {'id': 'end', 'romanization': 'End', 'meaning': 'Fin'},
       {
         'id': 'stance_a',
@@ -68,8 +69,10 @@ Catalog _testCatalog() => const CatalogJsonMapper().fromJsonString(
         'id': 'pattern_b',
         'order': 2,
         'name': 'Pattern 2',
+        'guardTermId': 'guard',
         'stanceTermId': 'stance_b',
         'cutTermId': 'cut_b',
+        'guard': _pose([0, 0.05], [0, -0.3]),
         'cut': {
           'start': _pose([0.5, -0.8], [1.2, -1.4]),
           'end': _pose([-0.3, 0.1], [-1.0, 0.4]),
@@ -80,8 +83,10 @@ Catalog _testCatalog() => const CatalogJsonMapper().fromJsonString(
         'id': 'pattern_a',
         'order': 1,
         'name': 'Pattern 1',
+        'guardTermId': 'guard',
         'stanceTermId': 'stance_a',
         'cutTermId': 'cut_a',
+        'guard': _pose([0, 0.05], [0, -0.3]),
         'cut': {
           'start': _pose([0, -0.9], [0, -1.6]),
           'end': _pose([0, -0.2], [0, -0.35]),
@@ -132,8 +137,8 @@ void main() {
         expect(find.text(text), findsOneWidget);
       }
       expect(find.text('Response 1 — Purpose 1'), findsOneWidget);
-      expect(find.text('Stance A (가) → Cut A (나)'), findsOneWidget);
-      expect(find.text('Stance B → Cut B'), findsOneWidget);
+      expect(find.text('Guard (다) → Stance A (가) → Cut A (나)'), findsOneWidget);
+      expect(find.text('Guard (다) → Stance B → Cut B'), findsOneWidget);
       expect(
         tester.getTopLeft(find.text('Level 1')).dy,
         lessThan(tester.getTopLeft(find.text('Level 2')).dy),
@@ -180,7 +185,7 @@ void main() {
     await _pumpSelection(tester, _FakeRepository(_realCatalog));
 
     expect(
-      find.text('Chochôn-se (초천세) → Chungmyôn begi (정면베기)'),
+      find.text('Chayôn-se (자연세) → Chochôn-se (초천세) → Chungmyôn begi (정면베기)'),
       findsOneWidget,
     );
   });

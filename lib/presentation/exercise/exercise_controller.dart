@@ -8,6 +8,7 @@ import '../../domain/exercise/exercise_event.dart';
 import '../../domain/exercise/exercise_parameters.dart';
 import '../../domain/exercise/exercise_snapshot.dart';
 import '../../domain/exercise/exercise_status.dart';
+import '../../domain/exercise/opponent_motion.dart';
 import '../../domain/exercise/session.dart';
 import '../providers.dart';
 
@@ -28,6 +29,7 @@ final class ExerciseController extends Notifier<ExerciseSnapshot> {
     return ExerciseSnapshot(
       status: ExerciseStatus.ready,
       saberColor: SaberColor.white,
+      motion: OpponentMotion.atGuard,
       elapsed: Duration.zero,
       remaining: ExerciseEngine.countdownLength + parameters.duration,
     );

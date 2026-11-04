@@ -201,8 +201,10 @@ void main() {
           id: 'p',
           order: 1,
           name: 'P',
+          guardTermId: 'g',
           stanceTermId: 's',
           cutTermId: 'c',
+          guard: SaberPose(hilt: Point2(0, 0.05), tip: Point2(0, -0.3)),
           cut: CutMotion(
             start: SaberPose(hilt: Point2(0, -0.9), tip: Point2(0, -1.6)),
             end: SaberPose(hilt: Point2(0, -0.2), tip: Point2(0, -0.35)),

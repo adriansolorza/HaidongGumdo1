@@ -16,8 +16,10 @@ Session testSession() => Session(
     id: 'frontal',
     order: 1,
     name: 'Frontal',
+    guardTermId: 'chayon_se',
     stanceTermId: 'chochon_se',
     cutTermId: 'chungmyon_begi',
+    guard: SaberPose(hilt: Point2(0, 0.05), tip: Point2(0, -0.3)),
     cut: CutMotion(
       start: SaberPose(hilt: Point2(0, -0.9), tip: Point2(0, -1.6)),
       end: SaberPose(hilt: Point2(0, -0.2), tip: Point2(0, -0.35)),

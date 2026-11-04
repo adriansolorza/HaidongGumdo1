@@ -4,6 +4,7 @@ import 'exercise_event.dart';
 import 'exercise_parameters.dart';
 import 'exercise_snapshot.dart';
 import 'exercise_status.dart';
+import 'opponent_motion.dart';
 import 'session.dart';
 import 'side_sequencer.dart';
 import 'signal.dart';
@@ -212,6 +213,8 @@ final class ExerciseEngine {
         return ExerciseSnapshot(
           status: _status,
           saberColor: SaberColor.white,
+          // Al terminar no se anima el regreso (plan.md D4).
+          motion: OpponentMotion.atGuard,
           elapsed: t,
           remaining: _status == ExerciseStatus.finished
               ? Duration.zero
@@ -222,6 +225,7 @@ final class ExerciseEngine {
           status: _status,
           countdownValue: 3 - t.inSeconds,
           saberColor: SaberColor.white,
+          motion: OpponentMotion.atGuard,
           elapsed: t,
           remaining: clampedRemaining,
         );
@@ -232,11 +236,17 @@ final class ExerciseEngine {
             status: _status,
             phase: AttackPhase.guard,
             saberColor: SaberColor.yellow,
+            motion: _guardMotion(attack, t),
             elapsed: t,
             remaining: clampedRemaining,
           );
         }
         final inCut = t >= attack.cutStartAt;
+        final cutProgress = inCut
+            ? ((t - attack.cutStartAt).inMicroseconds /
+                      parameters.cutSpeed.inMicroseconds)
+                  .clamp(0.0, 1.0)
+            : null;
         return ExerciseSnapshot(
           status: _status,
           phase: inCut ? AttackPhase.cut : AttackPhase.warning,
@@ -245,15 +255,60 @@ final class ExerciseEngine {
               : SaberColor.red,
           currentAttack: attack,
           signal: SignalPlacement.forAttack(attack),
-          cutProgress: inCut
-              ? ((t - attack.cutStartAt).inMicroseconds /
-                        parameters.cutSpeed.inMicroseconds)
-                    .clamp(0.0, 1.0)
-              : null,
+          cutProgress: cutProgress,
+          motion: cutProgress == null
+              ? _warningMotion(attack, t)
+              : OpponentMotion(
+                  from: PoseKey.stance,
+                  to: PoseKey.cutEnd,
+                  progress: cutProgress,
+                  side: attack.side,
+                ),
           elapsed: t,
           remaining: clampedRemaining,
         );
     }
+  }
+
+  /// Duración de la subida a la postura de ataque: la primera mitad del aviso
+  /// (FR-010 paso 2), en microsegundos enteros.
+  Duration get riseDuration =>
+      Duration(microseconds: parameters.warningTime.inMicroseconds ~/ 2);
+
+  /// Duración del regreso a la guardia (FR-010 paso 4). Es el margen del piso
+  /// del intervalo, así que siempre termina a más tardar con la señal siguiente.
+  static const returnDuration = ParameterLimits.intervalFloorMargin;
+
+  /// Durante el aviso: subida y después quieto arriba hasta el corte.
+  OpponentMotion _warningMotion(Attack attack, Duration t) {
+    final sinceSignal = t - attack.signalAt;
+    if (sinceSignal >= riseDuration) {
+      return OpponentMotion(
+        from: PoseKey.stance,
+        to: PoseKey.stance,
+        progress: 0,
+        side: attack.side,
+      );
+    }
+    return OpponentMotion(
+      from: PoseKey.guard,
+      to: PoseKey.stance,
+      progress: sinceSignal.inMicroseconds / riseDuration.inMicroseconds,
+      side: attack.side,
+    );
+  }
+
+  /// En guardia: regreso tras el último corte y después quieto.
+  OpponentMotion _guardMotion(Attack? lastAttack, Duration t) {
+    if (lastAttack == null) return OpponentMotion.atGuard;
+    final sinceCutEnd = t - lastAttack.cutEndAt;
+    if (sinceCutEnd >= returnDuration) return OpponentMotion.atGuard;
+    return OpponentMotion(
+      from: PoseKey.cutEnd,
+      to: PoseKey.guard,
+      progress: sinceCutEnd.inMicroseconds / returnDuration.inMicroseconds,
+      side: lastAttack.side,
+    );
   }
 }
 

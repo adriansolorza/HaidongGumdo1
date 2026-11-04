@@ -34,9 +34,9 @@ flutter run --release -d <android-device-id>
 
 | #   | Paso                                                                          | Resultado esperado                                                                                                                                          | Referencia          |
 | --- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
-| 1   | Abrir la app                                                                  | Pantalla horizontal de selección con "Nivel 1 — Defensa — Calentamiento" y "Frontal — _Chochôn-se_ (초천세) → _Chungmyôn begi_ (정면베기)" ya seleccionados | FR-003, FR-004      |
-| 2   | Pulsar **Iniciar**                                                            | Cuenta 3, 2, 1; se escucha _Si-jak_; el sable pasa de blanco a amarillo                                                                                     | CA6, FR-009         |
-| 3   | Observar varios ataques                                                       | Sable azul → símbolo de sable a la **izquierda**; sable rojo → a la **derecha**. El corte se ve continuo, de arriba hacia el frente                         | CA2, FR-010, FR-015 |
+| 1   | Abrir la app                                                                  | Pantalla horizontal de selección con "Nivel 1 — Defensa — Calentamiento" y "Frontal — _Chayôn-se_ (자연세) → _Chochôn-se_ (초천세) → _Chungmyôn begi_ (정면베기)" ya seleccionados | FR-003, FR-004      |
+| 2   | Pulsar **Iniciar**                                                            | Cuenta 3, 2, 1 con el oponente en _Chayôn-se_ (punta hacia el usuario); se escucha _Si-jak_; el sable pasa de blanco a amarillo                            | CA6, FR-008, FR-009 |
+| 3   | Observar varios ataques                                                       | Sable azul → símbolo de sable a la **izquierda**; sable rojo → a la **derecha**. Con cada señal el oponente sube animado a _Chochôn-se_, se queda quieto arriba un instante, corta con un movimiento continuo y regresa animado a _Chayôn-se_ antes de la señal siguiente. El símbolo se ve como un sable visto desde arriba | CA2, FR-010, FR-015, FR-025a |
 | 4   | Contar los lados durante el ejercicio                                         | Nunca más de 5 seguidos al mismo lado                                                                                                                       | CA4                 |
 | 5   | Esperar el fin (30 s)                                                         | Si termina durante un ataque, el corte se completa y después suena _Guman_. El sable vuelve a blanco y aparecen **Repetir** y **Volver**                    | CA5, FR-013, FR-014 |
 | 6   | Iniciar y pulsar **Detener** durante el aviso                                 | Vuelve a la selección sin sonido                                                                                                                            | FR-021, SC-008      |
@@ -50,6 +50,7 @@ flutter run --release -d <android-device-id>
 1. Coloca la tablet o la TV y marca 3 m en el suelo.
 2. Al menos 10 observadores ven un ejercicio de 30 s cada uno y dicen en voz alta el color del sable y el lado de la señal en cada ataque. Una persona anota los aciertos.
 3. **Criterio**: al menos 2 de 3 observadores aciertan en al menos el 95 % de los ataques.
+4. *(Revisión 2026-11-03)* Pide también que digan el color del sable con el oponente en guardia (_Chayôn-se_, sable amarillo con la punta hacia ellos) y antes de *Si-jak* (blanco). Si no se distingue, se ajusta el tamaño de la punta vista de frente en `OpponentPainter` (plan.md D2).
 
 ## 4. Precisión de tiempos (SC-005)
 

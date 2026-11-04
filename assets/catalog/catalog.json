@@ -3,6 +3,7 @@
   "glossary": [
     { "id": "si_jak", "romanization": "Si-jak", "hangul": "시작", "meaning": "Voz de inicio" },
     { "id": "guman", "romanization": "Guman", "hangul": "그만", "meaning": "Voz de fin" },
+    { "id": "chayon_se", "romanization": "Chayôn-se", "hangul": "자연세", "meaning": "Postura natural o corta (guardia)" },
     { "id": "chochon_se", "romanization": "Chochôn-se", "hangul": "초천세", "meaning": "Postura con el sable sobre la cabeza" },
     { "id": "chungmyon_begi", "romanization": "Chungmyôn begi", "hangul": "정면베기", "meaning": "Corte frontal" }
   ],
@@ -15,8 +16,10 @@
       "id": "frontal",
       "order": 1,
       "name": "Frontal",
+      "guardTermId": "chayon_se",
       "stanceTermId": "chochon_se",
       "cutTermId": "chungmyon_begi",
+      "guard": { "hilt": [0, 0.05], "tip": [0, -0.3] },
       "cut": {
         "start": { "hilt": [0, -0.9], "tip": [0, -1.6] },
         "end": { "hilt": [0, -0.2], "tip": [0, -0.35] },

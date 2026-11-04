@@ -172,8 +172,10 @@ final class CatalogJsonMapper {
           'id',
           'order',
           'name',
+          'guardTermId',
           'stanceTermId',
           'cutTermId',
+          'guard',
           'cut',
         },
       );
@@ -188,12 +190,18 @@ final class CatalogJsonMapper {
           id: id,
           order: order,
           name: _string(json['name'], '$path.name'),
+          guardTermId: _termRef(
+            json['guardTermId'],
+            '$path.guardTermId',
+            termIds,
+          ),
           stanceTermId: _termRef(
             json['stanceTermId'],
             '$path.stanceTermId',
             termIds,
           ),
           cutTermId: _termRef(json['cutTermId'], '$path.cutTermId', termIds),
+          guard: _parsePose(json['guard'], '$path.guard'),
           cut: _parseCut(json['cut'], '$path.cut'),
         ),
       );

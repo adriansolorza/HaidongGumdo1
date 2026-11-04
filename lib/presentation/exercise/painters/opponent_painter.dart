@@ -1,3 +1,4 @@
+import 'dart:math' show pow, sqrt;
 import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/rendering.dart';
@@ -5,35 +6,35 @@ import 'package:flutter/rendering.dart';
 import '../../../domain/catalog/catalog.dart';
 import '../../../domain/exercise/attack.dart';
 import '../../../domain/exercise/exercise_snapshot.dart';
+import '../../../domain/exercise/opponent_motion.dart';
 import '../../theme.dart';
 
 /// Oponente virtual de frente, centrado, con el sable como trazo grueso
-/// (research R12). La postura y el corte salen de `pattern.cut` del catálogo.
+/// (research R12). Las posturas salen del patrón (`guard`, `cut.start`,
+/// `cut.end`) y el tramo actual, de `snapshot.motion` (plan.md D3).
 class OpponentPainter extends CustomPainter {
   const OpponentPainter({
     required this.saberColor,
-    required this.inStance,
+    required this.guard,
     required this.cut,
-    this.side,
-    this.cutProgress,
+    required this.motion,
   });
 
   final SaberColor saberColor;
-
-  /// `false` antes de *Si-jak* (reposo, sable bajo); `true` desde *Si-jak*.
-  final bool inStance;
-
+  final SaberPose guard;
   final CutMotion cut;
-  final Side? side;
+  final OpponentMotion motion;
 
-  /// En [0, 1] durante el corte; `null` fuera de él (postura fija).
-  final double? cutProgress;
-
-  /// Reposo genérico, igual para todos los patrones: sable bajo y en diagonal.
-  static const _restPose = SaberPose(
-    hilt: Point2(0.25, 0.15),
-    tip: Point2(0.9, 0.75),
-  );
+  /// Diámetro de la punta vista de frente, en unidades de la figura, según la
+  /// longitud visible de la hoja: crece al acortarse por el escorzo para que
+  /// el color se lea a 3 m (plan.md D2).
+  static double tipDiameter(double visibleLength) {
+    const full = 0.8; // hoja larga: sin punta
+    const short = 0.2; // hoja muy corta: punta máxima
+    const maxDiameter = 0.3;
+    final t = ((full - visibleLength) / (full - short)).clamp(0.0, 1.0);
+    return maxDiameter * t;
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -84,28 +85,51 @@ class OpponentPainter extends CustomPainter {
     }
 
     // Sable y manos.
-    _strokeWithOutline(canvas, hilt, tip, 0.09 * unit, _saberColor);
+    final bladeWidth = 0.09 * unit;
+    _strokeWithOutline(canvas, hilt, tip, bladeWidth, _saberColor);
     final handRadius = 0.1 * unit;
     canvas
       ..drawCircle(hilt, handRadius, body)
       ..drawCircle(hilt, handRadius, outline);
+
+    // Punta vista de frente cuando la hoja se ve corta. Más estrecha que la
+    // hoja no se vería (solo dejaría un anillo del contorno en la punta).
+    final diameter = tipDiameter(_length(pose)) * unit;
+    if (diameter > bladeWidth) {
+      canvas
+        ..drawCircle(tip, diameter / 2, Paint()..color = _saberColor)
+        ..drawCircle(tip, diameter / 2, outline);
+    }
   }
 
   SaberPose _currentPose() {
-    if (!inStance) return _restPose;
-    final progress = cutProgress;
-    final pose = progress == null
-        ? cut.start
-        : SaberPose(
-            hilt: _lerp(cut.start.hilt, cut.end.hilt, progress),
-            tip: _lerp(cut.start.tip, cut.end.tip, progress),
-          );
-    if (!(cut.mirroredBySide && side == Side.left)) return pose;
+    final from = _resolve(motion.from);
+    final to = _resolve(motion.to);
+    return SaberPose(
+      hilt: _lerp(from.hilt, to.hilt, motion.progress),
+      tip: _lerp(from.tip, to.tip, motion.progress),
+    );
+  }
+
+  /// La guardia es común a ambos lados; la postura de ataque y el fin del
+  /// corte se reflejan si el patrón lo pide (plan.md D5).
+  SaberPose _resolve(PoseKey key) {
+    final pose = switch (key) {
+      PoseKey.guard => guard,
+      PoseKey.stance => cut.start,
+      PoseKey.cutEnd => cut.end,
+    };
+    final mirrored =
+        key != PoseKey.guard && cut.mirroredBySide && motion.side == Side.left;
+    if (!mirrored) return pose;
     return SaberPose(
       hilt: Point2(-pose.hilt.x, pose.hilt.y),
       tip: Point2(-pose.tip.x, pose.tip.y),
     );
   }
+
+  static double _length(SaberPose pose) =>
+      sqrt(pow(pose.tip.x - pose.hilt.x, 2) + pow(pose.tip.y - pose.hilt.y, 2));
 
   static Point2 _lerp(Point2 a, Point2 b, double t) =>
       Point2(lerpDouble(a.x, b.x, t)!, lerpDouble(a.y, b.y, t)!);
@@ -147,8 +171,7 @@ class OpponentPainter extends CustomPainter {
   @override
   bool shouldRepaint(OpponentPainter oldDelegate) =>
       oldDelegate.saberColor != saberColor ||
-      oldDelegate.inStance != inStance ||
+      oldDelegate.guard != guard ||
       oldDelegate.cut != cut ||
-      oldDelegate.side != side ||
-      oldDelegate.cutProgress != cutProgress;
+      oldDelegate.motion != motion;
 }

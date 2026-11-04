@@ -15,6 +15,7 @@ Map<String, Object?> _validJson() => {
   'glossary': [
     {'id': 'si_jak', 'romanization': 'Si-jak', 'meaning': 'Voz de inicio'},
     {'id': 'guman', 'romanization': 'Guman', 'meaning': 'Voz de fin'},
+    {'id': 'guard', 'romanization': 'Guard', 'meaning': 'Guardia'},
     {'id': 'stance', 'romanization': 'Stance', 'meaning': 'Postura'},
     {'id': 'cut', 'romanization': 'Cut', 'meaning': 'Corte'},
   ],
@@ -25,8 +26,13 @@ Map<String, Object?> _validJson() => {
       'id': 'frontal',
       'order': 1,
       'name': 'Frontal',
+      'guardTermId': 'guard',
       'stanceTermId': 'stance',
       'cutTermId': 'cut',
+      'guard': {
+        'hilt': [0, 0.05],
+        'tip': [0, -0.3],
+      },
       'cut': {
         'start': {
           'hilt': [0, -0.9],
@@ -69,12 +75,13 @@ void main() {
 
     expect(catalog.levels, hasLength(1));
     expect(catalog.patterns, hasLength(1));
-    expect(catalog.glossary, hasLength(4));
+    expect(catalog.glossary, hasLength(5));
     expect(catalog.levels.single.responseTypes, [ResponseType.defense]);
 
     final expected = {
       'si_jak': ('Si-jak', '시작'),
       'guman': ('Guman', '그만'),
+      'chayon_se': ('Chayôn-se', '자연세'),
       'chochon_se': ('Chochôn-se', '초천세'),
       'chungmyon_begi': ('Chungmyôn begi', '정면베기'),
     };
@@ -86,6 +93,12 @@ void main() {
     }
 
     final pattern = catalog.patterns.single;
+    expect(pattern.guardTermId, 'chayon_se');
+    expect(catalog.term(pattern.guardTermId).romanization, 'Chayôn-se');
+    expect(
+      pattern.guard,
+      const SaberPose(hilt: Point2(0, 0.05), tip: Point2(0, -0.3)),
+    );
     expect(catalog.term(pattern.stanceTermId).romanization, 'Chochôn-se');
     expect(catalog.term(pattern.cutTermId).romanization, 'Chungmyôn begi');
     expect(catalog.voiceTerm(VoiceCommand.start).id, 'si_jak');
@@ -176,6 +189,44 @@ void main() {
       final json = _validJson();
       (_cut(json)['start']! as Map<String, Object?>)['tip'] = [0, -2.5];
       expect(() => _parse(json), _throwsCatalogException);
+    });
+  });
+
+  group('guardia del patrón (revisión 2026-11-03)', () {
+    test('guardTermId inexistente lanza CatalogException con la ruta', () {
+      final json = _validJson();
+      _pattern(json)['guardTermId'] = 'no_existe';
+      expect(
+        () => _parse(json),
+        throwsA(
+          isA<CatalogException>().having(
+            (e) => e.message,
+            'message',
+            contains('patterns[0].guardTermId'),
+          ),
+        ),
+      );
+    });
+
+    test('guard ausente lanza CatalogException', () {
+      final json = _validJson();
+      _pattern(json).remove('guard');
+      expect(() => _parse(json), _throwsCatalogException);
+    });
+
+    test('guard con un punto fuera de [-2, 2] lanza CatalogException', () {
+      final json = _validJson();
+      (_pattern(json)['guard']! as Map<String, Object?>)['tip'] = [0, -2.5];
+      expect(
+        () => _parse(json),
+        throwsA(
+          isA<CatalogException>().having(
+            (e) => e.message,
+            'message',
+            contains('patterns[0].guard.tip'),
+          ),
+        ),
+      );
     });
   });
 }

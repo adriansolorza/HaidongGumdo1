@@ -1,6 +1,7 @@
 import 'attack.dart';
 import 'exercise_event.dart';
 import 'exercise_status.dart';
+import 'opponent_motion.dart';
 import 'signal.dart';
 
 /// Fase del ataque dentro de `running` y `finishing`.
@@ -18,6 +19,7 @@ final class ExerciseSnapshot {
     this.currentAttack,
     this.signal,
     this.cutProgress,
+    required this.motion,
     required this.elapsed,
     required this.remaining,
   });
@@ -43,6 +45,9 @@ final class ExerciseSnapshot {
   /// En [0, 1], solo en `cut`.
   final double? cutProgress;
 
+  /// Postura del oponente: subida, arriba, corte, regreso o guardia quieta.
+  final OpponentMotion motion;
+
   /// Desde que se pulsó Iniciar.
   final Duration elapsed;
 
@@ -59,6 +64,7 @@ final class ExerciseSnapshot {
       other.currentAttack == currentAttack &&
       other.signal == signal &&
       other.cutProgress == cutProgress &&
+      other.motion == motion &&
       other.elapsed == elapsed &&
       other.remaining == remaining;
 
@@ -71,6 +77,7 @@ final class ExerciseSnapshot {
     currentAttack,
     signal,
     cutProgress,
+    motion,
     elapsed,
     remaining,
   );

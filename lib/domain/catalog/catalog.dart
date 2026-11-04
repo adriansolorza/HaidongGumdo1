@@ -122,22 +122,32 @@ final class CutMotion {
   int get hashCode => Object.hash(start, end, mirroredBySide);
 }
 
-/// Tipo de ataque del oponente virtual: postura + corte.
+/// Tipo de ataque del oponente virtual: guardia, postura de ataque y corte.
 final class Pattern {
   const Pattern({
     required this.id,
     required this.order,
     required this.name,
+    required this.guardTermId,
     required this.stanceTermId,
     required this.cutTermId,
+    required this.guard,
     required this.cut,
   });
 
   final String id;
   final int order;
   final String name;
+
+  /// Postura de guardia (reposo, guardia entre ataques y fin).
+  final String guardTermId;
+
+  /// Postura de ataque, desde la que sale el corte.
   final String stanceTermId;
   final String cutTermId;
+
+  /// Sable en la postura de guardia.
+  final SaberPose guard;
   final CutMotion cut;
 
   @override
@@ -146,13 +156,23 @@ final class Pattern {
       other.id == id &&
       other.order == order &&
       other.name == name &&
+      other.guardTermId == guardTermId &&
       other.stanceTermId == stanceTermId &&
       other.cutTermId == cutTermId &&
+      other.guard == guard &&
       other.cut == cut;
 
   @override
-  int get hashCode =>
-      Object.hash(id, order, name, stanceTermId, cutTermId, cut);
+  int get hashCode => Object.hash(
+    id,
+    order,
+    name,
+    guardTermId,
+    stanceTermId,
+    cutTermId,
+    guard,
+    cut,
+  );
 }
 
 /// Catálogo de solo lectura: única fuente de niveles, patrones y glosario (FR-001).

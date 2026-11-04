@@ -113,6 +113,7 @@ class _Lists extends ConsumerWidget {
                 ListTile(
                   title: Text(pattern.name),
                   subtitle: Text(
+                    '${_termLabel(catalog.term(pattern.guardTermId))} → '
                     '${_termLabel(catalog.term(pattern.stanceTermId))} → '
                     '${_termLabel(catalog.term(pattern.cutTermId))}',
                   ),

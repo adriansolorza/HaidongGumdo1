@@ -87,10 +87,9 @@ class _ExerciseScreenState extends ConsumerState<ExerciseScreen>
           CustomPaint(
             painter: OpponentPainter(
               saberColor: snapshot.saberColor,
-              inStance: _inStance(snapshot.status),
+              guard: widget.session.pattern.guard,
               cut: widget.session.pattern.cut,
-              side: snapshot.currentAttack?.side,
-              cutProgress: snapshot.cutProgress,
+              motion: snapshot.motion,
             ),
           ),
           if (snapshot.signal case final signal?)
@@ -158,10 +157,6 @@ class _ExerciseScreenState extends ConsumerState<ExerciseScreen>
       status == ExerciseStatus.countdown ||
       status == ExerciseStatus.running ||
       status == ExerciseStatus.finishing;
-
-  /// En reposo hasta *Si-jak*; después, la postura del patrón (FR-010a).
-  static bool _inStance(ExerciseStatus status) =>
-      status != ExerciseStatus.ready && status != ExerciseStatus.countdown;
 
   static int _seconds(Duration remaining) =>
       (remaining.inMilliseconds / 1000).ceil();

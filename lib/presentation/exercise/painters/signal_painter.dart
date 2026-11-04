@@ -23,7 +23,12 @@ class SignalPainter extends CustomPainter {
     }
   }
 
-  /// Sable vertical: hoja, guarda y empuñadura, relleno blanco con contorno.
+  /// Ancho de la hoja respecto al de la empuñadura (FR-025a, plan.md D6).
+  static const bladeToGripWidth = 0.75;
+
+  /// Sable vertical visto desde arriba, en planta (FR-025a): hoja estrecha
+  /// (se ve el lomo) que termina en punta, guarda vista de canto y empuñadura
+  /// más gruesa. Relleno blanco con contorno.
   void _paintDefenseSaber(Canvas canvas, Size size) {
     final height = size.height * _heightFraction;
     // Centro de la mitad izquierda o derecha de la pantalla, vista por el usuario.
@@ -32,18 +37,19 @@ class SignalPainter extends CustomPainter {
         : size.width * 0.82;
     final top = (size.height - height) / 2;
 
-    final bladeWidth = height * 0.07;
+    final gripWidth = height * 0.09;
+    final bladeWidth = gripWidth * bladeToGripWidth;
     final bladeHeight = height * 0.7;
-    final guardWidth = height * 0.28;
-    final guardHeight = height * 0.06;
-    final gripWidth = height * 0.06;
+    final tipLength = bladeWidth * 2;
+    final guardWidth = height * 0.26;
+    final guardHeight = height * 0.045;
 
     final blade = Path()
       ..moveTo(centerX, top)
-      ..lineTo(centerX + bladeWidth / 2, top + bladeWidth)
+      ..lineTo(centerX + bladeWidth / 2, top + tipLength)
       ..lineTo(centerX + bladeWidth / 2, top + bladeHeight)
       ..lineTo(centerX - bladeWidth / 2, top + bladeHeight)
-      ..lineTo(centerX - bladeWidth / 2, top + bladeWidth)
+      ..lineTo(centerX - bladeWidth / 2, top + tipLength)
       ..close();
     final guard = RRect.fromRectAndRadius(
       Rect.fromCenter(
