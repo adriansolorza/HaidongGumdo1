@@ -233,13 +233,13 @@ Un solo proyecto Flutter en la raíz del repositorio (plan.md, "Structure Decisi
 
 **Purpose**: Verificaciones de la constitution, documentación y validación manual.
 
-- [ ] T052 Verificar el Principio II ejecutando `grep -rE "package:flutter|package:flutter_riverpod|package:flutter_tts|package:wakelock_plus" lib/domain` (no debe devolver nada) y corregir cualquier import en `lib/domain/`
-- [ ] T053 Ejecutar `flutter analyze` (cero errores y advertencias) y `dart format --output=none --set-exit-if-changed lib test`; corregir lo que aparezca en `lib/` y `test/`
-- [ ] T054 [P] Buscar textos coreanos o de nivel/patrón escritos en el código con `grep -rnE "[가-힣]|Chochôn|Chungmyôn|Si-jak|Guman|Nivel 1|Frontal" lib` (solo se permiten en comentarios); moverlos al catálogo o a `lib/presentation/strings_es.dart` (Principios III y IX)
-- [ ] T055 [P] Reemplazar el `README.md` de plantilla por uno en español: propósito de la app, requisitos (Flutter 3.47.7 / Dart 3.13.5, Android), cómo ejecutar (`flutter run`), cómo probar (`flutter test test/domain`, `flutter test`), estructura por capas, cómo agregar un nivel o patrón editando `assets/catalog/catalog.json` y enlace a `docs/decisions/`
-- [ ] T056 Ejecutar `flutter test` completo y `flutter build apk --release`; confirmar ambos en verde
-- [ ] T057 Validar en un dispositivo Android real todos los pasos de `specs/001-motor-nivel1-frontal/quickstart.md` §2 (1–10), y anotar el resultado (fecha, dispositivo, versión de Android, ✅/❌ por paso) en una sección "Resultados de validación" al final de `specs/001-motor-nivel1-frontal/quickstart.md`
-- [ ] T058 Ejecutar la prueba manual de legibilidad a 3 m (quickstart.md §3, SC-007) y la de precisión de tiempos con video a ≥ 60 fps (quickstart.md §4, SC-005); anotar resultados en la misma sección de `specs/001-motor-nivel1-frontal/quickstart.md`. Si SC-007 falla, ajustar grosor de contorno o tamaño de la señal en `lib/presentation/theme.dart` y los painters, y repetir
+- [X] T052 Verificar el Principio II ejecutando `grep -rE "package:flutter|package:flutter_riverpod|package:flutter_tts|package:wakelock_plus" lib/domain` (no debe devolver nada) y corregir cualquier import en `lib/domain/`
+- [X] T053 Ejecutar `flutter analyze` (cero errores y advertencias) y `dart format --output=none --set-exit-if-changed lib test`; corregir lo que aparezca en `lib/` y `test/`
+- [X] T054 [P] Buscar textos coreanos o de nivel/patrón escritos en el código con `grep -rnE "[가-힣]|Chochôn|Chungmyôn|Si-jak|Guman|Nivel 1|Frontal" lib` (solo se permiten en comentarios); moverlos al catálogo o a `lib/presentation/strings_es.dart` (Principios III y IX)
+- [X] T055 [P] Reemplazar el `README.md` de plantilla por uno en español: propósito de la app, requisitos (Flutter 3.47.7 / Dart 3.13.5, Android), cómo ejecutar (`flutter run`), cómo probar (`flutter test test/domain`, `flutter test`), estructura por capas, cómo agregar un nivel o patrón editando `assets/catalog/catalog.json` y enlace a `docs/decisions/`
+- [X] T056 Ejecutar `flutter test` completo y `flutter build apk --release`; confirmar ambos en verde
+- [ ] T057 Validar en un dispositivo Android real todos los pasos de `specs/001-motor-nivel1-frontal/quickstart.md` §2 (1–10), y anotar el resultado (fecha, dispositivo, versión de Android, ✅/❌ por paso) en una sección "Resultados de validación" al final de `specs/001-motor-nivel1-frontal/quickstart.md`. Pospuesta: validación en dojang junto con el patrón transversal
+- [ ] T058 Ejecutar la prueba manual de legibilidad a 3 m (quickstart.md §3, SC-007) y la de precisión de tiempos con video a ≥ 60 fps (quickstart.md §4, SC-005); anotar resultados en la misma sección de `specs/001-motor-nivel1-frontal/quickstart.md`. Si SC-007 falla, ajustar grosor de contorno o tamaño de la señal en `lib/presentation/theme.dart` y los painters, y repetir. Pospuesta: validación en dojang junto con el patrón transversal
 
 ---
 

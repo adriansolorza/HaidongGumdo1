@@ -1,6 +1,6 @@
 # Brief — App de entrenamiento de reacción para Haidong Gumdo (v1, rev. 3)
 
-> Documento de intención. Describe **qué** y **por qué**, no **cómo**. La tecnología y la arquitectura se deciden en la *constitution* y en el *plan*.
+> Documento de intención. Describe **qué** y **por qué**, no **cómo**. La tecnología y la arquitectura se deciden en la _constitution_ y en el _plan_.
 
 ## Problemas que resuelve
 
@@ -14,19 +14,19 @@
 
 ## Glosario
 
-| Término | Significado en la app |
-|---|---|
-| *Si-jak* (시작) | Voz de inicio |
-| *Guman* (그만) | Voz de fin |
-| *Chayôn-se* (자연세, 自然勢) | Postura natural o corta (guardia): sable al frente, manos a la altura del ombligo y punta dirigida hacia el oponente |
-| *Chochôn-se* (초천세) | Postura con el sable sobre la cabeza |
-| *Sodose* | Postura con el sable a un costado del cuerpo |
-| *Chungmyôn begi* (정면베기) | Corte frontal |
-| *Hwengdan ilgôm begi* (횡단일검베기) | Corte transversal |
-| Patrón | Tipo de ataque del oponente |
-| Nivel | Tipo de respuesta que entrena el usuario |
-| Tiempo de aviso | Tiempo desde que aparece la señal hasta que inicia el corte (ventana de reacción) |
-| Velocidad del corte | Duración del corte del oponente |
+| Término                              | Significado en la app                                                                                                |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| _Si-jak_ (시작)                      | Voz de inicio                                                                                                        |
+| _Guman_ (그만)                       | Voz de fin                                                                                                           |
+| _Chayôn-se_ (자연세, 自然勢)         | Postura natural o corta (guardia): sable al frente, manos a la altura del ombligo y punta dirigida hacia el oponente |
+| _Chochôn-se_ (초천세)                | Postura con el sable sobre la cabeza                                                                                 |
+| _Sodose_                             | Postura con el sable a un costado del cuerpo                                                                         |
+| _Chungmyôn begi_ (정면베기)          | Corte frontal                                                                                                        |
+| _Hwengdan ilgôm begi_ (횡단일검베기) | Corte transversal                                                                                                    |
+| Patrón                               | Tipo de ataque del oponente                                                                                          |
+| Nivel                                | Tipo de respuesta que entrena el usuario                                                                             |
+| Tiempo de aviso                      | Tiempo desde que aparece la señal hasta que inicia el corte (ventana de reacción)                                    |
+| Velocidad del corte                  | Duración del corte del oponente                                                                                      |
 
 ## Pantalla y señales
 
@@ -42,21 +42,21 @@
 
 ## Patrones v1
 
-| Patrón | Postura | Corte |
-|---|---|---|
-| Frontal | *Chochôn-se* | *Chungmyôn begi* |
-| Transversal | *Sodose* | *Hwengdan ilgôm begi* |
+| Patrón      | Postura      | Corte                 |
+| ----------- | ------------ | --------------------- |
+| Frontal     | _Chochôn-se_ | _Chungmyôn begi_      |
+| Transversal | _Sodose_     | _Hwengdan ilgôm begi_ |
 
 La postura **no revela** el lado del ataque. El corte transversal puede salir hacia cualquier lado, incluso con la rodilla contraria.
 
 ## Niveles v1
 
-| Nivel | Respuesta | Propósito |
-|---|---|---|
-| 1 | Defensa | Calentamiento |
-| 2 | Evasión lateral | Calentamiento / base |
-| 3 | Defensa o evasión lateral, mezcladas al azar | Decisión bajo presión |
-| 4 | Evasión lateral + corte del usuario (contraataque) | Combate |
+| Nivel | Respuesta                                          | Propósito             |
+| ----- | -------------------------------------------------- | --------------------- |
+| 1     | Defensa                                            | Calentamiento         |
+| 2     | Evasión lateral                                    | Calentamiento / base  |
+| 3     | Defensa o evasión lateral, mezcladas al azar       | Decisión bajo presión |
+| 4     | Evasión lateral + corte del usuario (contraataque) | Combate               |
 
 - El usuario elige libremente nivel y patrón, sin desbloqueos. Los atletas pueden saltarse el calentamiento.
 - Una sesión es la combinación **Nivel × Patrón**.
@@ -64,13 +64,13 @@ La postura **no revela** el lado del ataque. El corte transversal puede salir ha
 ## Flujo del ejercicio
 
 1. El usuario elige nivel, patrón y, si quiere, ajusta los parámetros.
-2. Cuenta regresiva en pantalla: 3, 2, 1, voz *Si-jak*. El sable pasa a amarillo.
+2. Cuenta regresiva en pantalla: 3, 2, 1, voz _Si-jak_. El sable pasa a amarillo.
 3. **Ciclo de ataque**, que se repite hasta que se cumple la duración:
    1. El oponente toma la postura del patrón.
    2. El sable cambia a azul o rojo (lado aleatorio) y aparece la señal del nivel.
    3. Pasado el tiempo de aviso, el oponente ejecuta el corte.
    4. El sable regresa a amarillo y, tras un intervalo aleatorio, viene el siguiente ataque.
-4. Al cumplirse la duración suena *Guman*. Si hay un corte en curso, **se termina primero**, como en torneo.
+4. Al cumplirse la duración suena _Guman_. Si hay un corte en curso, **se termina primero**, como en torneo.
 
 ## Reglas
 
@@ -80,13 +80,13 @@ La postura **no revela** el lado del ataque. El corte transversal puede salir ha
 
 ## Parámetros configurables
 
-| Parámetro | Rango | Por defecto |
-|---|---|---|
-| Duración del ejercicio | — | 30 s |
-| Máximo de repeticiones seguidas (N) | — | 5 |
-| Tiempo de aviso | ⅓ s – 1 s | *pendiente* |
-| Velocidad del corte | *pendiente* | *pendiente* |
-| Intervalo entre ataques | 0.5 s – 5 s | *pendiente* |
+| Parámetro                           | Rango       | Por defecto |
+| ----------------------------------- | ----------- | ----------- |
+| Duración del ejercicio              | —           | 30 s        |
+| Máximo de repeticiones seguidas (N) | —           | 5           |
+| Tiempo de aviso                     | ⅓ s – 1 s   | _pendiente_ |
+| Velocidad del corte                 | _pendiente_ | _pendiente_ |
+| Intervalo entre ataques             | 0.5 s – 5 s | _pendiente_ |
 
 Referencia del tiempo de aviso: 1 s (decir "mil uno") es lento para un corte real, pero adecuado para que una cinta blanca empiece a desarrollar reacción. ⅓ s sigue siendo más lento que un corte real, pero deja tiempo suficiente para reaccionar sin volverse demasiado difícil. Bajar estos tiempos es lo que mantiene el reto para practicantes avanzados.
 
@@ -98,11 +98,12 @@ Referencia del tiempo de aviso: 1 s (decir "mil uno") es lento para un corte rea
 ## Entrega de la v1 en ciclos SDD
 
 1. **Spec 001:** motor del ejercicio + Nivel 1 + Patrón frontal, con parámetros por defecto.
-2. **Spec 002:** Nivel 2 (señal de evasión).
-3. **Spec 003:** Patrón transversal.
-4. **Spec 004:** configuración de parámetros e invariante de tiempos.
-5. **Spec 005:** Nivel 3.
-6. **Spec 006:** Nivel 4.
+2. **Spec 002:** Patrón transversal.
+3. **Spec 003:** Nivel 2 (señal de evasión).
+4. **Spec 004:** Experiencia visual: que enamore.
+5. **Spec 005:** configuración de parámetros e invariante de tiempos.
+6. **Spec 006:** Nivel 3.
+7. **Spec 007:** Nivel 4.
 
 ## Visión a futuro (fuera de la v1)
 
