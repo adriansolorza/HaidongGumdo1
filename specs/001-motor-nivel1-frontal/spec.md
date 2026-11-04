@@ -32,6 +32,7 @@ Esta spec entrega el primer incremento usable: un ejercicio completo de **Nivel 
 | --------------------------- | -------------------------------------------------------------------------------------------------- |
 | _Si-jak_ (시작)             | Voz de inicio                                                                                      |
 | _Guman_ (그만)              | Voz de fin                                                                                         |
+| _Chayôn-se_ (자연세, 自然勢) | Postura natural o corta (guardia): sable al frente, manos a la altura del ombligo y punta dirigida hacia el oponente                    |
 | _Chochôn-se_ (초천세)       | Postura con el sable sobre la cabeza                                                               |
 | _Chungmyôn begi_ (정면베기) | Corte frontal                                                                                      |
 | Oponente virtual            | Figura de un competidor de Haidong Gumdo dentro de la app                                          |
@@ -56,13 +57,24 @@ _Sodose_ y _Hwengdan ilgôm begi_ (횡단일검베기) pertenecen al Patrón tra
 - Q: ¿Las voces _Si-jak_ y _Guman_ son grabadas o sintéticas? → A: Voz sintética del dispositivo, en coreano.
 - Q: Si el dispositivo no tiene voz sintética en coreano, ¿qué hace la app? → A: Usa la voz sintética predeterminada del dispositivo (de otro idioma) para pronunciar _Si-jak_ y _Guman_.
 
+### Session 2026-11-03 (corrección del responsable tras probar la US1)
+
+- Q: ¿De qué postura parte el oponente virtual? → A: De la postura natural _Chayôn-se_ (자연세, 自然勢), no de _Chochôn-se_. Se agrega al glosario.
+- Q: ¿Cuándo sube el oponente a _Chochôn-se_? → A: Al mismo tiempo que aparecen el color y la señal; la subida ocurre dentro del tiempo de aviso.
+- Q: ¿Se animan los cambios de postura? → A: Sí, tanto la subida a _Chochôn-se_ como el regreso a _Chayôn-se_. **Reemplaza** la respuesta de la sesión 2026-10-28 ("solo el corte se anima").
+- Q: ¿Cómo debe verse el sable? → A: Visto de arriba hacia abajo: hoja un poco más delgada que la actual y empuñadura un poco más gruesa, sin perder la legibilidad del color a 3 m.
+- Q: ¿Cuánto del tiempo de aviso ocupa la subida de _Chayôn-se_ a _Chochôn-se_? → A: La primera mitad del tiempo de aviso (0.35 s por defecto); el oponente se mantiene en _Chochôn-se_ la otra mitad, hasta el corte.
+- Q: ¿Cuánto dura el regreso animado desde el final del corte a _Chayôn-se_? → A: 0.5 s, igual al margen del piso del intervalo; con el intervalo mínimo, la señal siguiente aparece justo cuando el oponente llega a _Chayôn-se_.
+- Q: ¿A qué sable se aplica la nueva forma (hoja más delgada, empuñadura más gruesa)? → A: Solo al símbolo de sable de la señal de defensa; el sable del oponente no cambia.
+- Q: En el símbolo de la señal, ¿qué significa "visto de arriba hacia abajo"? → A: Visto desde arriba, en planta: se ve el lomo de la hoja, no el filo.
+
 ## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Ejercicio de defensa ante el corte frontal (Priority: P1)
 
 Como practicante de combate de Haidong Gumdo, quiero reaccionar defendiendo con el sable ante cortes frontales de un oponente virtual, para calentar (Nivel 1).
 
-El usuario abre la app y ve la pantalla de selección con el Nivel 1 y el Patrón frontal (las únicas opciones del catálogo por ahora) ya elegidos. Pulsa **Iniciar**. Aparece la cuenta regresiva 3, 2, 1 y se escucha _Si-jak_; el sable del oponente pasa de blanco a amarillo. El oponente toma la postura _Chochôn-se_. En cada ataque el sable cambia a azul o rojo y aparece el símbolo de sable del lado en que el usuario debe defender. Pasado el tiempo de aviso, el oponente ejecuta _Chungmyôn begi_. El sable vuelve a amarillo y, tras el intervalo, llega el siguiente ataque. A los 30 s suena _Guman_: si hay un ataque en curso, se termina primero.
+El usuario abre la app y ve la pantalla de selección con el Nivel 1 y el Patrón frontal (las únicas opciones del catálogo por ahora) ya elegidos. Pulsa **Iniciar**. Aparece la cuenta regresiva 3, 2, 1 y se escucha _Si-jak_; el sable del oponente pasa de blanco a amarillo. El oponente está en guardia en _Chayôn-se_. En cada ataque el sable cambia a azul o rojo, aparece el símbolo de sable del lado en que el usuario debe defender y el oponente sube a _Chochôn-se_. Pasado el tiempo de aviso, el oponente ejecuta _Chungmyôn begi_. El sable vuelve a amarillo y, tras el intervalo, llega el siguiente ataque. A los 30 s suena _Guman_: si hay un ataque en curso, se termina primero.
 
 **Why this priority**: Es el flujo completo mínimo que aporta valor de entrenamiento y valida el motor (tiempos, aleatoriedad, señales, inicio y fin) sobre el que se apoyan todas las specs siguientes.
 
@@ -73,7 +85,7 @@ El usuario abre la app y ve la pantalla de selección con el Nivel 1 y el Patró
 1. **Given** la pantalla de selección, **When** el usuario pulsa Iniciar, **Then** ve la cuenta 3, 2, 1 en pantalla, escucha _Si-jak_ antes del primer ataque y el sable pasa de blanco a amarillo. _(CA6)_
 2. **Given** un ejercicio de Nivel 1 en curso, **When** el sable cambia a azul, **Then** aparece un símbolo de sable en el lado **izquierdo** de la pantalla. _(CA2)_
 3. **Given** un ejercicio de Nivel 1 en curso, **When** el sable cambia a rojo, **Then** aparece un símbolo de sable en el lado **derecho** de la pantalla.
-4. **Given** un ejercicio con el Patrón frontal, **When** el oponente se prepara para atacar, **Then** toma la postura _Chochôn-se_, que no revela el lado del ataque, y el corte ejecutado es _Chungmyôn begi_.
+4. **Given** un ejercicio con el Patrón frontal, **When** el oponente está en guardia, **Then** está en _Chayôn-se_; **When** aparece la señal, **Then** sube con un movimiento animado a _Chochôn-se_, que no revela el lado del ataque, y el corte ejecutado es _Chungmyôn begi_.
 5. **Given** una señal que acaba de aparecer, **When** pasa el tiempo de aviso (0.7 s), **Then** el oponente inicia el corte, que se ve como un movimiento continuo y dura la velocidad del corte (0.5 s). Al terminar el corte, el sable vuelve a amarillo y la señal desaparece.
 6. **Given** el inicio de un corte, **When** se mide el tiempo hasta la siguiente señal, **Then** está entre 1.0 s y 2.5 s, ambos incluidos, y varía de un ataque a otro.
 7. **Given** N = 5, **When** se observa cualquier ejercicio, **Then** nunca aparecen 6 ataques seguidos al mismo lado. _(CA4)_
@@ -104,6 +116,7 @@ Como practicante, quiero que el ejercicio se cancele de forma limpia si lo deten
 
 - **Fin del tiempo durante el aviso.** Si la duración se cumple cuando la señal ya apareció pero el corte aún no empieza, el ataque se completa (aviso + corte) y después suena _Guman_. Una señal mostrada siempre termina en su corte.
 - **Fin del tiempo durante el descanso.** Si la duración se cumple entre el fin de un corte y la siguiente señal, suena _Guman_ de inmediato y no aparece la señal siguiente.
+- **Fin del ejercicio al terminar un corte.** Si _Guman_ suena al terminar el último corte (la duración se cumplió durante ese ataque), el oponente aparece en _Chayôn-se_ con el sable blanco, sin animar el regreso: el ejercicio ya terminó.
 - **Racha máxima alcanzada.** Con N = 5, si los últimos 5 ataques fueron al mismo lado, el siguiente es obligatoriamente al lado contrario. Con N = 1 los lados se alternan siempre.
 - **Primer ataque.** No hay corte previo desde el cual medir el intervalo; la primera señal aparece tras una espera sorteada en el mismo rango (1.0 s a 2.5 s) contada desde _Si-jak_.
 - **Repetición de ejercicios.** Dos ejercicios con la misma configuración no producen necesariamente la misma secuencia de lados. El conteo de rachas se reinicia en cada ejercicio.
@@ -118,7 +131,7 @@ Como practicante, quiero que el ejercicio se cancele de forma limpia si lo deten
 
 **Catálogo (datos)**
 
-- **FR-001**: Los niveles y patrones disponibles MUST provenir de un catálogo de datos de solo lectura incluido en la app. En esta spec, el catálogo contiene el **Nivel 1 (Defensa, calentamiento)** y el **Patrón frontal (_Chochôn-se_ → _Chungmyôn begi_)**.
+- **FR-001**: Los niveles y patrones disponibles MUST provenir de un catálogo de datos de solo lectura incluido en la app. En esta spec, el catálogo contiene el **Nivel 1 (Defensa, calentamiento)** y el **Patrón frontal (guardia en _Chayôn-se_, ataque desde _Chochôn-se_ con _Chungmyôn begi_)**.
 - **FR-002**: El catálogo MUST describir, para cada nivel, el tipo de respuesta y la señal asociada y, para cada patrón, su postura y su corte. Agregar un nivel o un patrón que use tipos de señal ya existentes MUST requerir solo agregar datos al catálogo, sin cambiar la lógica del ejercicio ni las pantallas.
 - **FR-003**: Los términos coreanos mostrados MUST coincidir exactamente con el glosario (romanización + hangul).
 
@@ -143,14 +156,14 @@ Como practicante, quiero que el ejercicio se cancele de forma limpia si lo deten
 
 **Flujo del ejercicio**
 
-- **FR-008**: Antes de iniciar, el oponente virtual MUST estar en reposo, con el sable **blanco**.
+- **FR-008**: Antes de iniciar, el oponente virtual MUST estar en reposo, en _Chayôn-se_, con el sable **blanco**.
 - **FR-009**: Al pulsar Iniciar, el sistema MUST mostrar una cuenta regresiva 3, 2, 1 (un número por segundo) y reproducir la voz _Si-jak_ al terminarla. Con _Si-jak_, el sable MUST pasar a **amarillo** (en guardia) y empieza a correr la duración del ejercicio.
 - **FR-010**: Cada ataque MUST seguir este ciclo:
-  1. El oponente virtual está en la postura del patrón (_Chochôn-se_) con el sable amarillo. La postura no revela el lado.
-  2. El sable cambia a **azul** (respuesta hacia la derecha del usuario) o **rojo** (respuesta hacia la izquierda del usuario) y aparece la señal del nivel.
+  1. El oponente virtual está en guardia en _Chayôn-se_ con el sable amarillo.
+  2. El sable cambia a **azul** (respuesta hacia la derecha del usuario) o **rojo** (respuesta hacia la izquierda del usuario) y aparece la señal del nivel. **Al mismo tiempo**, el oponente virtual empieza a subir, con un movimiento animado, a la postura de ataque del patrón (_Chochôn-se_), que no revela el lado. La subida MUST durar la **primera mitad** del tiempo de aviso (0.35 s con el valor por defecto); durante la segunda mitad el oponente MUST mantenerse quieto en _Chochôn-se_ hasta que empiece el corte.
   3. Pasado el tiempo de aviso, el oponente virtual ejecuta el corte del patrón (_Chungmyôn begi_) como un **movimiento animado continuo** desde la postura hasta el final del corte, con duración exactamente igual a la velocidad del corte.
-  4. Al terminar el corte, el sable vuelve a amarillo, la señal desaparece y el oponente regresa **de inmediato** (sin animación) a la postura del patrón.
-- **FR-010a**: Los cambios de postura (reposo → postura del patrón al iniciar, y fin del corte → postura) MUST ser instantáneos; solo el corte se anima.
+  4. Al terminar el corte, el sable vuelve a amarillo, la señal desaparece y el oponente regresa a _Chayôn-se_ con un **movimiento animado** de **0.5 s** (el margen del piso del intervalo), así que siempre termina a más tardar cuando aparece la señal siguiente. Con el intervalo mínimo, la señal siguiente aparece justo al llegar a _Chayôn-se_. Al terminar el ejercicio no se anima el regreso (ver Edge Cases).
+- **FR-010a**: La subida a la postura de ataque, el corte y el regreso a _Chayôn-se_ MUST verse como movimientos animados continuos. El cambio de reposo a guardia al iniciar no requiere animación (el oponente ya está en _Chayôn-se_). Los tiempos del ejercicio (aviso, corte, intervalo) no cambian por estas animaciones.
 - **FR-011**: El tiempo entre el **inicio del corte** de un ataque y la **aparición de la señal** del siguiente MUST sortearse, en cada ataque, de forma aleatoria entre el piso del intervalo y el intervalo configurado, ambos incluidos. Con los valores por defecto, entre 1.0 s y 2.5 s.
 - **FR-012**: La primera señal del ejercicio MUST aparecer tras una espera sorteada en el mismo rango que FR-011, contada desde _Si-jak_.
 - **FR-013**: Cuando se cumple la duración, el sistema MUST dejar de generar ataques nuevos. Si hay un ataque en curso (señal visible o corte en ejecución), MUST completarlo; después MUST reproducir _Guman_. Si no hay ataque en curso, MUST reproducir _Guman_ de inmediato.
@@ -178,6 +191,7 @@ Como practicante, quiero que el ejercicio se cancele de forma limpia si lo deten
 
 - **FR-024**: La pantalla del ejercicio MUST usar orientación horizontal de preferencia, con el oponente virtual al centro.
 - **FR-025**: El oponente virtual, el sable y las señales MUST tener contornos definidos y alto contraste, y MUST distinguirse con claridad a **3 m** de la pantalla. _(CA8)_
+- **FR-025a**: El **símbolo de sable de la señal de defensa** MUST representarse visto desde arriba, en planta (se ve el lomo de la hoja, no el filo), y reconocerse como sable: hoja recta un poco más delgada que la empuñadura, y empuñadura un poco más gruesa que la hoja. El símbolo MUST seguir cumpliendo FR-025. El sable que sostiene el oponente virtual no cambia de forma.
 - **FR-026**: Toda la interfaz MUST estar en español.
 - **FR-027**: La app MUST funcionar en teléfonos y tablets Android. Cuando la imagen se envía a una TV, la pantalla del ejercicio MUST seguir cumpliendo FR-024 y FR-025.
 - **FR-028**: La pantalla del dispositivo MUST NOT apagarse por inactividad mientras el ejercicio está en curso.
@@ -191,7 +205,7 @@ Como practicante, quiero que el ejercicio se cancele de forma limpia si lo deten
 
 - **Catálogo**: conjunto de solo lectura de niveles y patrones disponibles. Es la única fuente de las opciones de la pantalla de selección.
 - **Nivel**: identificador, nombre, propósito (p. ej. calentamiento), tipo de respuesta (defensa en esta spec) y señal asociada.
-- **Patrón**: identificador, nombre, postura (_Chochôn-se_) y corte (_Chungmyôn begi_). Indica si el corte puede salir hacia ambos lados.
+- **Patrón**: identificador, nombre, postura de guardia (_Chayôn-se_), postura de ataque (_Chochôn-se_) y corte (_Chungmyôn begi_). Indica si el corte puede salir hacia ambos lados.
 - **Sesión**: combinación de un nivel y un patrón elegida por el usuario.
 - **Parámetros del ejercicio**: duración, N, tiempo de aviso, velocidad del corte e intervalo configurado. Cumplen rangos e invariante (FR-006, FR-007).
 - **Ejercicio**: una ejecución de una sesión con unos parámetros. Tiene un estado (FR-020), el tiempo transcurrido y el historial de lados para aplicar N.
@@ -217,7 +231,7 @@ Como practicante, quiero que el ejercicio se cancele de forma limpia si lo deten
 - **Alcance**: solo Nivel 1 y Patrón frontal con parámetros por defecto. Quedan fuera los niveles 2–4, el Patrón transversal, la edición y el guardado de parámetros (incluidos CL1 y CA7), y la pausa y reanudación. Todo se especifica en specs posteriores.
 - La duración del ejercicio empieza a contar con _Si-jak_, no con la cuenta regresiva.
 - La cuenta regresiva es solo visual (3, 2, 1, un número por segundo); la única voz de inicio es _Si-jak_.
-- El oponente regresa a la postura del patrón al terminar cada corte y la mantiene durante el descanso en amarillo.
+- El oponente regresa a _Chayôn-se_ al terminar cada corte y la mantiene durante el descanso en amarillo.
 - Hay un botón Detener durante el ejercicio, necesario para cancelar sin salir de la app.
 - Varios usuarios pueden entrenar a la vez frente a la misma pantalla. La app no distingue usuarios ni detecta sus respuestas.
 - **Plataforma**: solo Android en esta entrega. Para enviar la imagen a la TV se usa la función de pantalla compartida del sistema o del dispositivo; la app no la implementa. iOS, escritorio y web quedan fuera.

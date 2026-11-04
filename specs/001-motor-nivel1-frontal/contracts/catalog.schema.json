@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "haidonggumdo/catalog.schema.json",
   "title": "Catálogo de niveles, patrones y glosario",
-  "description": "Asset de solo lectura en assets/catalog/catalog.json. Las referencias a términos (stanceTermId, cutTermId y voiceCommands) deben existir en glossary; se validan al cargar.",
+  "description": "Asset de solo lectura en assets/catalog/catalog.json. Las referencias a términos (guardTermId, stanceTermId, cutTermId y voiceCommands) deben existir en glossary; se validan al cargar.",
   "type": "object",
   "required": ["version", "glossary", "voiceCommands", "levels", "patterns"],
   "additionalProperties": false,
@@ -77,14 +77,16 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["id", "order", "name", "stanceTermId", "cutTermId", "cut"],
+        "required": ["id", "order", "name", "guardTermId", "stanceTermId", "cutTermId", "guard", "cut"],
         "additionalProperties": false,
         "properties": {
           "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
           "order": { "type": "integer", "minimum": 1 },
           "name": { "type": "string", "minLength": 1 },
-          "stanceTermId": { "type": "string" },
+          "guardTermId": { "type": "string", "description": "Postura de guardia (Chayôn-se en el Patrón frontal)" },
+          "stanceTermId": { "type": "string", "description": "Postura de ataque (Chochôn-se en el Patrón frontal)" },
           "cutTermId": { "type": "string" },
+          "guard": { "$ref": "#/$defs/saberPose", "description": "Sable en la postura de guardia: reposo antes de Si-jak, guardia entre ataques y fin" },
           "cut": {
             "type": "object",
             "required": ["start", "end", "mirroredBySide"],
@@ -105,6 +107,7 @@
       "glossary": [
         { "id": "si_jak", "romanization": "Si-jak", "hangul": "시작", "meaning": "Voz de inicio" },
         { "id": "guman", "romanization": "Guman", "hangul": "그만", "meaning": "Voz de fin" },
+        { "id": "chayon_se", "romanization": "Chayôn-se", "hangul": "자연세", "meaning": "Postura natural o corta (guardia)" },
         { "id": "chochon_se", "romanization": "Chochôn-se", "hangul": "초천세", "meaning": "Postura con el sable sobre la cabeza" },
         { "id": "chungmyon_begi", "romanization": "Chungmyôn begi", "hangul": "정면베기", "meaning": "Corte frontal" }
       ],
@@ -113,7 +116,7 @@
         { "id": "level_1", "order": 1, "name": "Nivel 1", "responseLabel": "Defensa", "purpose": "Calentamiento", "responseTypes": ["defense"] }
       ],
       "patterns": [
-        { "id": "frontal", "order": 1, "name": "Frontal", "stanceTermId": "chochon_se", "cutTermId": "chungmyon_begi", "cut": { "start": { "hilt": [0, -0.9], "tip": [0, -1.6] }, "end": { "hilt": [0, -0.2], "tip": [0, -0.35] }, "mirroredBySide": false } }
+        { "id": "frontal", "order": 1, "name": "Frontal", "guardTermId": "chayon_se", "stanceTermId": "chochon_se", "cutTermId": "chungmyon_begi", "guard": { "hilt": [0, 0.05], "tip": [0, -0.3] }, "cut": { "start": { "hilt": [0, -0.9], "tip": [0, -1.6] }, "end": { "hilt": [0, -0.2], "tip": [0, -0.35] }, "mirroredBySide": false } }
       ]
     }
   ]
