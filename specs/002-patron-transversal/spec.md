@@ -141,7 +141,7 @@ Como practicante, quiero elegir en la pantalla de selección entre el Patrón fr
 - **SC-004**: En una prueba a 3 m que mezcla ejercicios frontales y transversales, al menos 2 de cada 3 observadores identifican qué patrón está ejecutando el oponente en al menos el 95 % de los ataques.
 - **SC-005**: El tiempo de aviso, la duración del corte, el intervalo y el instante de _Guman_ con el Patrón transversal cumplen los mismos márgenes que la Spec 001 (desviación menor a 50 ms; _Guman_ nunca antes de cumplirse la duración y como máximo 1.2 s después con los valores por defecto).
 - **SC-006**: Las comprobaciones automáticas de aleatoriedad y de N de la Spec 001 (SC-003 y SC-004) dan los mismos resultados con el Patrón transversal.
-- **SC-007**: Agregar el Patrón transversal no modifica la lógica del ejercicio ni las pantallas: el cambio se limita al catálogo, y todas las pruebas de la Spec 001 siguen pasando sin cambiar sus expectativas.
+- **SC-007**: Agregar el Patrón transversal no modifica la lógica del ejercicio ni las pantallas: el cambio se limita al catálogo, y todas las pruebas de la Spec 001 siguen pasando sin cambiar sus expectativas sobre la lógica del ejercicio.
 
 ## Assumptions
 
