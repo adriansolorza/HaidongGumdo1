@@ -6,6 +6,7 @@ import 'package:haidonggumdo/domain/exercise/exercise_parameters.dart';
 import 'package:haidonggumdo/domain/exercise/exercise_snapshot.dart';
 import 'package:haidonggumdo/domain/exercise/exercise_status.dart';
 import 'package:haidonggumdo/domain/exercise/opponent_motion.dart';
+import 'package:haidonggumdo/domain/exercise/session.dart';
 import 'package:haidonggumdo/domain/ports/random_source.dart';
 
 import 'fakes/manual_clock.dart';
@@ -31,12 +32,15 @@ ScriptedRandomSource _script({
   ],
 ]);
 
-ExerciseEngine _engine(RandomSource random, {ExerciseParameters? parameters}) =>
-    ExerciseEngine(
-      session: testSession(),
-      parameters: parameters ?? ExerciseParameters.defaults(),
-      random: random,
-    )..start();
+ExerciseEngine _engine(
+  RandomSource random, {
+  ExerciseParameters? parameters,
+  Session? session,
+}) => ExerciseEngine(
+  session: session ?? testSession(),
+  parameters: parameters ?? ExerciseParameters.defaults(),
+  random: random,
+)..start();
 
 OpponentMotion _motionAt(ExerciseEngine engine, num ms) =>
     engine.advanceTo(_ms(ms)).snapshot.motion;
@@ -245,5 +249,78 @@ void main() {
       engine.advanceTo(clock.elapsed).snapshot.motion,
       _m(PoseKey.guard, PoseKey.stance, 0.5, Side.right),
     );
+  });
+
+  group('Patrón transversal (Spec 002)', () {
+    // Mismos tramos que el frontal (FR-007, FR-010): señal en 4.0 s; subida
+    // hasta 4.35 s; barrido [4.7 s, 5.2 s), frente al oponente en 4.95 s;
+    // regreso hasta 5.7 s; la señal siguiente, con sorteo 1500, en 7.2 s.
+    late ExerciseEngine engine;
+
+    setUp(
+      () => engine = _engine(
+        _script(first: 0, intervals: [1500]),
+        session: testTransversalSession(),
+      ),
+    );
+
+    test('subida guard → stance (Sodose) en la primera mitad del aviso', () {
+      expect(
+        _motionAt(engine, 4000),
+        _m(PoseKey.guard, PoseKey.stance, 0, Side.right),
+      );
+      expect(
+        _motionAt(engine, 4175),
+        _m(PoseKey.guard, PoseKey.stance, 0.5, Side.right),
+      );
+    });
+
+    test('quieto en Sodose la segunda mitad, hasta el barrido', () {
+      expect(
+        _motionAt(engine, 4350),
+        _m(PoseKey.stance, PoseKey.stance, 0, Side.right),
+      );
+      expect(
+        _motionAt(engine, 4699),
+        _m(PoseKey.stance, PoseKey.stance, 0, Side.right),
+      );
+    });
+
+    test(
+      'barrido stance → cutEnd con progress == cutProgress; frente a la mitad',
+      () {
+        for (final ms in [4700, 4950, 5199]) {
+          final snapshot = engine.advanceTo(_ms(ms)).snapshot;
+          expect(snapshot.motion.from, PoseKey.stance);
+          expect(snapshot.motion.to, PoseKey.cutEnd);
+          expect(snapshot.motion.progress, snapshot.cutProgress);
+          expect(snapshot.motion.side, Side.right);
+        }
+      },
+    );
+
+    test('el barrido pasa frente al oponente a la mitad (0.25 s)', () {
+      expect(_motionAt(engine, 4950).progress, 0.5);
+    });
+
+    test('regreso cutEnd → guard con el lado del ataque, luego atGuard', () {
+      expect(
+        _motionAt(engine, 5450),
+        _m(PoseKey.cutEnd, PoseKey.guard, 0.5, Side.right),
+      );
+      expect(_motionAt(engine, 5700), OpponentMotion.atGuard);
+      expect(_motionAt(engine, 7199), OpponentMotion.atGuard);
+    });
+
+    test('un ataque a la izquierda conserva side == left en el regreso', () {
+      final left = _engine(
+        _script(first: 0, intervals: [0, 1500]),
+        session: testTransversalSession(),
+      );
+      expect(
+        _motionAt(left, 7150),
+        _m(PoseKey.cutEnd, PoseKey.guard, 0.5, Side.left),
+      );
+    });
   });
 }

@@ -40,8 +40,9 @@ final class _Harness {
   final voice = FakeVoiceAnnouncer();
   final wakeLock = FakeScreenWakeLock();
 
-  /// App completa con la selección como raíz; pulsa Iniciar.
-  Future<void> start(WidgetTester tester) async {
+  /// App completa con la selección como raíz; elige [pattern] si se indica
+  /// (por nombre visible) y pulsa Iniciar.
+  Future<void> start(WidgetTester tester, {String? pattern}) async {
     tester.view.physicalSize = const Size(1600, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -58,6 +59,10 @@ final class _Harness {
       ),
     );
     await tester.pumpAndSettle();
+    if (pattern != null) {
+      await tester.tap(find.text(pattern));
+      await tester.pump();
+    }
     await tester.tap(find.text(StringsEs.start));
     // Deja terminar la transición de la ruta (el reloj manual sigue en 0).
     await tester.pump();
@@ -211,4 +216,37 @@ void main() {
     await h.advanceTo(tester, 5000);
     expect(h.random.consumed, greaterThan(consumedBefore));
   });
+
+  testWidgets(
+    '(g) Repetir conserva el transversal y Volver permite elegir el frontal (Spec 002)',
+    (tester) async {
+      final h = _Harness();
+      await h.start(tester, pattern: 'Transversal');
+      String patternId() => tester
+          .widget<ExerciseScreen>(find.byType(ExerciseScreen))
+          .session
+          .pattern
+          .id;
+      expect(patternId(), 'transversal');
+
+      await h.advanceTo(tester, _finishedAt);
+      await tester.tap(find.text(StringsEs.repeat));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 16));
+      expect(find.text('3'), findsOneWidget);
+      expect(patternId(), 'transversal');
+
+      await h.advanceTo(tester, _finishedAt);
+      await tester.tap(find.text(StringsEs.back));
+      await tester.pumpAndSettle();
+      _expectBackOnSelection(tester);
+
+      await tester.tap(find.text('Frontal'));
+      await tester.pump();
+      await tester.tap(find.text(StringsEs.start));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(patternId(), 'frontal');
+    },
+  );
 }

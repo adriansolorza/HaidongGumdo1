@@ -210,4 +210,37 @@ void main() {
       expect(button.onPressed, isNull);
     },
   );
+
+  testWidgets(
+    'dos patrones reales: frontal preseleccionado y transversal elegible (Spec 002)',
+    (tester) async {
+      await _pumpSelection(tester, _FakeRepository(_realCatalog));
+
+      expect(find.text('Frontal'), findsOneWidget);
+      expect(find.text('Transversal'), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.text('Frontal')).dy,
+        lessThan(tester.getTopLeft(find.text('Transversal')).dy),
+      );
+      expect(_tile(tester, 'Frontal').selected, isTrue);
+      expect(_tile(tester, 'Transversal').selected, isFalse);
+      expect(
+        find.text('Chayôn-se (자연세) → Sodose → Hwengdan ilgôm begi (횡단일검베기)'),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.text('Transversal'));
+      await tester.pump();
+      expect(_tile(tester, 'Transversal').selected, isTrue);
+      expect(_tile(tester, 'Frontal').selected, isFalse);
+
+      await tester.tap(find.text(StringsEs.start));
+      // El ejercicio avanza con un Ticker: no se usa pumpAndSettle.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      final screen = tester.widget<ExerciseScreen>(find.byType(ExerciseScreen));
+      expect(screen.session.pattern.id, 'transversal');
+    },
+  );
 }

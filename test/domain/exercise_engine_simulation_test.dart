@@ -3,6 +3,7 @@ import 'package:haidonggumdo/domain/exercise/attack.dart';
 import 'package:haidonggumdo/domain/exercise/exercise_engine.dart';
 import 'package:haidonggumdo/domain/exercise/exercise_event.dart';
 import 'package:haidonggumdo/domain/exercise/exercise_parameters.dart';
+import 'package:haidonggumdo/domain/exercise/session.dart';
 
 import 'fakes/seeded_random_source.dart';
 import 'fakes/test_session.dart';
@@ -21,12 +22,12 @@ final class _Run {
   List<Side> get sides => [for (final a in attacks) a.side];
 }
 
-/// Ejercicio de 180 s con valores por defecto y [maxRepeats], avanzado en
-/// pasos de 16 ms hasta `finished`.
-_Run _simulate(int seed, {int maxRepeats = 5}) {
+/// Ejercicio de 180 s con valores por defecto, [maxRepeats] y [session]
+/// (frontal si no se indica), avanzado en pasos de 16 ms hasta `finished`.
+_Run _simulate(int seed, {int maxRepeats = 5, Session? session}) {
   final d = ExerciseParameters.defaults();
   final engine = ExerciseEngine(
-    session: testSession(),
+    session: session ?? testSession(),
     parameters: ExerciseParameters.create(
       duration: const Duration(seconds: 180),
       maxRepeats: maxRepeats,
@@ -114,5 +115,69 @@ void main() {
       expect(delay.isNegative, isFalse);
       expect(delay.inMilliseconds, lessThanOrEqualTo(1200));
     }
+  });
+
+  // Spec 002, SC-005 y SC-006: las mismas reglas con el Patrón transversal.
+  group('Patrón transversal (Spec 002)', () {
+    late List<_Run> transversal;
+
+    setUpAll(() {
+      transversal = [
+        for (var seed = 0; seed < _exercises; seed++)
+          _simulate(seed, session: testTransversalSession()),
+      ];
+    });
+
+    test(
+      'con N = 5, ningún ejercicio tiene más de 5 lados iguales seguidos',
+      () {
+        for (final run in transversal) {
+          expect(_longestStreak(run.sides), lessThanOrEqualTo(5));
+        }
+      },
+    );
+
+    test('con N = 1, el 100 % alterna', () {
+      for (var seed = 0; seed < _exercises; seed++) {
+        final sides = _simulate(
+          seed,
+          maxRepeats: 1,
+          session: testTransversalSession(),
+        ).sides;
+        expect(_longestStreak(sides), 1, reason: 'semilla $seed');
+      }
+    });
+
+    test('proporción de right en 50 % ± 5 % sobre ≥ 10 000 ataques', () {
+      final sides = [for (final run in transversal) ...run.sides];
+      expect(sides.length, greaterThanOrEqualTo(10000));
+      final right = sides.where((s) => s == Side.right).length / sides.length;
+      expect(right, inInclusiveRange(0.45, 0.55));
+    });
+
+    test('ningún par de ejercicios repite la secuencia completa de lados', () {
+      final sequences = {
+        for (final run in transversal) run.sides.map((s) => s.index).join(),
+      };
+      expect(sequences, hasLength(_exercises));
+    });
+
+    test('el 100 % de los intervalos está en [1000 ms, 2500 ms]', () {
+      for (final run in transversal) {
+        for (var i = 1; i < run.attacks.length; i++) {
+          final interval =
+              run.attacks[i].signalAt - run.attacks[i - 1].cutStartAt;
+          expect(interval.inMilliseconds, inInclusiveRange(1000, 2500));
+        }
+      }
+    });
+
+    test('Guman nunca antes de E y como máximo 1200 ms después', () {
+      for (final run in transversal) {
+        final delay = run.endVoice.at - run.nominalEnd;
+        expect(delay.isNegative, isFalse);
+        expect(delay.inMilliseconds, lessThanOrEqualTo(1200));
+      }
+    });
   });
 }
