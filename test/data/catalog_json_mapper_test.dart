@@ -74,8 +74,8 @@ void main() {
     final catalog = _mapper.fromJsonString(source);
 
     expect(catalog.levels, hasLength(1));
-    expect(catalog.patterns, hasLength(1));
-    expect(catalog.glossary, hasLength(5));
+    expect(catalog.patterns, hasLength(2));
+    expect(catalog.glossary, hasLength(7));
     expect(catalog.levels.single.responseTypes, [ResponseType.defense]);
 
     final expected = {
@@ -84,6 +84,8 @@ void main() {
       'chayon_se': ('Chayôn-se', '자연세'),
       'chochon_se': ('Chochôn-se', '초천세'),
       'chungmyon_begi': ('Chungmyôn begi', '정면베기'),
+      'sodose': ('Sodose', null),
+      'hwengdan_ilgom_begi': ('Hwengdan ilgôm begi', '횡단일검베기'),
     };
     for (final MapEntry(key: id, value: (romanization, hangul))
         in expected.entries) {
@@ -92,7 +94,7 @@ void main() {
       expect(term.hangul, hangul, reason: id);
     }
 
-    final pattern = catalog.patterns.single;
+    final pattern = catalog.patterns.firstWhere((p) => p.id == 'frontal');
     expect(pattern.guardTermId, 'chayon_se');
     expect(catalog.term(pattern.guardTermId).romanization, 'Chayôn-se');
     expect(
@@ -228,5 +230,73 @@ void main() {
         ),
       );
     });
+  });
+
+  group('Patrón transversal (Spec 002)', () {
+    late Catalog catalog;
+    late Pattern transversal;
+
+    setUp(() {
+      catalog = _mapper.fromJsonString(
+        File('assets/catalog/catalog.json').readAsStringSync(),
+      );
+      transversal = catalog.patterns.firstWhere((p) => p.id == 'transversal');
+    });
+
+    test('(a) es el segundo patrón, con sus términos y posiciones', () {
+      expect(catalog.patterns[1], same(transversal));
+      expect(transversal.order, 2);
+      expect(transversal.name, 'Transversal');
+      expect(transversal.guardTermId, 'chayon_se');
+      expect(transversal.stanceTermId, 'sodose');
+      expect(transversal.cutTermId, 'hwengdan_ilgom_begi');
+      expect(
+        transversal.cut,
+        const CutMotion(
+          start: SaberPose(hilt: Point2(-0.45, 0.1), tip: Point2(-1.3, -0.1)),
+          end: SaberPose(hilt: Point2(0.45, 0.1), tip: Point2(1.3, -0.1)),
+          mirroredBySide: true,
+        ),
+      );
+    });
+
+    test('(b) su guardia es la del Patrón frontal (FR-006)', () {
+      final frontal = catalog.patterns.firstWhere((p) => p.id == 'frontal');
+      expect(transversal.guard, frontal.guard);
+    });
+
+    test(
+      '(c) el barrido va del costado izquierdo al derecho (FR-007, FR-008)',
+      () {
+        final cut = transversal.cut;
+        expect(cut.start.hilt.x, lessThan(0));
+        expect(cut.start.tip.x, lessThan(cut.start.hilt.x));
+        expect(cut.end.hilt.x, greaterThan(0));
+        expect(cut.end.tip.x, greaterThan(cut.end.hilt.x));
+      },
+    );
+
+    test('(d) Sodose no tiene hangul (FR-003)', () {
+      expect(catalog.term('sodose').hangul, isNull);
+    });
+
+    test(
+      '(e) reglas del barrido de data-model.md (FR-008, FR-009, FR-011)',
+      () {
+        final start = transversal.cut.start;
+        final end = transversal.cut.end;
+        // cut.end es el reflejo exacto de cut.start en x.
+        expect(end.hilt, Point2(-start.hilt.x, start.hilt.y));
+        expect(end.tip, Point2(-start.tip.x, start.tip.y));
+        // Barrido horizontal: empuñadura y punta no cambian de altura.
+        expect(end.hilt.y, start.hilt.y);
+        expect(end.tip.y, start.tip.y);
+        // A la mitad del barrido la hoja visible no mide cero.
+        expect(
+          (start.tip.y - start.hilt.y).abs(),
+          greaterThanOrEqualTo(0.2 - 1e-9),
+        );
+      },
+    );
   });
 }

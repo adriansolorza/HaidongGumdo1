@@ -27,3 +27,24 @@ Session testSession() => Session(
     ),
   ),
 );
+
+/// Sesión de Nivel 1 / Patrón transversal (Spec 002, data-model.md): barrido
+/// de 180° a la cintura; `cut.end` es el reflejo de `cut.start`. Las pruebas
+/// del dominio no leen el asset.
+Session testTransversalSession() => Session(
+  level: testSession().level,
+  pattern: const Pattern(
+    id: 'transversal',
+    order: 2,
+    name: 'Transversal',
+    guardTermId: 'chayon_se',
+    stanceTermId: 'sodose',
+    cutTermId: 'hwengdan_ilgom_begi',
+    guard: SaberPose(hilt: Point2(0, 0.05), tip: Point2(0, -0.3)),
+    cut: CutMotion(
+      start: SaberPose(hilt: Point2(-0.45, 0.1), tip: Point2(-1.3, -0.1)),
+      end: SaberPose(hilt: Point2(0.45, 0.1), tip: Point2(1.3, -0.1)),
+      mirroredBySide: true,
+    ),
+  ),
+);
