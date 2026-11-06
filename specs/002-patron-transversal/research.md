@@ -6,34 +6,44 @@ El contexto técnico no tenía incógnitas abiertas: el stack, los paquetes y la
 
 ## R1. El corte transversal como `CutMotion` (solo datos)
 
-- **Decision**: Expresar *Hwengdan ilgôm begi* con el modelo de la 001, sin cambios de código: `CutMotion` interpola linealmente la empuñadura y la punta entre `start` (*Sodose*) y `end` (impacto), con `mirroredBySide: true`. La subida (`guard → stance`), el corte (`stance → cutEnd`) y el regreso (`cutEnd → guard`) salen de `OpponentMotion`, igual que en el frontal.
-- **Rationale**: Visto de frente, un corte horizontal que viene hacia el usuario se lee como una hoja que sale larga del costado y se acorta al girar hacia él, hasta quedar en escorzo en el impacto. La interpolación lineal produce exactamente eso: la punta avanza en horizontal desde fuera del cuerpo hacia el centro y la hoja visible se acorta. Se comprobó con un **prototipo** (posiciones de R2 dibujadas con el `OpponentPainter` actual, 2026-11-04): *Sodose* se ve a un costado, el corte se acorta hacia el usuario, el impacto muestra la punta vista de frente y el lado rojo es el reflejo exacto del azul. No hizo falta tocar ningún archivo de `lib/`.
+- **Decision**: Expresar *Hwengdan ilgôm begi* con el modelo de la 001, sin cambios de código: `CutMotion` interpola linealmente la empuñadura y la punta entre `start` (*Sodose*, extendido hacia el costado del corte) y `end` (su reflejo, extendido hacia el costado contrario), con `mirroredBySide: true`. *(Revisión 2026-11-05: barrido de 180°; antes, `end` era el impacto.)* La subida (`guard → stance`), el corte (`stance → cutEnd`) y el regreso (`cutEnd → guard`) salen de `OpponentMotion`, igual que en el frontal.
+- **Rationale**: Visto de frente, un barrido horizontal de 180° se lee como una hoja que sale larga de un costado, se acorta al pasar frente al oponente (apunta al usuario) y vuelve a alargarse hacia el otro costado. La interpolación lineal produce exactamente eso, a velocidad uniforme en la pantalla, que es lo que pide la spec (sesión 2026-11-05). Se comprobó con un **prototipo** (posiciones de R2 dibujadas con el `OpponentPainter` actual, 2026-11-05): *Sodose* extendido a un costado, la hoja acortándose hacia el frente, la punta vista de frente a la mitad, el sable extendido al otro costado al final y el regreso a la guardia. No hizo falta tocar ningún archivo de `lib/`.
 - **Alternatives considered**:
   - Trayectoria en arco o con fotogramas intermedios (p. ej. un barrido que cruza todo el frente). Requiere ampliar `CutMotion`, lo que es código nuevo en el dominio y la presentación y entra en tensión con el Principio III. Se rechaza: la interpolación lineal ya se lee como corte horizontal.
-  - Terminar el corte con la hoja extendida hacia el lado contrario (después de cruzar). Así el corte ya habría pasado del usuario, en lugar de llegarle; contradice "llega por el lado de la defensa" (FR-008) y el criterio del frontal, que termina en el impacto.
+  - *(Descartada el 2026-11-05)* Terminar el corte en el impacto, frente al flanco del usuario. Era la decisión del 2026-11-04 y el responsable la corrigió tras verla en el emulador: el corte real es un barrido de 180° que termina extendido hacia el costado contrario.
 
 ## R2. Posiciones del sable
 
 - **Decision**: Coordenadas de la 001 (origen en el centro de la figura, unidad = media altura, `x` a la derecha de la pantalla, `y` hacia abajo). Los valores base son para el lado `right` (sable azul) y se reflejan en `x` con el lado `left` (rojo).
 
+  *(Revisión 2026-11-05: barrido de 180° a la cintura.)*
+
   | Postura | `hilt` | `tip` | Lectura |
   |---|---|---|---|
   | Guardia (*Chayôn-se*) | (0, 0.05) | (0, −0.3) | Igual que el frontal: manos al ombligo, punta al usuario |
-  | *Sodose* (`cut.start`) | (−0.45, 0.3) | (−1.25, 0.45) | Manos a la cadera del costado izquierdo de la pantalla; hoja hacia afuera y un poco hacia abajo |
-  | Impacto (`cut.end`) | (−0.1, −0.05) | (−0.3, −0.1) | Manos frente al pecho; hoja en escorzo hacia la izquierda del usuario, a la altura del torso |
+  | *Sodose* (`cut.start`) | (−0.45, 0.1) | (−1.3, −0.1) | Manos a la cintura en el costado izquierdo de la pantalla; hoja extendida hacia afuera |
+  | Mitad del barrido (interpolada, no es un dato) | (0, 0.1) | (0, −0.1) | Frente al oponente; hoja en escorzo apuntando al usuario |
+  | Fin del corte (`cut.end`) | (0.45, 0.1) | (1.3, −0.1) | Reflejo de *Sodose*: sable extendido hacia el costado contrario, a la misma altura |
 
-- **Rationale**: La hoja en *Sodose* mide ≈ 0.81 u visibles, así que se ve larga y con el color legible sin necesidad de la punta vista de frente. La punta del corte avanza casi en horizontal (de `y` 0.45 a −0.1) a la altura del torso, como pide FR-008. En el impacto la hoja visible mide ≈ 0.21 u, de modo que aparece la punta vista de frente con su diámetro máximo (FR-009). Todos los valores están en [−2, 2].
-- **Alternatives considered**: *Sodose* con la hoja hacia atrás en escorzo fuerte, más fiel a la postura real pero con la hoja casi invisible de frente. Se rechaza por legibilidad: el costado tiene que leerse a 3 m.
+- **Rationale**:
+  - **Altura**: la empuñadura va a la cintura (`y` 0.1, justo debajo del ombligo de la guardia) y no cambia de altura en todo el barrido; la punta tampoco (`y` −0.1). Ninguna de las dos sigue una trayectoria diagonal (FR-008).
+  - **Largo a la mitad del barrido (FR-009)**: como `cut.end` es el reflejo de `cut.start`, a la mitad del barrido la empuñadura y la punta quedan en `x = 0`, y la hoja visible mide solo la diferencia de altura entre ellas. Con la punta 0.2 u más alta que la empuñadura, la hoja nunca mide cero: mide 0.2 u y la punta vista de frente aparece con su diámetro máximo (0.3 u). Si ambas fueran a la misma altura, a la mitad la hoja mediría cero.
+  - **Largo en los costados**: en *Sodose* y al final la hoja mide ≈ 0.87 u, así que se ve larga y con el color legible sin la punta vista de frente. La leve inclinación hacia arriba (≈ 13°) no cambia la lectura de corte horizontal.
+  - **Rango**: todos los valores están en [−2, 2].
+- **Alternatives considered**:
+  - Empuñadura y punta a la misma altura (hoja perfectamente horizontal). A la mitad del barrido la hoja mediría cero y desaparecería justo cuando apunta al usuario; incumple FR-009.
+  - Una diferencia de altura mayor (p. ej. 0.4 u) para alargar la hoja a la mitad. Inclinaría la hoja ≈ 25° en los costados y se leería como un corte diagonal; incumple FR-008.
+  - *Sodose* con la hoja hacia atrás en escorzo fuerte. Más fiel a la postura real, pero la hoja sería casi invisible de frente. Se rechaza por legibilidad: el costado tiene que leerse a 3 m.
 
 ## R3. Lado del ataque ↔ costado del corte
 
 - **Decision**: Lado `right` (sable azul, defensa a la izquierda) → *Sodose* y salida del corte en el costado **izquierdo** de la pantalla, sin reflejar. Lado `left` (sable rojo, defensa a la derecha) → valores reflejados, costado **derecho**.
-- **Rationale**: El usuario mira la pantalla de frente, así que el lado izquierdo de la pantalla es su izquierda (research R11 de la 001). Un corte que sale del costado izquierdo de la pantalla y avanza hacia el centro llega primero al flanco izquierdo del usuario, que es justo donde está el símbolo de defensa con el sable azul (FR-015 de la 001). La regla de reflejo de la 001 (plan D5: se reflejan `stance` y `cutEnd`, nunca `guard`) ya implementa esto.
+- **Rationale**: El usuario mira la pantalla de frente, así que el lado izquierdo de la pantalla es su izquierda (research R11 de la 001). Un barrido que sale del costado izquierdo de la pantalla llega primero al flanco izquierdo del usuario y sigue hacia el otro costado, que es justo donde está el símbolo de defensa con el sable azul (FR-015 de la 001). La regla de reflejo de la 001 (plan D5: se reflejan `stance` y `cutEnd`, nunca `guard`) ya implementa esto.
 - **Alternatives considered**: Ninguna; la decisión de la spec (Q1: A) fija la relación.
 
 ## R4. Legibilidad en *Sodose* y en escorzo (FR-009)
 
-- **Decision**: Sin cambios en la presentación. La punta vista de frente de la 001 (plan D2) aparece sola cuando la hoja visible es corta: durante el último tramo del corte y en el impacto. En *Sodose* la hoja es larga y no la necesita.
+- **Decision**: Sin cambios en la presentación. La punta vista de frente de la 001 (plan D2) aparece sola cuando la hoja visible es corta: en el tramo central del barrido, con su diámetro máximo a la mitad (hoja de 0.2 u, R2). En *Sodose* y al final del corte la hoja es larga y no la necesita.
 - **Rationale**: El diámetro de la punta depende solo de la longitud visible, no del patrón, así que funciona igual para el corte transversal. Se valida a 3 m con la prueba manual (quickstart §3, SC-003).
 - **Alternatives considered**: Engrosar la hoja en el patrón transversal. Sería una regla por patrón en el painter, que la 001 evita a propósito.
 
@@ -51,7 +61,7 @@ El contexto técnico no tenía incógnitas abiertas: el stack, los paquetes y la
 
 ## R7. Distinguir los dos patrones a 3 m (SC-004)
 
-- **Decision**: Sin elementos extra. El frontal se lee como un movimiento vertical desde arriba de la cabeza hacia el centro. El transversal, como un movimiento horizontal desde un costado, a la altura de la cadera y el torso, hacia el centro. Se valida con la prueba manual de quickstart §3.
+- **Decision**: Sin elementos extra. El frontal se lee como un movimiento vertical desde arriba de la cabeza hacia el centro. El transversal, como un barrido horizontal a la altura de la cintura, de un costado al otro, que pasa frente al oponente a la mitad. Se valida con la prueba manual de quickstart §3.
 - **Rationale**: La postura de ataque (sable sobre la cabeza frente a sable al costado) ya diferencia los patrones durante medio tiempo de aviso antes del corte.
 - **Alternatives considered**: Mostrar el nombre del patrón durante el ejercicio. Compite con la señal y no lo pide la spec.
 

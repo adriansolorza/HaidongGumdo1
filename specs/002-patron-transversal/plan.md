@@ -1,6 +1,6 @@
 # Implementation Plan: Patrón transversal
 
-**Branch**: `002-patron-transversal` | **Date**: 2026-11-04 | **Spec**: [spec.md](./spec.md)
+**Branch**: `002-patron-transversal` | **Date**: 2026-11-04 (revisado 2026-11-05) | **Spec**: [spec.md](./spec.md)
 
 **Input**: Feature specification from `specs/002-patron-transversal/spec.md`
 
@@ -8,9 +8,9 @@
 
 ## Summary
 
-Agregar el Patrón transversal (guardia en *Chayôn-se*, ataque desde *Sodose*, corte *Hwengdan ilgôm begi*), jugable con el Nivel 1, **solo con datos en el catálogo** (FR-002, Principio III). El corte horizontal se expresa con el `CutMotion` de la 001 (interpolación lineal de empuñadura y punta entre *Sodose* y el impacto) con `mirroredBySide: true`. El costado de *Sodose* y del corte sigue el lado del ataque: izquierda de la pantalla con azul y derecha con rojo, que es el lado del símbolo de defensa.
+Agregar el Patrón transversal (guardia en *Chayôn-se*, ataque desde *Sodose*, corte *Hwengdan ilgôm begi*), jugable con el Nivel 1, **solo con datos en el catálogo** (FR-002, Principio III). El corte es un barrido horizontal de 180° a la altura de la cintura (sesión 2026-11-05) y se expresa con el `CutMotion` de la 001: interpolación lineal de empuñadura y punta desde *Sodose* (extendido hacia el costado del corte) hasta el reflejo de esa postura (extendido hacia el costado contrario), con `mirroredBySide: true`. El costado de *Sodose* y del corte sigue el lado del ataque: izquierda de la pantalla con azul y derecha con rojo, que es el lado del símbolo de defensa.
 
-Un prototipo con el painter actual confirmó que las posiciones elegidas se leen como un corte horizontal que llega por el lado de la defensa, sin tocar `lib/` (research R1). El trabajo es agregar las entradas del catálogo, ajustar las pruebas que cuentan el contenido del catálogo real y agregar pruebas del patrón nuevo. Después se valida a 3 m.
+Un prototipo con el painter actual (2026-11-05) confirmó que las posiciones elegidas se leen como un barrido de un costado al otro, que pasa frente al oponente con la hoja en escorzo y la punta vista de frente, sin tocar `lib/` (research R1, R2). El trabajo es agregar las entradas del catálogo, ajustar las pruebas que cuentan el contenido del catálogo real y agregar pruebas del patrón nuevo. Después se valida a 3 m.
 
 ## Technical Context
 
@@ -47,7 +47,7 @@ No hay incógnitas abiertas. La única duda de diseño (si el corte cabe en `Cut
 | V. Gestión de estado | Riverpod, sin cambios | ✅ |
 | VI. Pruebas | Pruebas del catálogo real y de la selección derivadas de FR-001–FR-005; pruebas de movimiento y simulación con una sesión transversal (FR-007, FR-010, SC-005, SC-006); las pruebas de lógica de la 001 siguen pasando | ✅ |
 | VII. Dependencias | Ninguna nueva | ✅ |
-| VIII. Interfaz | Contornos y legibilidad heredados; la punta vista de frente cubre el escorzo del impacto (research R4) | ✅ |
+| VIII. Interfaz | Contornos y legibilidad heredados; la punta vista de frente cubre el escorzo a la mitad del barrido (research R4) | ✅ |
 | IX. Idioma | Términos coreanos solo desde el glosario; *Sodose* sin hangul, como en el glosario (research R5) | ✅ |
 | X. Flujo | Rama `002-patron-transversal` → PR a `main`; Conventional Commits | ✅ |
 | XI. Seguridad | Sin cambios | ✅ |
@@ -58,14 +58,15 @@ No hay incógnitas abiertas. La única duda de diseño (si el corte cabe en `Cut
 ## Decisiones de diseño
 
 - **D1. Solo datos.** Dos términos de glosario y un patrón en `assets/catalog/catalog.json`, con los valores de [data-model.md](./data-model.md) y el contrato de [contracts/catalog-entries.md](./contracts/catalog-entries.md). Sin cambios en el esquema, el mapper, el motor, los painters ni las pantallas (research R1, R8).
-- **D2. Posiciones.** *Sodose*: `hilt (−0.45, 0.3)`, `tip (−1.25, 0.45)`. Impacto: `hilt (−0.1, −0.05)`, `tip (−0.3, −0.1)`. Guardia igual que el frontal. Valores base para el lado `right` (azul), reflejados con `left` (research R2, R3).
-- **D3. El corte termina en el impacto**, con la hoja en escorzo hacia el flanco del usuario, igual que el frontal termina con la hoja apuntando al usuario. No cruza todo el frente (research R1).
+- **D2. Posiciones (revisión 2026-11-05).** *Sodose* (`cut.start`): `hilt (−0.45, 0.1)`, `tip (−1.3, −0.1)`. Fin del corte (`cut.end`): su reflejo, `hilt (0.45, 0.1)`, `tip (1.3, −0.1)`. Guardia igual que el frontal. Valores base para el lado `right` (azul), reflejados con `left` (research R2, R3).
+- **D3. Barrido de 180° (revisión 2026-11-05).** El corte va de un costado al otro: empieza extendido hacia el costado del corte, pasa frente al oponente a la mitad (0.25 s con los valores por defecto) y termina extendido hacia el costado contrario. La empuñadura (`y` 0.1) y la punta (`y` −0.1) avanzan en línea recta y en horizontal a velocidad uniforme en la pantalla (FR-008). Como `cut.end` es el reflejo de `cut.start`, a la mitad del barrido la empuñadura y la punta quedan en `x = 0`. La hoja visible mide entonces la diferencia de altura entre ambas, **0.2 u**, nunca cero, y la punta vista de frente aparece con su diámetro máximo (FR-009). Reemplaza la decisión anterior de terminar el corte en el impacto.
 - **D4. Pruebas del catálogo real.** El test (a) del mapper pasa a esperar 2 patrones y 7 términos y a buscar cada patrón por `id` en lugar de usar `patterns.single`. Es un cambio de datos, no de lógica (research R6).
 - **D5. Validación visual.** Las posiciones se validan a 3 m (quickstart §3). Si hace falta ajustarlas, se cambian solo en el catálogo.
+- **D6. Solo datos, confirmado tras la revisión (2026-11-05).** El barrido de 180° cabe en `CutMotion` sin cambios en `lib/`. La velocidad uniforme en la pantalla es justo lo que produce la interpolación lineal (spec, sesión 2026-11-05). El reflejo por lado ya existe (`mirroredBySide`, plan D5 de la 001). La legibilidad en el frente la da la punta vista de frente de la 001 (plan D2 de la 001). Lo único que exigió el barrido fue un dato: la punta va 0.2 u más alta que la empuñadura para que la hoja no mida cero a la mitad.
 
 ## Notas para la spec
 
-- **SC-007** dice que las pruebas de la 001 siguen pasando "sin cambiar sus expectativas". Una prueba de la 001 cuenta el contenido del catálogo real (1 patrón, 5 términos) y tiene que cambiar al crecer el catálogo. Se recomienda precisar SC-007: "…sin cambiar sus expectativas sobre la lógica del ejercicio (tiempos, eventos, estados, señales y movimiento)". El plan aplica esa lectura (research R6).
+- **SC-007** *(aplicada en spec.md el 2026-11-04)*: se precisó como "…sin cambiar sus expectativas sobre la lógica del ejercicio". El plan aplica esa lectura (research R6).
 
 ## Project Structure
 

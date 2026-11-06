@@ -23,8 +23,8 @@ El esquema [catalog.schema.json de la 001](../../001-motor-nivel1-frontal/contra
   "cutTermId": "hwengdan_ilgom_begi",
   "guard": { "hilt": [0, 0.05], "tip": [0, -0.3] },
   "cut": {
-    "start": { "hilt": [-0.45, 0.3], "tip": [-1.25, 0.45] },
-    "end": { "hilt": [-0.1, -0.05], "tip": [-0.3, -0.1] },
+    "start": { "hilt": [-0.45, 0.1], "tip": [-1.3, -0.1] },
+    "end": { "hilt": [0.45, 0.1], "tip": [1.3, -0.1] },
     "mirroredBySide": true
   }
 }
@@ -35,4 +35,6 @@ El esquema [catalog.schema.json de la 001](../../001-motor-nivel1-frontal/contra
 | Pantalla | Resultado esperado |
 |---|---|
 | Selección | La lista "Patrón" muestra dos opciones por `order`: "Frontal — Chayôn-se (자연세) → Chochôn-se (초천세) → Chungmyôn begi (정면베기)" (preseleccionado) y "Transversal — Chayôn-se (자연세) → Sodose → Hwengdan ilgôm begi (횡단일검베기)" |
-| Ejercicio | Con el Patrón transversal, el oponente usa `pattern.guard`, `pattern.cut.start` (*Sodose*) y `pattern.cut.end`, reflejados según el lado, con los tramos de `snapshot.motion` (contrato `ui-screens.md` de la 001) |
+| Ejercicio | Con el Patrón transversal, el oponente usa `pattern.guard`, `pattern.cut.start` (*Sodose*) y `pattern.cut.end` (fin del barrido de 180°, reflejo de *Sodose*), reflejados según el lado, con los tramos de `snapshot.motion` (contrato `ui-screens.md` de la 001) |
+
+`cut.end` debe ser el reflejo exacto de `cut.start` en `x`, y `tip.y` debe ser distinto de `hilt.y` para que la hoja no mida cero a la mitad del barrido (data-model.md). Revisión 2026-11-05: antes, `cut.end` era el impacto frente al flanco del usuario.
