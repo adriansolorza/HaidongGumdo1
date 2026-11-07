@@ -36,7 +36,7 @@ El stack, los paquetes y la arquitectura son los de la Spec 001. Las dudas reale
 
 - **Decision**: Flecha horizontal con cuerpo rectangular y punta triangular, centrada en vertical (como el símbolo de defensa) y apuntando hacia el borde exterior. En horizontal ocupa el tramo entre el **alcance del oponente** y el borde:
   - Borde exterior de la flecha: a 4 % del ancho del borde de la pantalla.
-  - Borde interior: a `1.45 u` del centro de la pantalla como mínimo, donde `u = 0.27 × alto` es la unidad del `OpponentPainter`. El mayor `|x|` del catálogo es 1.3 u (punta del transversal en *Sodose* y al final del barrido); el margen de 0.15 u cubre el grosor de la hoja y el contorno.
+  - Borde interior: a `1.45 u` del centro de la pantalla como mínimo, donde `u = 0.27 × alto` es la unidad del `OpponentPainter`. El mayor `|x|` del catálogo es 1.3 u (punta del transversal en *Sodose* y al final del barrido); el margen de 0.15 u cubre el grosor de la hoja y el contorno. Si la prueba de T012 muestra que el círculo de la punta (radio máximo 0.15 u) más el contorno pasan de 1.45 u, se sube la constante (p. ej. a 1.5 u); es solo un cambio del painter.
   - Largo: el tramo disponible, con un máximo de `0.36 × alto`; si el tramo es más largo, la flecha se ancla al borde exterior.
   - Proporciones respecto al largo `L`: punta de `0.42 L` de largo y `0.62 L` de alto; cuerpo de `0.24 L` de alto.
 
@@ -61,15 +61,15 @@ El stack, los paquetes y la arquitectura son los de la Spec 001. Las dudas reale
 ## R5. Contraste de la flecha sobre el fondo
 
 - **Decision**: Relleno azul o rojo del sable con el contorno negro de siempre (`kOutlineWidth`), igual que el sable del oponente.
-- **Rationale**: Contraste del relleno contra el fondo `#121212`: azul `#1E6BFF` ≈ 4.1 : 1 y rojo `#FF2D2D` ≈ 5.0 : 1, por encima del 3 : 1 que pide WCAG para gráficos (1.4.11). La flecha es mucho más grande que la hoja del sable, que usa los mismos colores. El contorno negro no se ve contra el fondo oscuro, pero mantiene el estilo de todas las figuras (Principio VIII) y separa la flecha si algo pasara cerca.
+- **Rationale**: Contraste del relleno contra el fondo `#121212`: azul `#1E6BFF` ≈ 4.1 : 1 y rojo `#FF2D2D` ≈ 5.0 : 1, por encima del 3 : 1 que pide WCAG para gráficos (1.4.11). La flecha es mucho más grande que la hoja del sable, que usa los mismos colores. El contorno negro no se ve contra el fondo oscuro, pero mantiene el estilo de todas las figuras y separa la flecha si algo pasara cerca. El "contorno definido" del Principio VIII lo da el borde del relleno contra el fondo (contraste ≥ 3 : 1), igual que la hoja del sable del oponente en las Specs 001 y 002 (decisión del responsable, análisis del 2026-11-06).
 - **Alternatives considered**: contorno blanco o halo claro. Mejora el borde contra el fondo, pero rompe la consistencia visual. Queda como ajuste solo del painter si SC-004 falla en el dojang.
 
 ## R6. Pruebas
 
 - **Decision**: Pruebas derivadas de la spec, después del código (Principio VI):
   - **Dominio**: colocación de la evasión (azul → derecha, rojo → izquierda); el motor con una sesión de Nivel 2 genera ataques `evasion` y snapshots con la señal del mismo lado que el color; simulaciones de aleatoriedad, N y tiempos de la 001 con el Nivel 2 y los dos patrones (SC-006).
-  - **Datos**: el catálogo real tiene 2 niveles en orden, con el Nivel 2 y `responseTypes: ["evasion"]`. La prueba (a) del mapper, que hoy espera 1 nivel y usa `levels.single`, pasa a esperar 2 y a buscar por `id`; es un cambio de datos, no de lógica (SC-007).
-  - **Presentación**: el painter de la evasión dibuja en la mitad correcta, con el color del sable, la punta hacia el borde y sin píxeles dentro del alcance del oponente en 20:9, 16:9, 16:10 y 4:3; los dos lados son reflejos. Una prueba comprueba que la constante de alcance (1.45 u) cubre el mayor `|x|` del catálogo real. La selección muestra los dos niveles con el Nivel 1 preseleccionado y "Evasión lateral — Calentamiento / base"; Repetir conserva el Nivel 2 y Volver permite elegir el Nivel 1.
+  - **Datos**: el catálogo real tiene 2 niveles en orden, con el Nivel 2 y `responseTypes: ["evasion"]`. La prueba (a) del mapper, que hoy espera 1 nivel y usa `levels.single`, pasa a esperar 2 y a buscar por `id`. La prueba (e) que rechazaba `"evasion"` pasa a usar un nombre desconocido (`"counter"`), y se agrega una que acepta `"evasion"`. Los dos son cambios de datos del catálogo, no de la lógica del ejercicio (SC-007).
+  - **Presentación**: el painter de la evasión dibuja en la mitad correcta, con el color del sable, la punta hacia el borde y sin píxeles dentro del alcance del oponente en 20:9, 16:9, 16:10 y 4:3; los dos lados son reflejos. Una prueba comprueba que la constante de alcance (1.45 u) cubre el mayor `|x|` del catálogo real más el radio máximo de la punta y el contorno, y otra que los píxeles del oponente en *Sodose* y al final del barrido no se cruzan con los de la flecha. La selección muestra los dos niveles con el Nivel 1 preseleccionado y "Evasión lateral — Calentamiento / base"; Repetir conserva el Nivel 2 y Volver permite elegir el Nivel 1.
 - **Rationale**: Cubre FR-001 a FR-012 y SC-002, SC-003, SC-006 y SC-007 de forma automática; SC-004 y SC-005 se validan a 3 m (quickstart §3).
 - **Alternatives considered**: pruebas de golden (imagen de referencia). Frágiles ante cambios de proporción y de la Spec 004. Se rechazan, como en la 002.
 

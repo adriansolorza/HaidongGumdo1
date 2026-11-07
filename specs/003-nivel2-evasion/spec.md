@@ -45,7 +45,7 @@ Los demás términos (_Si-jak_, _Guman_, _Chayôn-se_, _Chochôn-se_, _Sodose_, 
 
 - Q: En el Nivel 2 con el Patrón transversal, ¿de qué costado sale el corte? → A: Igual que en la Spec 002: el color decide el costado del corte en todos los niveles. Con sable azul, _Sodose_ y el inicio del corte quedan a la izquierda de la pantalla y la flecha de evasión a la derecha; el usuario se aleja del costado del que sale el corte.
 - Q: ¿De qué color es la flecha de evasión? → A: Del color del sable en ese ataque (azul o rojo), con contorno definido.
-- Q: ¿Dónde se coloca la flecha? → A: En la misma zona de la pantalla que el símbolo de defensa (centrada en su mitad, cerca del borde), apuntando hacia el borde exterior. No se cruza con el oponente ni con el sable al final del corte.
+- Q: ¿Dónde se coloca la flecha? → A: En la misma zona de la pantalla que el símbolo de defensa (en su mitad, centrada en vertical y cerca del borde exterior), apuntando hacia el borde exterior. No se cruza con el oponente ni con el sable al final del corte.
 
 ## User Scenarios & Testing _(mandatory)_
 
@@ -130,7 +130,7 @@ Como practicante, quiero elegir en la pantalla de selección entre el Nivel 1 y 
 **Señal de evasión**
 
 - **FR-006**: En el Nivel 2, la señal MUST ser la **señal de evasión**: una flecha **horizontal** en la mitad de la pantalla hacia la que el usuario debe moverse, vista desde el usuario. Con el sable **azul**, la flecha aparece en el lado **derecho** y apunta a la derecha; con el **rojo**, en el lado **izquierdo** y apunta a la izquierda. Es siempre el lado contrario al que ocuparía el símbolo de defensa (Spec 001, FR-015).
-- **FR-007**: La flecha MUST ser horizontal pura (sin inclinación ni componente adelante o atrás), con cuerpo y punta reconocibles, apuntando hacia el borde exterior de su mitad de pantalla. MUST ocupar la misma zona de la pantalla que el símbolo de defensa (centrada en su mitad, cerca del borde) y MUST NOT cruzarse con el oponente ni con su sable en ninguna fase del ataque.
+- **FR-007**: La flecha MUST ser horizontal pura (sin inclinación ni componente adelante o atrás), con cuerpo y punta reconocibles, apuntando hacia el borde exterior de su mitad de pantalla. MUST ocupar la misma zona de la pantalla que el símbolo de defensa (en su mitad, centrada en vertical y cerca del borde exterior) y MUST NOT cruzarse con el oponente ni con su sable en ninguna fase del ataque.
 - **FR-008**: La flecha MUST tener el **color del sable** en ese ataque (azul o rojo) y un contorno definido, y MUST distinguirse a 3 m de la pantalla (Spec 001, FR-025).
 - **FR-009**: La flecha MUST aparecer al mismo tiempo que el sable cambia de color y MUST permanecer visible hasta que termina el corte (Spec 001, FR-016). En el Nivel 2 MUST NOT mostrarse el símbolo de defensa.
 - **FR-010**: Con el Patrón transversal, el costado del corte MUST seguir determinado por el color, igual que en la Spec 002 (azul → _Sodose_ y corte desde el costado izquierdo de la pantalla; rojo → derecho). Por lo tanto, la flecha queda siempre del lado contrario al costado del que sale el corte.

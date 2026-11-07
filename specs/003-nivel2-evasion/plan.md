@@ -54,7 +54,7 @@ No hay incógnitas abiertas: las tres decisiones de diseño se resolvieron en re
 | V. Gestión de estado | Riverpod, sin cambios | ✅ |
 | VI. Pruebas | Pruebas de dominio para la colocación y el motor con el Nivel 2; simulaciones de aleatoriedad, N y tiempos con el Nivel 2 y los dos patrones (SC-006); pruebas de datos y presentación derivadas de FR-001 a FR-012 | ✅ |
 | VII. Dependencias | Ninguna nueva | ✅ |
-| VIII. Interfaz | La flecha tiene contorno definido, un contraste de relleno de 4.1:1 (azul) y 5.0:1 (rojo) y la misma orientación horizontal (research R5) | ✅ |
+| VIII. Interfaz | El "contorno definido" de la flecha lo da el borde del relleno contra el fondo (contraste ≥ 3 : 1, WCAG 1.4.11: 4.1 : 1 azul y 5.0 : 1 rojo), igual que la hoja del sable del oponente en las Specs 001 y 002. El contorno negro se mantiene por consistencia. Si SC-004 falla, se aplica el contorno claro de D6 (research R5) | ✅ |
 | IX. Idioma | El nombre, la respuesta y el propósito del nivel vienen del catálogo, en español; no hay términos coreanos nuevos | ✅ |
 | X. Flujo | Rama `003-nivel2-evasion` → PR a `main`; Conventional Commits | ✅ |
 | XI. Seguridad | Sin cambios | ✅ |
@@ -68,12 +68,8 @@ No hay incógnitas abiertas: las tres decisiones de diseño se resolvieron en re
 - **D2. Tipo de señal nuevo.** `ResponseType.evasion` en `lib/domain/catalog/enums.dart` (se actualiza el comentario que la anunciaba). La regla de colocación en `SignalPlacement.forAttack` es `evasion → attack.side`, del lado contrario a la defensa (research R2).
 - **D3. Color de la flecha.** `SignalPainter` recibe `saberColor` (el `SaberColor` del snapshot) y `ExerciseScreen` le pasa `snapshot.saberColor`. La flecha se pinta con ese color; la defensa lo ignora y sigue blanca (research R3).
 - **D4. Geometría de la flecha.** Es horizontal, con cuerpo y punta, centrada en vertical y apuntando al borde. Ocupa el tramo entre `1.45 u` del centro y el 4 % del ancho desde el borde, con un largo máximo de `0.36 × alto` ([data-model.md](./data-model.md#geometría-de-la-flecha-presentación), research R4). La unidad del oponente (`0.27 × alto`) se expone como una constante pública de `OpponentPainter`, para que los dos painters compartan el mismo valor. Es un cambio de visibilidad sin cambio de comportamiento.
-- **D5. Pruebas del catálogo real.** La prueba (a) del mapper pasa a esperar 2 niveles y a buscar cada nivel por `id` en lugar de usar `levels.single`. Es un cambio de datos, no de lógica (research R6, SC-007).
+- **D5. Pruebas del catálogo real.** La prueba (a) del mapper pasa a esperar 2 niveles y a buscar cada nivel por `id` en lugar de usar `levels.single`. La prueba (e) que rechazaba `"evasion"` pasa a usar un nombre desconocido (`"counter"`), y se agrega una que acepta `"evasion"`. Los dos son cambios de datos del catálogo, no de la lógica del ejercicio (research R6, SC-007).
 - **D6. Ajustes previstos tras el dojang.** Si SC-004 falla por contraste, se agrega un contorno claro a la flecha. Si falla en 4:3 por el largo, se sube la flecha sobre la línea de la cintura. Los dos ajustes son solo del painter (research R4, R5).
-
-## Notas para la spec
-
-- **FR-007** dice "centrada en su mitad". Con D4, el centro horizontal de la flecha queda entre el 85 % y el 88 % del ancho, no en el 82 % del símbolo de defensa, para no cruzarse con el barrido en pantallas 16:10 y 4:3. Es la lectura de "misma zona, cerca del borde" que cumple el resto de FR-007. No hace falta editar la spec, pero conviene que el responsable lo sepa.
 
 ## Project Structure
 
