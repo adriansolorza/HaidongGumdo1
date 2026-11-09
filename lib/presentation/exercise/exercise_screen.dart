@@ -93,7 +93,12 @@ class _ExerciseScreenState extends ConsumerState<ExerciseScreen>
             ),
           ),
           if (snapshot.signal case final signal?)
-            CustomPaint(painter: SignalPainter(signal: signal)),
+            CustomPaint(
+              painter: SignalPainter(
+                signal: signal,
+                saberColor: snapshot.saberColor,
+              ),
+            ),
           if (snapshot.status == ExerciseStatus.countdown &&
               snapshot.countdownValue != null)
             Center(

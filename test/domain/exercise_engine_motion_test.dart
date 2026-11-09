@@ -323,4 +323,65 @@ void main() {
       );
     });
   });
+
+  _sameMotionAsLevel1(
+    'Nivel 2 transversal (Spec 003, US1): FR-002, FR-010, SC-003',
+    level1: testTransversalSession,
+    level2: testLevel2TransversalSession,
+  );
+
+  // US2-2: el frontal no se refleja, así que la postura y el corte no
+  // revelan el lado; el Nivel 2 se mueve igual que el Nivel 1.
+  _sameMotionAsLevel1(
+    'Nivel 2 frontal (Spec 003, US2): FR-002, US2-2',
+    level1: testSession,
+    level2: testLevel2Session,
+  );
+
+  test('Nivel 2 frontal: el patrón no se refleja por lado (US2-2)', () {
+    expect(testLevel2Session().pattern.cut.mirroredBySide, isFalse);
+    expect(testLevel2Session().pattern, testSession().pattern);
+  });
+}
+
+/// Con los mismos sorteos y los mismos instantes, el Nivel 2 mueve al
+/// oponente igual que el Nivel 1 (FR-002), y durante cada ataque
+/// `motion.side == attack.side == signal.screenSide`. El costado de pantalla
+/// de *Sodose* para cada `motion.side` lo fijan los datos (sin reflejar,
+/// `cut.start` tiene `x < 0`: izquierda) y `OpponentPainter`, probado en
+/// `test/presentation/opponent_painter_test.dart` ("(a) Sodose en el costado
+/// del corte"); por eso el corte sale del lado contrario a la flecha.
+void _sameMotionAsLevel1(
+  String name, {
+  required Session Function() level1,
+  required Session Function() level2,
+}) {
+  group(name, () {
+    test('mismo motion en cada fotograma que el Nivel 1', () {
+      for (var seed = 0; seed < 20; seed++) {
+        final a = _engine(SeededRandomSource(seed), session: level1());
+        final b = _engine(SeededRandomSource(seed), session: level2());
+        for (var t = Duration.zero; !a.status.isTerminal; t += _frame) {
+          final sa = a.advanceTo(t).snapshot;
+          final sb = b.advanceTo(t).snapshot;
+          expect(sb.motion, sa.motion, reason: 'semilla $seed, $t');
+        }
+        expect(b.status.isTerminal, isTrue, reason: 'semilla $seed');
+      }
+    });
+
+    test('motion.side == attack.side == signal.screenSide en cada ataque', () {
+      final engine = _engine(_script(first: 0), session: level2());
+      final sides = <Side>{};
+      for (var t = Duration.zero; t < _ms(20000); t += _frame) {
+        final snapshot = engine.advanceTo(t).snapshot;
+        final attack = snapshot.currentAttack;
+        if (attack == null) continue;
+        sides.add(attack.side);
+        expect(snapshot.motion.side, attack.side, reason: '$t');
+        expect(snapshot.signal!.screenSide, attack.side, reason: '$t');
+      }
+      expect(sides, Side.values.toSet());
+    });
+  });
 }

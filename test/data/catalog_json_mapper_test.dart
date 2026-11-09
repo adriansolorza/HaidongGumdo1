@@ -73,10 +73,13 @@ void main() {
     final source = File('assets/catalog/catalog.json').readAsStringSync();
     final catalog = _mapper.fromJsonString(source);
 
-    expect(catalog.levels, hasLength(1));
+    expect(catalog.levels, hasLength(2));
+    expect(catalog.levels.map((l) => l.id), ['level_1', 'level_2']);
     expect(catalog.patterns, hasLength(2));
     expect(catalog.glossary, hasLength(7));
-    expect(catalog.levels.single.responseTypes, [ResponseType.defense]);
+    expect(catalog.levels.firstWhere((l) => l.id == 'level_1').responseTypes, [
+      ResponseType.defense,
+    ]);
 
     final expected = {
       'si_jak': ('Si-jak', '시작'),
@@ -145,13 +148,38 @@ void main() {
       expect(() => _parse(json), _throwsCatalogException);
     });
 
-    test('con "evasion" (no existe en Spec 001)', () {
+    test('con "counter" (desconocido)', () {
+      final json = _validJson();
+      (json['levels']! as List<Object?>)[0] = {
+        ..._level('level_1', 1),
+        'responseTypes': ['counter'],
+      };
+      expect(() => _parse(json), _throwsCatalogException);
+    });
+  });
+
+  group('Nivel 2 (Spec 003)', () {
+    test('el asset real incluye level_2 con evasión (FR-001)', () {
+      final source = File('assets/catalog/catalog.json').readAsStringSync();
+      final level = _mapper
+          .fromJsonString(source)
+          .levels
+          .firstWhere((l) => l.id == 'level_2');
+
+      expect(level.order, 2);
+      expect(level.name, 'Nivel 2');
+      expect(level.responseLabel, 'Evasión lateral');
+      expect(level.purpose, 'Calentamiento / base');
+      expect(level.responseTypes, [ResponseType.evasion]);
+    });
+
+    test('acepta responseTypes ["evasion"]', () {
       final json = _validJson();
       (json['levels']! as List<Object?>)[0] = {
         ..._level('level_1', 1),
         'responseTypes': ['evasion'],
       };
-      expect(() => _parse(json), _throwsCatalogException);
+      expect(_parse(json).levels.single.responseTypes, [ResponseType.evasion]);
     });
   });
 

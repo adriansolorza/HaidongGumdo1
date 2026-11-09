@@ -11,7 +11,8 @@
   ],
   "voiceCommands": { "start": "si_jak", "end": "guman" },
   "levels": [
-    { "id": "level_1", "order": 1, "name": "Nivel 1", "responseLabel": "Defensa", "purpose": "Calentamiento", "responseTypes": ["defense"] }
+    { "id": "level_1", "order": 1, "name": "Nivel 1", "responseLabel": "Defensa", "purpose": "Calentamiento", "responseTypes": ["defense"] },
+    { "id": "level_2", "order": 2, "name": "Nivel 2", "responseLabel": "Evasión lateral", "purpose": "Calentamiento / base", "responseTypes": ["evasion"] }
   ],
   "patterns": [
     {

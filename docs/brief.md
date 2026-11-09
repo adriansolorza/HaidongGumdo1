@@ -101,6 +101,8 @@ Referencia del tiempo de aviso: 1 s (decir "mil uno") es lento para un corte rea
 2. **Spec 002:** Patrón transversal.
 3. **Spec 003:** Nivel 2 (señal de evasión).
 4. **Spec 004:** Experiencia visual: que enamore.
+   - Estilo: cómic o videojuego de consola retro.
+   - Flecha de evasión más corta y gruesa, con líneas de movimiento en la cola (boceto: `docs/design/flecha-evasion-boceto.png`). Pendiente desde la Spec 003.
 5. **Spec 005:** configuración de parámetros e invariante de tiempos.
 6. **Spec 006:** Nivel 3.
 7. **Spec 007:** Nivel 4.

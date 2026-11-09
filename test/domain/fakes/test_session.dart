@@ -48,3 +48,22 @@ Session testTransversalSession() => Session(
     ),
   ),
 );
+
+/// Nivel 2 (Spec 003, data-model.md): evasión lateral.
+Level _level2() => Level(
+  id: 'level_2',
+  order: 2,
+  name: 'Nivel 2',
+  responseLabel: 'Evasión lateral',
+  purpose: 'Calentamiento / base',
+  responseTypes: const [ResponseType.evasion],
+);
+
+/// Sesión de Nivel 2 / Patrón frontal; el patrón es el mismo de [testSession].
+Session testLevel2Session() =>
+    Session(level: _level2(), pattern: testSession().pattern);
+
+/// Sesión de Nivel 2 / Patrón transversal; el patrón es el mismo de
+/// [testTransversalSession].
+Session testLevel2TransversalSession() =>
+    Session(level: _level2(), pattern: testTransversalSession().pattern);

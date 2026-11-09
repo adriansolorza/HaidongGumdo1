@@ -7,8 +7,12 @@ import 'package:haidonggumdo/app.dart';
 import 'package:haidonggumdo/data/catalog/catalog_json_mapper.dart';
 import 'package:haidonggumdo/domain/catalog/catalog.dart';
 import 'package:haidonggumdo/domain/catalog/enums.dart';
+import 'package:haidonggumdo/domain/exercise/attack.dart';
+import 'package:haidonggumdo/domain/exercise/exercise_snapshot.dart';
 import 'package:haidonggumdo/domain/ports/catalog_repository.dart';
 import 'package:haidonggumdo/presentation/exercise/exercise_screen.dart';
+import 'package:haidonggumdo/presentation/exercise/painters/opponent_painter.dart';
+import 'package:haidonggumdo/presentation/exercise/painters/signal_painter.dart';
 import 'package:haidonggumdo/presentation/providers.dart';
 import 'package:haidonggumdo/presentation/selection/selection_screen.dart';
 import 'package:haidonggumdo/presentation/strings_es.dart';
@@ -40,9 +44,13 @@ final class _Harness {
   final voice = FakeVoiceAnnouncer();
   final wakeLock = FakeScreenWakeLock();
 
-  /// App completa con la selección como raíz; elige [pattern] si se indica
-  /// (por nombre visible) y pulsa Iniciar.
-  Future<void> start(WidgetTester tester, {String? pattern}) async {
+  /// App completa con la selección como raíz; elige [level] y [pattern] si se
+  /// indican (por nombre visible) y pulsa Iniciar.
+  Future<void> start(
+    WidgetTester tester, {
+    String? level,
+    String? pattern,
+  }) async {
     tester.view.physicalSize = const Size(1600, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -59,6 +67,10 @@ final class _Harness {
       ),
     );
     await tester.pumpAndSettle();
+    if (level != null) {
+      await tester.tap(find.text(level));
+      await tester.pump();
+    }
     if (pattern != null) {
       await tester.tap(find.text(pattern));
       await tester.pump();
@@ -247,6 +259,41 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
       expect(patternId(), 'frontal');
+    },
+  );
+
+  testWidgets(
+    '(h) Nivel 2 transversal: flecha de evasión del color del oponente, sin '
+    'defensa; sin flecha tras el corte (Spec 003, FR-009)',
+    (tester) async {
+      final h = _Harness();
+      await h.start(tester, level: 'Nivel 2', pattern: 'Transversal');
+      final session = tester
+          .widget<ExerciseScreen>(find.byType(ExerciseScreen))
+          .session;
+      expect(session.level.id, 'level_2');
+      expect(session.pattern.id, 'transversal');
+
+      Iterable<CustomPainter> painters() => tester
+          .widgetList<CustomPaint>(find.byType(CustomPaint))
+          .map((w) => w.painter)
+          .whereType<CustomPainter>();
+
+      // Aviso del 1.er ataque (sorteo 0 → right, azul) y corte.
+      for (final ms in [_warningAt, _cutAt]) {
+        await h.advanceTo(tester, ms);
+        final signals = painters().whereType<SignalPainter>().toList();
+        final opponent = painters().whereType<OpponentPainter>().single;
+        expect(signals, hasLength(1), reason: '$ms ms');
+        expect(signals.single.signal.responseType, ResponseType.evasion);
+        expect(signals.single.signal.screenSide, Side.right);
+        expect(signals.single.saberColor, SaberColor.blue);
+        expect(signals.single.saberColor, opponent.saberColor);
+      }
+
+      // Corte hasta 5.2 s; la señal siguiente llega en 5.7 s.
+      await h.advanceTo(tester, 5400);
+      expect(painters().whereType<SignalPainter>(), isEmpty);
     },
   );
 }

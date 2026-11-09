@@ -25,6 +25,10 @@ class OpponentPainter extends CustomPainter {
   final CutMotion cut;
   final OpponentMotion motion;
 
+  /// Unidad de la figura: u = 0.27 × alto del lienzo. Pública para que la
+  /// señal de evasión respete el alcance del oponente (Spec 003, plan.md D4).
+  static const unitFraction = 0.27;
+
   /// Diámetro de la punta vista de frente, en unidades de la figura, según la
   /// longitud visible de la hoja: crece al acortarse por el escorzo para que
   /// el color se lea a 3 m (plan.md D2).
@@ -39,7 +43,7 @@ class OpponentPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     // Unidad = media altura de la figura. Se deja sitio para la punta en y = −1.6.
-    final unit = size.height * 0.27;
+    final unit = size.height * unitFraction;
     final origin = Offset(size.width / 2, size.height * 0.58);
     Offset toScreen(Point2 p) => origin + Offset(p.x * unit, p.y * unit);
 
