@@ -28,5 +28,11 @@ abstract final class SignalPlacement {
       responseType: attack.responseType,
       screenSide: attack.side.opposite,
     ),
+    // Evasión: la señal va del lado del color del sable, contrario a la
+    // defensa (FR-006).
+    ResponseType.evasion => Signal(
+      responseType: attack.responseType,
+      screenSide: attack.side,
+    ),
   };
 }

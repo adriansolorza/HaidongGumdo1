@@ -243,4 +243,42 @@ void main() {
       expect(screen.session.pattern.id, 'transversal');
     },
   );
+
+  testWidgets(
+    'dos niveles reales: Nivel 1 preseleccionado y Nivel 2 elegible con '
+    'Transversal en tres acciones (Spec 003, US3-1, FR-004, FR-005, SC-001)',
+    (tester) async {
+      await _pumpSelection(tester, _FakeRepository(_realCatalog));
+
+      expect(find.text('Nivel 1'), findsOneWidget);
+      expect(find.text('Nivel 2'), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.text('Nivel 1')).dy,
+        lessThan(tester.getTopLeft(find.text('Nivel 2')).dy),
+      );
+      expect(
+        find.text('Evasión lateral — Calentamiento / base'),
+        findsOneWidget,
+      );
+      expect(_tile(tester, 'Nivel 1').selected, isTrue);
+      expect(_tile(tester, 'Nivel 2').selected, isFalse);
+      expect(_tile(tester, 'Frontal').selected, isTrue);
+
+      // Tres acciones: Nivel 2, Transversal, Iniciar.
+      await tester.tap(find.text('Nivel 2'));
+      await tester.pump();
+      expect(_tile(tester, 'Nivel 2').selected, isTrue);
+      expect(_tile(tester, 'Nivel 1').selected, isFalse);
+      await tester.tap(find.text('Transversal'));
+      await tester.pump();
+      await tester.tap(find.text(StringsEs.start));
+      // El ejercicio avanza con un Ticker: no se usa pumpAndSettle.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      final screen = tester.widget<ExerciseScreen>(find.byType(ExerciseScreen));
+      expect(screen.session.level.id, 'level_2');
+      expect(screen.session.pattern.id, 'transversal');
+    },
+  );
 }

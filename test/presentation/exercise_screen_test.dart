@@ -7,8 +7,13 @@ import 'package:haidonggumdo/app.dart';
 import 'package:haidonggumdo/data/catalog/catalog_json_mapper.dart';
 import 'package:haidonggumdo/domain/catalog/catalog.dart';
 import 'package:haidonggumdo/domain/catalog/enums.dart';
+import 'package:haidonggumdo/domain/exercise/attack.dart';
+import 'package:haidonggumdo/domain/exercise/exercise_snapshot.dart';
+import 'package:haidonggumdo/domain/exercise/session.dart';
 import 'package:haidonggumdo/domain/ports/catalog_repository.dart';
 import 'package:haidonggumdo/presentation/exercise/exercise_screen.dart';
+import 'package:haidonggumdo/presentation/exercise/painters/opponent_painter.dart';
+import 'package:haidonggumdo/presentation/exercise/painters/signal_painter.dart';
 import 'package:haidonggumdo/presentation/providers.dart';
 import 'package:haidonggumdo/presentation/selection/selection_screen.dart';
 import 'package:haidonggumdo/presentation/strings_es.dart';
@@ -40,9 +45,13 @@ final class _Harness {
   final voice = FakeVoiceAnnouncer();
   final wakeLock = FakeScreenWakeLock();
 
-  /// App completa con la selección como raíz; elige [pattern] si se indica
-  /// (por nombre visible) y pulsa Iniciar.
-  Future<void> start(WidgetTester tester, {String? pattern}) async {
+  /// App completa con la selección como raíz; elige [level] y [pattern] si se
+  /// indican (por nombre visible) y pulsa Iniciar.
+  Future<void> start(
+    WidgetTester tester, {
+    String? level,
+    String? pattern,
+  }) async {
     tester.view.physicalSize = const Size(1600, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -59,6 +68,10 @@ final class _Harness {
       ),
     );
     await tester.pumpAndSettle();
+    if (level != null) {
+      await tester.tap(find.text(level));
+      await tester.pump();
+    }
     if (pattern != null) {
       await tester.tap(find.text(pattern));
       await tester.pump();
@@ -247,6 +260,109 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
       expect(patternId(), 'frontal');
+    },
+  );
+
+  testWidgets(
+    '(h) Nivel 2 transversal: flecha de evasión del color del oponente, sin '
+    'defensa; sin flecha tras el corte (Spec 003, FR-009)',
+    (tester) async {
+      final h = _Harness();
+      await h.start(tester, level: 'Nivel 2', pattern: 'Transversal');
+      final session = tester
+          .widget<ExerciseScreen>(find.byType(ExerciseScreen))
+          .session;
+      expect(session.level.id, 'level_2');
+      expect(session.pattern.id, 'transversal');
+
+      Iterable<CustomPainter> painters() => tester
+          .widgetList<CustomPaint>(find.byType(CustomPaint))
+          .map((w) => w.painter)
+          .whereType<CustomPainter>();
+
+      // Aviso del 1.er ataque (sorteo 0 → right, azul) y corte.
+      for (final ms in [_warningAt, _cutAt]) {
+        await h.advanceTo(tester, ms);
+        final signals = painters().whereType<SignalPainter>().toList();
+        final opponent = painters().whereType<OpponentPainter>().single;
+        expect(signals, hasLength(1), reason: '$ms ms');
+        expect(signals.single.signal.responseType, ResponseType.evasion);
+        expect(signals.single.signal.screenSide, Side.right);
+        expect(signals.single.saberColor, SaberColor.blue);
+        expect(signals.single.saberColor, opponent.saberColor);
+      }
+
+      // Corte hasta 5.2 s; la señal siguiente llega en 5.7 s.
+      await h.advanceTo(tester, 5400);
+      expect(painters().whereType<SignalPainter>(), isEmpty);
+    },
+  );
+
+  testWidgets(
+    '(i) Nivel 2 frontal: Repetir conserva nivel y patrón; Volver permite el '
+    'Nivel 1 con símbolo de defensa (Spec 003, US3-2, US3-3, FR-012)',
+    (tester) async {
+      final h = _Harness();
+      await h.start(tester, level: 'Nivel 2', pattern: 'Frontal');
+      Session session() =>
+          tester.widget<ExerciseScreen>(find.byType(ExerciseScreen)).session;
+      Iterable<SignalPainter> signals() => tester
+          .widgetList<CustomPaint>(find.byType(CustomPaint))
+          .map((w) => w.painter)
+          .whereType<SignalPainter>();
+      expect(session().level.id, 'level_2');
+      expect(session().pattern.id, 'frontal');
+
+      await h.advanceTo(tester, _finishedAt);
+      await tester.tap(find.text(StringsEs.repeat));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 16));
+      expect(find.text('3'), findsOneWidget);
+      expect(session().level.id, 'level_2');
+      expect(session().pattern.id, 'frontal');
+      await h.advanceTo(tester, _warningAt);
+      expect(signals().single.signal.responseType, ResponseType.evasion);
+
+      await h.advanceTo(tester, _finishedAt);
+      await tester.tap(find.text(StringsEs.back));
+      await tester.pumpAndSettle();
+      _expectBackOnSelection(tester);
+
+      await tester.tap(find.text('Nivel 1'));
+      await tester.pump();
+      await tester.tap(find.text(StringsEs.start));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(session().level.id, 'level_1');
+      expect(session().pattern.id, 'frontal');
+
+      await h.advanceTo(tester, _warningAt);
+      expect(signals().single.signal.responseType, ResponseType.defense);
+    },
+  );
+
+  testWidgets(
+    '(j) Nivel 2: Detener con la flecha visible vuelve a la selección sin '
+    'Guman (Spec 003, FR-011)',
+    (tester) async {
+      final h = _Harness();
+      await h.start(tester, level: 'Nivel 2', pattern: 'Transversal');
+      await h.advanceTo(tester, _warningAt);
+      final signal = tester
+          .widgetList<CustomPaint>(find.byType(CustomPaint))
+          .map((w) => w.painter)
+          .whereType<SignalPainter>()
+          .single
+          .signal;
+      expect(signal.responseType, ResponseType.evasion);
+
+      await tester.tap(find.text(StringsEs.stop));
+      await tester.pumpAndSettle();
+      expect(h.stopped, isTrue);
+      _expectBackOnSelection(tester);
+
+      await h.advanceTo(tester, 40000);
+      expect(h.voice.announced, [VoiceCommand.start]);
     },
   );
 }
