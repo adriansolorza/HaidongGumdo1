@@ -9,6 +9,7 @@ import 'package:haidonggumdo/domain/catalog/catalog.dart';
 import 'package:haidonggumdo/domain/catalog/enums.dart';
 import 'package:haidonggumdo/domain/exercise/attack.dart';
 import 'package:haidonggumdo/domain/exercise/exercise_snapshot.dart';
+import 'package:haidonggumdo/domain/exercise/session.dart';
 import 'package:haidonggumdo/domain/ports/catalog_repository.dart';
 import 'package:haidonggumdo/presentation/exercise/exercise_screen.dart';
 import 'package:haidonggumdo/presentation/exercise/painters/opponent_painter.dart';
@@ -294,6 +295,74 @@ void main() {
       // Corte hasta 5.2 s; la señal siguiente llega en 5.7 s.
       await h.advanceTo(tester, 5400);
       expect(painters().whereType<SignalPainter>(), isEmpty);
+    },
+  );
+
+  testWidgets(
+    '(i) Nivel 2 frontal: Repetir conserva nivel y patrón; Volver permite el '
+    'Nivel 1 con símbolo de defensa (Spec 003, US3-2, US3-3, FR-012)',
+    (tester) async {
+      final h = _Harness();
+      await h.start(tester, level: 'Nivel 2', pattern: 'Frontal');
+      Session session() =>
+          tester.widget<ExerciseScreen>(find.byType(ExerciseScreen)).session;
+      Iterable<SignalPainter> signals() => tester
+          .widgetList<CustomPaint>(find.byType(CustomPaint))
+          .map((w) => w.painter)
+          .whereType<SignalPainter>();
+      expect(session().level.id, 'level_2');
+      expect(session().pattern.id, 'frontal');
+
+      await h.advanceTo(tester, _finishedAt);
+      await tester.tap(find.text(StringsEs.repeat));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 16));
+      expect(find.text('3'), findsOneWidget);
+      expect(session().level.id, 'level_2');
+      expect(session().pattern.id, 'frontal');
+      await h.advanceTo(tester, _warningAt);
+      expect(signals().single.signal.responseType, ResponseType.evasion);
+
+      await h.advanceTo(tester, _finishedAt);
+      await tester.tap(find.text(StringsEs.back));
+      await tester.pumpAndSettle();
+      _expectBackOnSelection(tester);
+
+      await tester.tap(find.text('Nivel 1'));
+      await tester.pump();
+      await tester.tap(find.text(StringsEs.start));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(session().level.id, 'level_1');
+      expect(session().pattern.id, 'frontal');
+
+      await h.advanceTo(tester, _warningAt);
+      expect(signals().single.signal.responseType, ResponseType.defense);
+    },
+  );
+
+  testWidgets(
+    '(j) Nivel 2: Detener con la flecha visible vuelve a la selección sin '
+    'Guman (Spec 003, FR-011)',
+    (tester) async {
+      final h = _Harness();
+      await h.start(tester, level: 'Nivel 2', pattern: 'Transversal');
+      await h.advanceTo(tester, _warningAt);
+      final signal = tester
+          .widgetList<CustomPaint>(find.byType(CustomPaint))
+          .map((w) => w.painter)
+          .whereType<SignalPainter>()
+          .single
+          .signal;
+      expect(signal.responseType, ResponseType.evasion);
+
+      await tester.tap(find.text(StringsEs.stop));
+      await tester.pumpAndSettle();
+      expect(h.stopped, isTrue);
+      _expectBackOnSelection(tester);
+
+      await h.advanceTo(tester, 40000);
+      expect(h.voice.announced, [VoiceCommand.start]);
     },
   );
 }

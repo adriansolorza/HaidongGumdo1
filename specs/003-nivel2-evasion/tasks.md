@@ -1,5 +1,4 @@
 ---
-
 description: "Task list for Spec 003: Nivel 2, señal de evasión"
 ---
 
@@ -28,7 +27,7 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
 
 **Purpose**: Confirmar la línea base antes de tocar código.
 
-- [X] T001 Desde la raíz del repo, en la rama `003-nivel2-evasion`, ejecutar `flutter analyze` y `flutter test` y confirmar que todo pasa sin cambios (línea base de las Specs 001 y 002, SC-007). Si algo falla, detenerse y reportarlo antes de seguir.
+- [x] T001 Desde la raíz del repo, en la rama `003-nivel2-evasion`, ejecutar `flutter analyze` y `flutter test` y confirmar que todo pasa sin cambios (línea base de las Specs 001 y 002, SC-007). Si algo falla, detenerse y reportarlo antes de seguir.
 
 ---
 
@@ -38,10 +37,10 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
 
 **⚠️ CRITICAL**: T002, T003 y T005 deben terminarse juntos para que compile: agregar el valor al enum vuelve no exhaustivos los `switch` de `signal.dart` y `signal_painter.dart`.
 
-- [X] T002 Agregar el valor `evasion` a `enum ResponseType { defense }` en `lib/domain/catalog/enums.dart` (queda `{ defense, evasion }`). Reescribir el comentario del enum: `evasion` se agregó en la Spec 003 y `counter` se agregará en la Spec 006 (excepción del Principio III: tipo de señal nuevo). No tocar `VoiceCommand`.
-- [X] T003 En `SignalPlacement.forAttack` de `lib/domain/exercise/signal.dart`, agregar la rama `ResponseType.evasion => Signal(responseType: attack.responseType, screenSide: attack.side)` con el comentario "Evasión: la señal va del lado del color del sable, contrario a la defensa (FR-006)". La rama `defense` (`attack.side.opposite`) no cambia. `Signal` no cambia de forma ni gana color (data-model: "La señal no lleva color").
-- [X] T004 [P] En `lib/presentation/exercise/painters/opponent_painter.dart`, exponer la unidad del oponente como constante pública `static const unitFraction = 0.27;` en `OpponentPainter`, con doc "unidad u = 0.27 × alto del lienzo", y usarla en `final unit = size.height * unitFraction;` (hoy literal `0.27`, línea 42). Cambio solo de visibilidad, sin cambio de comportamiento (plan D4).
-- [X] T005 En `lib/presentation/exercise/painters/signal_painter.dart` (depende de T002 y T004):
+- [x] T002 Agregar el valor `evasion` a `enum ResponseType { defense }` en `lib/domain/catalog/enums.dart` (queda `{ defense, evasion }`). Reescribir el comentario del enum: `evasion` se agregó en la Spec 003 y `counter` se agregará en la Spec 006 (excepción del Principio III: tipo de señal nuevo). No tocar `VoiceCommand`.
+- [x] T003 En `SignalPlacement.forAttack` de `lib/domain/exercise/signal.dart`, agregar la rama `ResponseType.evasion => Signal(responseType: attack.responseType, screenSide: attack.side)` con el comentario "Evasión: la señal va del lado del color del sable, contrario a la defensa (FR-006)". La rama `defense` (`attack.side.opposite`) no cambia. `Signal` no cambia de forma ni gana color (data-model: "La señal no lleva color").
+- [x] T004 [P] En `lib/presentation/exercise/painters/opponent_painter.dart`, exponer la unidad del oponente como constante pública `static const unitFraction = 0.27;` en `OpponentPainter`, con doc "unidad u = 0.27 × alto del lienzo", y usarla en `final unit = size.height * unitFraction;` (hoy literal `0.27`, línea 42). Cambio solo de visibilidad, sin cambio de comportamiento (plan D4).
+- [x] T005 En `lib/presentation/exercise/painters/signal_painter.dart` (depende de T002 y T004):
   - Cambiar el constructor a `const SignalPainter({required this.signal, required this.saberColor})` con el campo `final SaberColor saberColor;` (importar `domain/exercise/exercise_snapshot.dart`).
   - `shouldRepaint`: `oldDelegate.signal != signal || oldDelegate.saberColor != saberColor`.
   - En `paint`, agregar `case ResponseType.evasion: _paintEvasionArrow(canvas, size);`. `_paintDefenseSaber` no cambia e ignora `saberColor` (sigue `AppColors.saberWhite`).
@@ -57,14 +56,14 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
     - Contorno: "`AppColors.outline`, `kOutlineWidth`", con `StrokeJoin.round` como el símbolo de defensa.
     - La flecha izquierda es el reflejo exacto en `x` de la derecha (construir la derecha y reflejar con `x → w − x`).
   - Actualizar el doc de la clase para mencionar la Spec 003 (FR-006 a FR-009).
-- [X] T006 En `lib/presentation/exercise/exercise_screen.dart` (línea ~96), pasar el color del snapshot: `SignalPainter(signal: signal, saberColor: snapshot.saberColor)`, el mismo valor que ya recibe `OpponentPainter` (research R3). Depende de T005.
-- [X] T007 [P] En `assets/catalog/catalog.json`, agregar en `levels`, después de `level_1`, la entrada exacta del contrato: `{ "id": "level_2", "order": 2, "name": "Nivel 2", "responseLabel": "Evasión lateral", "purpose": "Calentamiento / base", "responseTypes": ["evasion"] }`. No tocar `glossary`, `voiceCommands` ni `patterns` (FR-003).
-- [X] T008 Ajustar `test/data/catalog_json_mapper_test.dart` (depende de T002 y T007; cambio de datos, no de lógica, plan D5):
+- [x] T006 En `lib/presentation/exercise/exercise_screen.dart` (línea ~96), pasar el color del snapshot: `SignalPainter(signal: signal, saberColor: snapshot.saberColor)`, el mismo valor que ya recibe `OpponentPainter` (research R3). Depende de T005.
+- [x] T007 [P] En `assets/catalog/catalog.json`, agregar en `levels`, después de `level_1`, la entrada exacta del contrato: `{ "id": "level_2", "order": 2, "name": "Nivel 2", "responseLabel": "Evasión lateral", "purpose": "Calentamiento / base", "responseTypes": ["evasion"] }`. No tocar `glossary`, `voiceCommands` ni `patterns` (FR-003).
+- [x] T008 Ajustar `test/data/catalog_json_mapper_test.dart` (depende de T002 y T007; cambio de datos, no de lógica, plan D5):
   - Prueba (a) del catálogo real (línea ~76): esperar `hasLength(2)`, orden `['level_1', 'level_2']`, y buscar cada nivel por `id` en lugar de `levels.single`; `level_1` sigue con `[ResponseType.defense]`.
   - Grupo nuevo "Nivel 2 (Spec 003)": `level_2` con `order` 2, `name` "Nivel 2", `responseLabel` "Evasión lateral", `purpose` "Calentamiento / base" y `responseTypes` `[ResponseType.evasion]` (FR-001).
   - Grupo (e): la prueba `'con "evasion" (no existe en Spec 001)'` deja de ser válida; cambiarla a un nombre inexistente (`'counter'`, que llega en la Spec 006) y renombrarla `'con "counter" (desconocido)'`. Agregar una prueba que `['evasion']` se acepta.
-- [X] T009 [P] En `test/domain/fakes/test_session.dart`, agregar `Session testLevel2Session()` (Nivel 2 + Patrón frontal) y `Session testLevel2TransversalSession()` (Nivel 2 + Patrón transversal), reutilizando `testSession().pattern` y `testTransversalSession().pattern` sin cambiarlos, con `Level(id: 'level_2', order: 2, name: 'Nivel 2', responseLabel: 'Evasión lateral', purpose: 'Calentamiento / base', responseTypes: [ResponseType.evasion])`.
-- [X] T010 [P] En `test/domain/signal_placement_test.dart`, agregar pruebas de evasión (contrato §2): `Attack(side: right, evasion)` → `Signal(evasion, screenSide: right)`; `Attack(side: left, evasion)` → `screenSide: left`; para un mismo ataque, la señal de evasión y la de defensa quedan en lados opuestos. Las pruebas de defensa existentes no cambian.
+- [x] T009 [P] En `test/domain/fakes/test_session.dart`, agregar `Session testLevel2Session()` (Nivel 2 + Patrón frontal) y `Session testLevel2TransversalSession()` (Nivel 2 + Patrón transversal), reutilizando `testSession().pattern` y `testTransversalSession().pattern` sin cambiarlos, con `Level(id: 'level_2', order: 2, name: 'Nivel 2', responseLabel: 'Evasión lateral', purpose: 'Calentamiento / base', responseTypes: [ResponseType.evasion])`.
+- [x] T010 [P] En `test/domain/signal_placement_test.dart`, agregar pruebas de evasión (contrato §2): `Attack(side: right, evasion)` → `Signal(evasion, screenSide: right)`; `Attack(side: left, evasion)` → `screenSide: left`; para un mismo ataque, la señal de evasión y la de defensa quedan en lados opuestos. Las pruebas de defensa existentes no cambian.
 
 **Checkpoint**: `flutter analyze` y `flutter test` pasan; el Nivel 2 ya aparece en la selección y se puede jugar con los dos patrones.
 
@@ -74,11 +73,11 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
 
 **Goal**: Nivel 2 + Patrón transversal: flecha del color del sable del lado del color, corte desde el costado contrario, flecha legible durante todo el barrido.
 
-**Independent Test**: Elegir Nivel 2 + Transversal, iniciar con valores por defecto y observar desde 3 m: color y lado de la flecha en cada ataque, corte desde el costado contrario, tiempos y cierre con *Guman* (quickstart §2 pasos 2–5).
+**Independent Test**: Elegir Nivel 2 + Transversal, iniciar con valores por defecto y observar desde 3 m: color y lado de la flecha en cada ataque, corte desde el costado contrario, tiempos y cierre con _Guman_ (quickstart §2 pasos 2–5).
 
 ### Tests for User Story 1
 
-- [X] T011 [P] [US1] Crear `test/presentation/signal_painter_test.dart`, renderizando a imagen con `PictureRecorder` → `toImage` → `toByteData` como en `test/presentation/opponent_painter_test.dart` (sin goldens, research R6). Para `Signal(evasion, right)` con `SaberColor.blue` y `Signal(evasion, left)` con `SaberColor.red`, en lienzos 20:9, 16:9, 16:10 y 4:3 (p. ej. 2000×900, 1600×900, 1600×1000, 1200×900):
+- [x] T011 [P] [US1] Crear `test/presentation/signal_painter_test.dart`, renderizando a imagen con `PictureRecorder` → `toImage` → `toByteData` como en `test/presentation/opponent_painter_test.dart` (sin goldens, research R6). Para `Signal(evasion, right)` con `SaberColor.blue` y `Signal(evasion, left)` con `SaberColor.red`, en lienzos 20:9, 16:9, 16:10 y 4:3 (p. ej. 2000×900, 1600×900, 1600×1000, 1200×900):
   - Todos los píxeles pintados están en la mitad `screenSide` y ninguno a menos de `SignalPainter.opponentClearanceUnits × OpponentPainter.unitFraction × h` del centro horizontal (FR-007).
   - Ninguno a menos del 4 % del ancho del borde.
   - El píxel central de la flecha tiene `AppColors.saberBlue` / `AppColors.saberRed` según `saberColor` (FR-008).
@@ -87,17 +86,17 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
   - Las imágenes izquierda y derecha son reflejos exactos en `x` (comparando máscaras de píxeles pintados).
   - Defensa: con `SaberColor.blue` y `SaberColor.red` el símbolo sigue blanco (sin píxeles azules ni rojos) y en el mismo lado que antes (FR-012).
   - `shouldRepaint` es `true` si cambia `saberColor` o `signal`, `false` si no cambia nada.
-- [X] T012 [US1] En `test/presentation/signal_painter_test.dart` (después de T011, mismo archivo), agregar dos pruebas de alcance (research R4/R6):
+- [x] T012 [US1] En `test/presentation/signal_painter_test.dart` (después de T011, mismo archivo), agregar dos pruebas de alcance (research R4/R6):
   - **Datos (por píxeles)**: cargar `assets/catalog/catalog.json` con el mapper y, para todos los patrones, los dos lados y todos los tramos (`guard → stance`, `stance → cutEnd`, `cutEnd → guard`, en pasos de 0.1, más `atGuard`), dibujar `OpponentPainter` en los 4 lienzos de T011 y comprobar que no pinta ningún píxel a `opponentClearanceUnits × u` o más del centro. Si falla, subir `opponentClearanceUnits` en `lib/presentation/exercise/painters/signal_painter.dart` (p. ej. a 1.5) y volver a correr T011. _(Implementación: reemplaza a la fórmula `max |x| + tipDiameter(0) / 2 + contorno ≤ 1.45`, que suma el círculo máximo de la punta al mayor `|x|` aunque no coinciden —en `|x| = 1.3` la hoja mide 0.87 u y no hay círculo— y por eso fallaría siempre, ya que 1.3 + 0.15 = 1.45 sin contar el contorno. La comprobación por píxeles cubre la hoja, las manos, el círculo y el contorno reales.)_
-  - **Píxeles**: con el Patrón transversal del catálogo real y sable azul, dibujar `OpponentPainter` en *Sodose* (`OpponentMotion` en `PoseKey.stance`, `side: right`) y al final del barrido (`PoseKey.cutEnd`), y `SignalPainter(Signal(evasion, right), SaberColor.blue)` en lienzos separados del mismo tamaño (20:9, 16:9, 16:10, 4:3). Comprobar que ningún píxel queda pintado en las dos imágenes a la vez. Repetir en espejo con `side: left`, `SaberColor.red` y la flecha a la izquierda (FR-007, caso límite "final del barrido").
-- [X] T013 [P] [US1] En `test/domain/exercise_engine_timeline_test.dart`, agregar un grupo "Nivel 2 transversal" con `testLevel2TransversalSession()` y los fakes existentes (`ManualClock`, `ScriptedRandomSource`): cada ataque tiene `responseType == ResponseType.evasion`; desde `signalAt` hasta `cutEndAt` el snapshot tiene `Signal(evasion, screenSide: attack.side)` (azul → `right`, rojo → `left`) y `saberColor == SaberColor.blue` cuando `attack.side == Side.right` y `SaberColor.red` cuando es `Side.left`; después de `cutEndAt` no hay señal y el sable vuelve a amarillo; los instantes (0.7 s de aviso, 0.5 s de corte) son iguales a los del Nivel 1 (US1-1, US1-2, US1-4, FR-009).
-- [X] T014 [P] [US1] En `test/domain/exercise_engine_motion_test.dart`, agregar una prueba: con la misma secuencia de `ScriptedRandomSource` y los mismos instantes de `ManualClock`, `testTransversalSession()` (Nivel 1) y `testLevel2TransversalSession()` producen el mismo `snapshot.motion` (`OpponentMotion`: `from`, `to`, `progress`, `side`) en cada fotograma, y durante cada ataque `motion.side == attack.side == signal.screenSide` (azul → `right`). El costado de pantalla de *Sodose* para cada `motion.side` lo fijan los datos (sin reflejar, `cut.start` del transversal tiene `x < 0`, la izquierda de la pantalla vista por el usuario) y `OpponentPainter`, que ya prueba `test/presentation/opponent_painter_test.dart` (Spec 002, "(a) Sodose en el costado del corte"); por eso *Sodose* y el inicio del corte quedan del lado contrario a la flecha (FR-010, US1-3, SC-003).
-- [X] T015 [P] [US1] En `test/domain/exercise_engine_simulation_test.dart`, parametrizar las simulaciones de aleatoriedad, máximo de N y tiempos de la 001 (SC-003 a SC-006 de la 001) para que también corran con `testLevel2TransversalSession()` y comprobar los mismos criterios; la regla de N se aplica a los lados (SC-006). Además, en cada ataque de cada simulación (≥ 200 ataques), comprobar que `signal.responseType == evasion`, que `signal.screenSide == attack.side` y que el `saberColor` del snapshot corresponde al lado (`right` ↔ `blue`, `left` ↔ `red`) (SC-002); y que `snapshot.motion.side == signal.screenSide` durante el ataque, lo que con los datos del catálogo pone *Sodose* del lado contrario a la flecha (SC-003, ver T014). Las expectativas existentes del Nivel 1 no cambian.
-- [X] T016 [US1] En `test/presentation/exercise_screen_test.dart`, agregar una prueba de widget con una sesión de Nivel 2 + Transversal: durante el aviso, el `CustomPaint` de la señal usa un `SignalPainter` con `signal.responseType == evasion` y `saberColor` igual al que recibe el `OpponentPainter`; no se dibuja ningún símbolo de defensa; tras el corte no hay `SignalPainter` (FR-009, caso límite "color de la flecha y del sable").
+  - **Píxeles**: con el Patrón transversal del catálogo real y sable azul, dibujar `OpponentPainter` en _Sodose_ (`OpponentMotion` en `PoseKey.stance`, `side: right`) y al final del barrido (`PoseKey.cutEnd`), y `SignalPainter(Signal(evasion, right), SaberColor.blue)` en lienzos separados del mismo tamaño (20:9, 16:9, 16:10, 4:3). Comprobar que ningún píxel queda pintado en las dos imágenes a la vez. Repetir en espejo con `side: left`, `SaberColor.red` y la flecha a la izquierda (FR-007, caso límite "final del barrido").
+- [x] T013 [P] [US1] En `test/domain/exercise_engine_timeline_test.dart`, agregar un grupo "Nivel 2 transversal" con `testLevel2TransversalSession()` y los fakes existentes (`ManualClock`, `ScriptedRandomSource`): cada ataque tiene `responseType == ResponseType.evasion`; desde `signalAt` hasta `cutEndAt` el snapshot tiene `Signal(evasion, screenSide: attack.side)` (azul → `right`, rojo → `left`) y `saberColor == SaberColor.blue` cuando `attack.side == Side.right` y `SaberColor.red` cuando es `Side.left`; después de `cutEndAt` no hay señal y el sable vuelve a amarillo; los instantes (0.7 s de aviso, 0.5 s de corte) son iguales a los del Nivel 1 (US1-1, US1-2, US1-4, FR-009).
+- [x] T014 [P] [US1] En `test/domain/exercise_engine_motion_test.dart`, agregar una prueba: con la misma secuencia de `ScriptedRandomSource` y los mismos instantes de `ManualClock`, `testTransversalSession()` (Nivel 1) y `testLevel2TransversalSession()` producen el mismo `snapshot.motion` (`OpponentMotion`: `from`, `to`, `progress`, `side`) en cada fotograma, y durante cada ataque `motion.side == attack.side == signal.screenSide` (azul → `right`). El costado de pantalla de _Sodose_ para cada `motion.side` lo fijan los datos (sin reflejar, `cut.start` del transversal tiene `x < 0`, la izquierda de la pantalla vista por el usuario) y `OpponentPainter`, que ya prueba `test/presentation/opponent_painter_test.dart` (Spec 002, "(a) Sodose en el costado del corte"); por eso _Sodose_ y el inicio del corte quedan del lado contrario a la flecha (FR-010, US1-3, SC-003).
+- [x] T015 [P] [US1] En `test/domain/exercise_engine_simulation_test.dart`, parametrizar las simulaciones de aleatoriedad, máximo de N y tiempos de la 001 (SC-003 a SC-006 de la 001) para que también corran con `testLevel2TransversalSession()` y comprobar los mismos criterios; la regla de N se aplica a los lados (SC-006). Además, en cada ataque de cada simulación (≥ 200 ataques), comprobar que `signal.responseType == evasion`, que `signal.screenSide == attack.side` y que el `saberColor` del snapshot corresponde al lado (`right` ↔ `blue`, `left` ↔ `red`) (SC-002); y que `snapshot.motion.side == signal.screenSide` durante el ataque, lo que con los datos del catálogo pone _Sodose_ del lado contrario a la flecha (SC-003, ver T014). Las expectativas existentes del Nivel 1 no cambian.
+- [x] T016 [US1] En `test/presentation/exercise_screen_test.dart`, agregar una prueba de widget con una sesión de Nivel 2 + Transversal: durante el aviso, el `CustomPaint` de la señal usa un `SignalPainter` con `signal.responseType == evasion` y `saberColor` igual al que recibe el `OpponentPainter`; no se dibuja ningún símbolo de defensa; tras el corte no hay `SignalPainter` (FR-009, caso límite "color de la flecha y del sable").
 
 ### Validation for User Story 1
 
-- [X] T017 [US1] Validación manual en dispositivo según `specs/003-nivel2-evasion/quickstart.md` §2 pasos 2–5 (y paso 5 en 4:3 o 16:10 si hay dispositivo), y §3.1 (SC-004) con el Patrón transversal, incluido el final del barrido. Si SC-004 falla, aplicar solo los ajustes de painter previstos en plan D6 / research R4–R5 en `lib/presentation/exercise/painters/signal_painter.dart` y repetir T011.
+- [x] T017 [US1] Validación manual en dispositivo según `specs/003-nivel2-evasion/quickstart.md` §2 pasos 2–5 (y paso 5 en 4:3 o 16:10 si hay dispositivo), y §3.1 (SC-004) con el Patrón transversal, incluido el final del barrido. Si SC-004 falla, aplicar solo los ajustes de painter previstos en plan D6 / research R4–R5 en `lib/presentation/exercise/painters/signal_painter.dart` y repetir T011.
 
 **Checkpoint**: US1 completa y validada: el MVP del Nivel 2 funciona con el Patrón transversal.
 
@@ -107,17 +106,17 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
 
 **Goal**: Nivel 2 + Patrón frontal: flecha del color del sable; el oponente se mueve exactamente como en el Nivel 1 frontal.
 
-**Independent Test**: Elegir Nivel 2 + Frontal, iniciar con valores por defecto y comprobar color y lado de la flecha en cada ataque, y que el oponente sube a *Chochôn-se* y corta igual que en el Nivel 1 (quickstart §2 paso 7).
+**Independent Test**: Elegir Nivel 2 + Frontal, iniciar con valores por defecto y comprobar color y lado de la flecha en cada ataque, y que el oponente sube a _Chochôn-se_ y corta igual que en el Nivel 1 (quickstart §2 paso 7).
 
 ### Tests for User Story 2
 
-- [X] T018 [P] [US2] En `test/domain/exercise_engine_timeline_test.dart`, agregar un grupo "Nivel 2 frontal" con `testLevel2Session()`: ataques `evasion`, señal `Signal(evasion, screenSide: attack.side)` desde `signalAt` hasta `cutEndAt`, azul → `right`, rojo → `left` (US2-1).
-- [X] T019 [P] [US2] En `test/domain/exercise_engine_motion_test.dart`, agregar una prueba: con la misma secuencia aleatoria y los mismos instantes, `testSession()` (Nivel 1 frontal) y `testLevel2Session()` producen poses idénticas (*Chayôn-se* → *Chochôn-se* → *Chungmyôn begi* → *Chayôn-se*), y las poses no dependen del lado (US2-2, FR-002).
-- [X] T020 [P] [US2] En `test/domain/exercise_engine_simulation_test.dart`, extender la parametrización de T015 para que las simulaciones también corran con `testLevel2Session()` (SC-006), con las mismas comprobaciones por ataque de T015 para SC-002 (la de `motion.side` no aplica al frontal, que no se refleja). Si T015 ya parametrizó por sesión, basta con agregar la sesión a la lista.
+- [x] T018 [P] [US2] En `test/domain/exercise_engine_timeline_test.dart`, agregar un grupo "Nivel 2 frontal" con `testLevel2Session()`: ataques `evasion`, señal `Signal(evasion, screenSide: attack.side)` desde `signalAt` hasta `cutEndAt`, azul → `right`, rojo → `left` (US2-1).
+- [x] T019 [P] [US2] En `test/domain/exercise_engine_motion_test.dart`, agregar una prueba: con la misma secuencia aleatoria y los mismos instantes, `testSession()` (Nivel 1 frontal) y `testLevel2Session()` producen poses idénticas (_Chayôn-se_ → _Chochôn-se_ → _Chungmyôn begi_ → _Chayôn-se_), y las poses no dependen del lado (US2-2, FR-002).
+- [x] T020 [P] [US2] En `test/domain/exercise_engine_simulation_test.dart`, extender la parametrización de T015 para que las simulaciones también corran con `testLevel2Session()` (SC-006), con las mismas comprobaciones por ataque de T015 para SC-002 (la de `motion.side` no aplica al frontal, que no se refleja). Si T015 ya parametrizó por sesión, basta con agregar la sesión a la lista.
 
 ### Validation for User Story 2
 
-- [ ] T021 [US2] Validación manual según `specs/003-nivel2-evasion/quickstart.md` §2 paso 7 y §3.1 (SC-004) con el Patrón frontal.
+- [x] T021 [US2] Validación manual según `specs/003-nivel2-evasion/quickstart.md` §2 paso 7 y §3.1 (SC-004) con el Patrón frontal.
 
 **Checkpoint**: US1 y US2 funcionan; el Nivel 2 se juega con los dos patrones.
 
@@ -131,12 +130,12 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
 
 ### Tests for User Story 3
 
-- [ ] T022 [P] [US3] En `test/presentation/selection_screen_test.dart`, agregar pruebas con un catálogo de dos niveles (el `_FakeRepository` existente con los niveles del catálogo real, o el asset real si el archivo ya lo carga): la lista "Nivel" muestra "Nivel 1" y "Nivel 2" en ese orden; el Nivel 1 está preseleccionado y el patrón Frontal también; el Nivel 2 muestra el subtítulo "Evasión lateral — Calentamiento / base"; elegir Nivel 2 + Transversal y pulsar Iniciar abre el ejercicio con una sesión cuyo `level.id == 'level_2'` y `pattern.id == 'transversal'` (US3-1, US3-2, FR-004, FR-005, SC-001: tres acciones).
-- [ ] T023 [P] [US3] En `test/presentation/exercise_screen_test.dart` (después de T016 si se trabaja en el mismo archivo), agregar: al terminar un ejercicio de Nivel 2 + Frontal, Repetir inicia uno nuevo con el mismo nivel y patrón; Volver regresa a la selección, donde se puede elegir el Nivel 1 e iniciar un ejercicio que muestra `SignalPainter` con `ResponseType.defense` (US3-2, US3-3, FR-012). Detener con una flecha visible vuelve a la selección sin voz de fin (`FakeVoiceAnnouncer`).
+- [x] T022 [P] [US3] En `test/presentation/selection_screen_test.dart`, agregar pruebas con un catálogo de dos niveles (el `_FakeRepository` existente con los niveles del catálogo real, o el asset real si el archivo ya lo carga): la lista "Nivel" muestra "Nivel 1" y "Nivel 2" en ese orden; el Nivel 1 está preseleccionado y el patrón Frontal también; el Nivel 2 muestra el subtítulo "Evasión lateral — Calentamiento / base"; elegir Nivel 2 + Transversal y pulsar Iniciar abre el ejercicio con una sesión cuyo `level.id == 'level_2'` y `pattern.id == 'transversal'` (US3-1, US3-2, FR-004, FR-005, SC-001: tres acciones).
+- [x] T023 [P] [US3] En `test/presentation/exercise_screen_test.dart` (después de T016 si se trabaja en el mismo archivo), agregar: al terminar un ejercicio de Nivel 2 + Frontal, Repetir inicia uno nuevo con el mismo nivel y patrón; Volver regresa a la selección, donde se puede elegir el Nivel 1 e iniciar un ejercicio que muestra `SignalPainter` con `ResponseType.defense` (US3-2, US3-3, FR-012). Detener con una flecha visible vuelve a la selección sin voz de fin (`FakeVoiceAnnouncer`).
 
 ### Validation for User Story 3
 
-- [ ] T024 [US3] Validación manual según `specs/003-nivel2-evasion/quickstart.md` §2 pasos 1, 6, 8 y 9.
+- [x] T024 [US3] Validación manual según `specs/003-nivel2-evasion/quickstart.md` §2 pasos 1, 6, 8 y 9.
 
 **Checkpoint**: Las tres historias funcionan de forma independiente.
 
@@ -146,9 +145,9 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
 
 **Purpose**: Verificar el alcance del cambio (Principio III, SC-007) y la distinción defensa/evasión a 3 m.
 
-- [ ] T025 Ejecutar `flutter analyze` y `flutter test` desde la raíz; todo debe pasar.
-- [ ] T026 Ejecutar `git diff --stat main -- lib` y confirmar que solo cambian `lib/domain/catalog/enums.dart`, `lib/domain/exercise/signal.dart`, `lib/presentation/exercise/painters/signal_painter.dart`, `lib/presentation/exercise/painters/opponent_painter.dart` y `lib/presentation/exercise/exercise_screen.dart` (FR-002, SC-007). Ejecutar `git diff main -- test` y confirmar que en las pruebas de las Specs 001 y 002 solo cambiaron las expectativas de datos del catálogo (T008: prueba (a) y nombre desconocido en (e)), no las de la lógica del ejercicio.
-- [ ] T027 Prueba manual SC-005 a 3 m según `specs/003-nivel2-evasion/quickstart.md` §3.2 (alternar Nivel 1 y Nivel 2 sin anunciar; criterio: 2 de 3 observadores aciertan "defender"/"evadir" en ≥ 95 % de los ataques), y §4 (tiempos grabados a 60 fps iguales a los del Nivel 1). Registrar el resultado en la descripción del PR.
+- [x] T025 Ejecutar `flutter analyze` y `flutter test` desde la raíz; todo debe pasar.
+- [x] T026 Ejecutar `git diff --stat main -- lib` y confirmar que solo cambian `lib/domain/catalog/enums.dart`, `lib/domain/exercise/signal.dart`, `lib/presentation/exercise/painters/signal_painter.dart`, `lib/presentation/exercise/painters/opponent_painter.dart` y `lib/presentation/exercise/exercise_screen.dart` (FR-002, SC-007). Ejecutar `git diff main -- test` y confirmar que en las pruebas de las Specs 001 y 002 solo cambiaron las expectativas de datos del catálogo (T008: prueba (a) y nombre desconocido en (e)), no las de la lógica del ejercicio.
+- [x] T027 Prueba manual SC-005 a 3 m según `specs/003-nivel2-evasion/quickstart.md` §3.2 (alternar Nivel 1 y Nivel 2 sin anunciar; criterio: 2 de 3 observadores aciertan "defender"/"evadir" en ≥ 95 % de los ataques), y §4 (tiempos grabados a 60 fps iguales a los del Nivel 1). Registrar el resultado en la descripción del PR.
 
 ---
 
