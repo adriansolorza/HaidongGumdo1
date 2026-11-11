@@ -2,13 +2,17 @@
 /// y los nombres de niveles y patrones salen del catálogo, no de aquí.
 abstract final class StringsEs {
   static const appTitle = 'Haidong Gumdo';
-  static const levelHeader = 'Nivel';
-  static const patternHeader = 'Patrón';
-  static const start = 'Iniciar';
-  static const stop = 'Detener';
-  static const repeat = 'Repetir';
-  static const back = 'Volver';
+  static const appHeader = 'HAIDONG GUMDO';
+  static const appSubtitle = 'Entrenamiento de reacción · 해동검도';
+  static const levelHeader = 'NIVEL';
+  static const patternHeader = 'PATRÓN';
+  static const start = 'INICIAR';
+  static const stop = 'DETENER';
+  static const repeat = 'REPETIR';
+  static const back = 'VOLVER';
   static const loadingCatalog = 'Cargando catálogo…';
   static const catalogError = 'No se pudo cargar el catálogo de ejercicios.';
+
+  /// Se elimina en T029, cuando el HUD nuevo deje de usarlo.
   static const remaining = 'Restante';
 }

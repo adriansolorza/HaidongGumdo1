@@ -4,15 +4,22 @@ import '../../../domain/catalog/enums.dart';
 import '../../../domain/exercise/attack.dart';
 import '../../../domain/exercise/exercise_snapshot.dart';
 import '../../../domain/exercise/signal.dart';
+import '../../scene/scene_layout.dart';
 import '../../theme.dart';
-import 'opponent_painter.dart';
 
 /// Señal de respuesta en la mitad de la pantalla que indica `signal.screenSide`
 /// (Spec 001: research R12, FR-015, FR-016). Defensa: sable blanco en planta.
 /// Evasión (Spec 003, FR-006 a FR-009): flecha horizontal del color del sable,
-/// apuntando al borde exterior.
+/// apuntando al borde exterior, dentro del carril de `SceneLayout` (Spec 004).
 class SignalPainter extends CustomPainter {
-  const SignalPainter({required this.signal, required this.saberColor});
+  const SignalPainter({
+    required this.layout,
+    required this.signal,
+    required this.saberColor,
+  });
+
+  /// Carriles de señal fuera del alcance del oponente (Spec 004, research R5).
+  final SceneLayout layout;
 
   final Signal signal;
 
@@ -22,14 +29,6 @@ class SignalPainter extends CustomPainter {
 
   /// Alto del símbolo respecto al alto disponible (mínimo 30 %, FR-016).
   static const _heightFraction = 0.6;
-
-  /// Alcance del oponente en unidades `u` (`OpponentPainter.unitFraction`):
-  /// mayor `|x|` del catálogo (1.3 u) más 0.15 u de margen de hoja y contorno
-  /// (research R4). Ningún píxel de la flecha queda más cerca del centro.
-  static const opponentClearanceUnits = 1.45;
-
-  /// Margen exterior de la flecha respecto al ancho de la pantalla.
-  static const _edgeMarginFraction = 0.04;
 
   /// Largo máximo de la flecha respecto al alto de la pantalla.
   static const _maxLengthFraction = 0.36;
@@ -60,12 +59,13 @@ class SignalPainter extends CustomPainter {
 
     final w = size.width;
     final h = size.height;
-    final unit = h * OpponentPainter.unitFraction;
+    // Se construye la flecha de la derecha en el carril derecho y se refleja.
     // El contorno sobresale media línea: se descuenta en los dos extremos
-    // para que ningún píxel salga del tramo.
+    // para que ningún píxel salga del carril.
+    final lane = layout.rightLane;
     const halfStroke = kOutlineWidth / 2;
-    final outer = w * (1 - _edgeMarginFraction) - halfStroke;
-    final innerLimit = w / 2 + opponentClearanceUnits * unit + halfStroke;
+    final outer = lane.right - halfStroke;
+    final innerLimit = lane.left + halfStroke;
     final length = (outer - innerLimit).clamp(0.0, h * _maxLengthFraction);
     if (length <= 0) return;
 
@@ -162,5 +162,7 @@ class SignalPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(SignalPainter oldDelegate) =>
-      oldDelegate.signal != signal || oldDelegate.saberColor != saberColor;
+      oldDelegate.layout != layout ||
+      oldDelegate.signal != signal ||
+      oldDelegate.saberColor != saberColor;
 }

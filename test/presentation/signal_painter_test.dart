@@ -13,6 +13,7 @@ import 'package:haidonggumdo/domain/exercise/opponent_motion.dart';
 import 'package:haidonggumdo/domain/exercise/signal.dart';
 import 'package:haidonggumdo/presentation/exercise/painters/opponent_painter.dart';
 import 'package:haidonggumdo/presentation/exercise/painters/signal_painter.dart';
+import 'package:haidonggumdo/presentation/scene/scene_layout.dart';
 import 'package:haidonggumdo/presentation/theme.dart';
 
 /// Lienzos horizontales de las 4 proporciones de research R4.
@@ -46,16 +47,32 @@ Future<Uint8List> _render(CustomPainter painter, int w, int h) async {
   return data!.buffer.asUint8List();
 }
 
-SignalPainter _signal(Signal signal, SaberColor color) =>
-    SignalPainter(signal: signal, saberColor: color);
+/// Catálogo real: la geometría de la escena depende de sus posturas.
+final _catalog = const CatalogJsonMapper().fromJsonString(
+  File('assets/catalog/catalog.json').readAsStringSync(),
+);
 
-OpponentPainter _opponent(Pattern pattern, OpponentMotion motion) =>
-    OpponentPainter(
-      saberColor: SaberColor.blue,
-      guard: pattern.guard,
-      cut: pattern.cut,
-      motion: motion,
-    );
+/// Geometría compartida para un lienzo de [w] × [h] (Spec 004, research R5).
+SceneLayout _layout(int w, int h, [Pattern? pattern]) => SceneLayout.compute(
+  Size(w.toDouble(), h.toDouble()),
+  pattern ?? _catalog.patterns.first,
+);
+
+SignalPainter _signal(Signal signal, SaberColor color, int w, int h) =>
+    SignalPainter(layout: _layout(w, h), signal: signal, saberColor: color);
+
+OpponentPainter _opponent(
+  Pattern pattern,
+  OpponentMotion motion,
+  int w,
+  int h,
+) => OpponentPainter(
+  layout: _layout(w, h, pattern),
+  saberColor: SaberColor.blue,
+  guard: pattern.guard,
+  cut: pattern.cut,
+  motion: motion,
+);
 
 bool _painted(Uint8List px, int i) => px[i + 3] > 0;
 
@@ -78,14 +95,17 @@ Map<int, int> _columnHeights(Uint8List px, int w, int h) {
   return heights;
 }
 
-/// Alcance del oponente en píxeles para un lienzo de alto [h].
-double _clearancePx(int h) =>
-    SignalPainter.opponentClearanceUnits * OpponentPainter.unitFraction * h;
+/// Alcance del oponente en píxeles (borde interior del carril) para un lienzo
+/// de [w] × [h].
+double _clearancePx(int w, int h) {
+  final layout = _layout(w, h);
+  return (layout.reachX + SceneLayout.laneGap) * layout.unit;
+}
 
 /// Largo pintado esperado: el tramo entre el alcance y el 4 % del borde, con
 /// tope de 0.36 h más el contorno, que sobresale media línea en cada extremo.
 double _expectedPaintedLength(int w, int h) {
-  final span = w * 0.96 - (w / 2 + _clearancePx(h));
+  final span = w * 0.96 - (w / 2 + _clearancePx(w, h));
   final capped = 0.36 * h + kOutlineWidth;
   return span < capped ? span : capped;
 }
@@ -103,13 +123,13 @@ void main() {
         test('$name: en su mitad, fuera del alcance del oponente y a ≥ 4 % '
             'del borde', () async {
           final columns = _columnHeights(
-            await _render(_signal(signal, color), w, h),
+            await _render(_signal(signal, color, w, h), w, h),
             w,
             h,
           ).keys;
           expect(columns, isNotEmpty);
           // ±1 px de tolerancia por el suavizado de bordes.
-          final inner = w / 2 + _clearancePx(h) - 1;
+          final inner = w / 2 + _clearancePx(w, h) - 1;
           final outer = w * 0.96 + 1;
           for (final x in columns) {
             // La columna x cubre [x, x + 1); en la izquierda se refleja.
@@ -121,7 +141,7 @@ void main() {
 
         test('$name: largo y punta hacia el borde exterior', () async {
           final heights = _columnHeights(
-            await _render(_signal(signal, color), w, h),
+            await _render(_signal(signal, color, w, h), w, h),
             w,
             h,
           );
@@ -149,7 +169,7 @@ void main() {
 
         test('$name: relleno del color del sable, sin el otro color '
             '(FR-008)', () async {
-          final px = await _render(_signal(signal, color), w, h);
+          final px = await _render(_signal(signal, color, w, h), w, h);
           final fill = color == SaberColor.blue
               ? AppColors.saberBlue
               : AppColors.saberRed;
@@ -171,12 +191,12 @@ void main() {
         '$ratio: la flecha izquierda es el reflejo exacto de la derecha',
         () async {
           final right = await _render(
-            _signal(_evasionRight, SaberColor.blue),
+            _signal(_evasionRight, SaberColor.blue, w, h),
             w,
             h,
           );
           final left = await _render(
-            _signal(_evasionLeft, SaberColor.blue),
+            _signal(_evasionLeft, SaberColor.blue, w, h),
             w,
             h,
           );
@@ -209,8 +229,16 @@ void main() {
     test('ignora saberColor: sigue blanca, sin azul ni rojo', () async {
       const w = 1600;
       const h = 900;
-      final blue = await _render(_signal(_defenseLeft, SaberColor.blue), w, h);
-      final red = await _render(_signal(_defenseLeft, SaberColor.red), w, h);
+      final blue = await _render(
+        _signal(_defenseLeft, SaberColor.blue, w, h),
+        w,
+        h,
+      );
+      final red = await _render(
+        _signal(_defenseLeft, SaberColor.red, w, h),
+        w,
+        h,
+      );
       expect(blue, red);
       var white = 0;
       var colored = 0;
@@ -230,7 +258,7 @@ void main() {
 
   group('shouldRepaint', () {
     SignalPainter p(Signal s, SaberColor c) =>
-        SignalPainter(signal: s, saberColor: c);
+        SignalPainter(layout: _layout(1600, 900), signal: s, saberColor: c);
 
     test('false con los mismos valores', () {
       expect(
@@ -277,13 +305,13 @@ void main() {
       test('$ratio: ningún patrón pinta fuera del alcance en ninguna fase', () async {
         // Basta con mirar las columnas fuera del alcance, a los dos lados:
         // [0, leftEnd) y [rightStart, w).
-        final limit = _clearancePx(h);
+        final limit = _clearancePx(w, h);
         final leftEnd = (w / 2 - limit).floor();
         final rightStart = (w / 2 + limit).ceil();
         final violations = <String>[];
         for (final pattern in catalog.patterns) {
           for (final motion in motions) {
-            final px = await _render(_opponent(pattern, motion), w, h);
+            final px = await _render(_opponent(pattern, motion, w, h), w, h);
             var maxOut = 0.0;
             for (var y = 0; y < h; y++) {
               for (final range in [(0, leftEnd), (rightStart, w)]) {
@@ -310,10 +338,10 @@ void main() {
           (Side.right, SaberColor.blue, _evasionRight),
           (Side.left, SaberColor.red, _evasionLeft),
         ]) {
-          final arrow = await _render(_signal(signal, color), w, h);
+          final arrow = await _render(_signal(signal, color, w, h), w, h);
           for (final key in [PoseKey.stance, PoseKey.cutEnd]) {
             final opponent = await _render(
-              _opponent(transversal, still(key, side)),
+              _opponent(transversal, still(key, side), w, h),
               w,
               h,
             );

@@ -7,6 +7,7 @@ import '../data/platform/flutter_tts_voice_announcer.dart';
 import '../data/platform/stopwatch_clock.dart';
 import '../data/platform/wakelock_plus_screen_wake_lock.dart';
 import '../domain/catalog/catalog.dart';
+import '../domain/exercise/exercise_parameters.dart';
 import '../domain/exercise/session.dart';
 import '../domain/ports/catalog_repository.dart';
 import '../domain/ports/elapsed_clock.dart';
@@ -32,6 +33,14 @@ final voiceAnnouncerProvider = Provider<VoiceAnnouncer>(
 
 final screenWakeLockProvider = Provider<ScreenWakeLock>(
   (ref) => const WakelockPlusScreenWakeLock(),
+);
+
+/// Parámetros vigentes del ejercicio (duración, aviso, corte, intervalos). Los
+/// usan el controlador, el HUD y el resumen de la selección, para que la
+/// duración no pueda diferir entre ellos. La Spec 005 lo reemplazará por la
+/// configuración del usuario.
+final exerciseParametersProvider = Provider<ExerciseParameters>(
+  (ref) => ExerciseParameters.defaults(),
 );
 
 /// Catálogo cargado una vez desde el repositorio.

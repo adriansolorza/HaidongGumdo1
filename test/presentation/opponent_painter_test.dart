@@ -8,6 +8,7 @@ import 'package:haidonggumdo/domain/exercise/attack.dart';
 import 'package:haidonggumdo/domain/exercise/exercise_snapshot.dart';
 import 'package:haidonggumdo/domain/exercise/opponent_motion.dart';
 import 'package:haidonggumdo/presentation/exercise/painters/opponent_painter.dart';
+import 'package:haidonggumdo/presentation/scene/scene_layout.dart';
 import 'package:haidonggumdo/presentation/theme.dart';
 
 import '../domain/fakes/test_session.dart';
@@ -20,6 +21,7 @@ OpponentPainter _painter({
   CutMotion? cut,
   OpponentMotion motion = OpponentMotion.atGuard,
 }) => OpponentPainter(
+  layout: SceneLayout.compute(const Size(1600, 900), _pattern),
   saberColor: color,
   guard: guard ?? _pattern.guard,
   cut: cut ?? _pattern.cut,
@@ -161,6 +163,7 @@ void main() {
     Future<Uint8List> render(OpponentMotion motion) async {
       final recorder = PictureRecorder();
       OpponentPainter(
+        layout: SceneLayout.compute(const Size(1600, 900), transversal),
         saberColor: SaberColor.blue,
         guard: transversal.guard,
         cut: transversal.cut,
@@ -261,6 +264,7 @@ void main() {
           final recorder = PictureRecorder();
           expect(
             () => OpponentPainter(
+              layout: SceneLayout.compute(const Size(1600, 900), transversal),
               saberColor: SaberColor.blue,
               guard: transversal.guard,
               cut: transversal.cut,

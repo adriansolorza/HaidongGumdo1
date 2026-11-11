@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../domain/exercise/exercise_snapshot.dart';
 import '../../domain/exercise/exercise_status.dart';
 import '../../domain/exercise/session.dart';
+import '../scene/dojang_painter.dart';
+import '../scene/scene_layout.dart';
 import '../strings_es.dart';
-import '../theme.dart';
 import 'exercise_controller.dart';
 import 'painters/opponent_painter.dart';
 import 'painters/signal_painter.dart';
@@ -80,81 +82,111 @@ class _ExerciseScreenState extends ConsumerState<ExerciseScreen>
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          CustomPaint(
-            painter: OpponentPainter(
-              saberColor: snapshot.saberColor,
-              guard: widget.session.pattern.guard,
-              cut: widget.session.pattern.cut,
-              motion: snapshot.motion,
-            ),
-          ),
-          if (snapshot.signal case final signal?)
-            CustomPaint(
-              painter: SignalPainter(
-                signal: signal,
-                saberColor: snapshot.saberColor,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final layout = _layoutFor(constraints.biggest);
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              // Capa 1: el dojang se rasteriza una vez (research R6, R13).
+              RepaintBoundary(
+                child: CustomPaint(painter: DojangPainter(layout: layout)),
               ),
-            ),
-          if (snapshot.status == ExerciseStatus.countdown &&
-              snapshot.countdownValue != null)
-            Center(
-              child: Text(
-                '${snapshot.countdownValue}',
-                style: textTheme.displayLarge,
-              ),
-            ),
-          Positioned(
-            top: 16,
-            right: 24,
-            child: SafeArea(
-              child: Text(
-                '${StringsEs.remaining} ${_seconds(snapshot.remaining)} s',
-                style: textTheme.titleMedium?.copyWith(color: Colors.white70),
-              ),
-            ),
-          ),
-          if (_isActive(snapshot.status))
-            Positioned(
-              top: 16,
-              left: 24,
-              child: SafeArea(
-                child: OutlinedButton(
-                  onPressed: _cancelAndLeave,
-                  child: const Text(StringsEs.stop),
+              CustomPaint(
+                painter: OpponentPainter(
+                  layout: layout,
+                  saberColor: snapshot.saberColor,
+                  guard: widget.session.pattern.guard,
+                  cut: widget.session.pattern.cut,
+                  motion: snapshot.motion,
                 ),
               ),
-            ),
-          if (snapshot.status == ExerciseStatus.finished)
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 24,
-              child: SafeArea(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    FilledButton(
-                      onPressed: () => ref
-                          .read(exerciseControllerProvider.notifier)
-                          .repeat(),
-                      child: const Text(StringsEs.repeat),
-                    ),
-                    const SizedBox(width: 24),
-                    OutlinedButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text(StringsEs.back),
-                    ),
-                  ],
+              if (snapshot.signal case final signal?)
+                CustomPaint(
+                  painter: SignalPainter(
+                    layout: layout,
+                    signal: signal,
+                    saberColor: snapshot.saberColor,
+                  ),
                 ),
-              ),
-            ),
-        ],
+              ..._overlay(context, snapshot, textTheme),
+            ],
+          );
+        },
       ),
     );
+  }
+
+  /// Geometría compartida, memoizada por tamaño (el patrón no cambia en la
+  /// vida de la pantalla).
+  SceneLayout _layoutFor(Size size) {
+    final cached = _layout;
+    if (cached != null && cached.size == size) return cached;
+    return _layout = SceneLayout.compute(size, widget.session.pattern);
+  }
+
+  SceneLayout? _layout;
+
+  /// Cuenta regresiva, tiempo restante y botones (se rehacen en US3).
+  List<Widget> _overlay(
+    BuildContext context,
+    ExerciseSnapshot snapshot,
+    TextTheme textTheme,
+  ) {
+    return [
+      if (snapshot.status == ExerciseStatus.countdown &&
+          snapshot.countdownValue != null)
+        Center(
+          child: Text(
+            '${snapshot.countdownValue}',
+            style: textTheme.displayLarge,
+          ),
+        ),
+      Positioned(
+        top: 16,
+        right: 24,
+        child: SafeArea(
+          child: Text(
+            '${StringsEs.remaining} ${_seconds(snapshot.remaining)} s',
+            style: textTheme.titleMedium?.copyWith(color: Colors.white70),
+          ),
+        ),
+      ),
+      if (_isActive(snapshot.status))
+        Positioned(
+          top: 16,
+          left: 24,
+          child: SafeArea(
+            child: OutlinedButton(
+              onPressed: _cancelAndLeave,
+              child: const Text(StringsEs.stop),
+            ),
+          ),
+        ),
+      if (snapshot.status == ExerciseStatus.finished)
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 24,
+          child: SafeArea(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                FilledButton(
+                  onPressed: () =>
+                      ref.read(exerciseControllerProvider.notifier).repeat(),
+                  child: const Text(StringsEs.repeat),
+                ),
+                const SizedBox(width: 24),
+                OutlinedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text(StringsEs.back),
+                ),
+              ],
+            ),
+          ),
+        ),
+    ];
   }
 
   /// Detener solo se ofrece mientras el ejercicio se puede cancelar.

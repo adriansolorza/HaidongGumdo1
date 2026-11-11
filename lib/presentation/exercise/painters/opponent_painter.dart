@@ -7,6 +7,7 @@ import '../../../domain/catalog/catalog.dart';
 import '../../../domain/exercise/attack.dart';
 import '../../../domain/exercise/exercise_snapshot.dart';
 import '../../../domain/exercise/opponent_motion.dart';
+import '../../scene/scene_layout.dart';
 import '../../theme.dart';
 
 /// Oponente virtual de frente, centrado, con el sable como trazo grueso
@@ -14,20 +15,20 @@ import '../../theme.dart';
 /// `cut.end`) y el tramo actual, de `snapshot.motion` (plan.md D3).
 class OpponentPainter extends CustomPainter {
   const OpponentPainter({
+    required this.layout,
     required this.saberColor,
     required this.guard,
     required this.cut,
     required this.motion,
   });
 
+  /// Unidad y origen de la figura, compartidos con las señales y el HUD
+  /// (Spec 004, research R5).
+  final SceneLayout layout;
   final SaberColor saberColor;
   final SaberPose guard;
   final CutMotion cut;
   final OpponentMotion motion;
-
-  /// Unidad de la figura: u = 0.27 × alto del lienzo. Pública para que la
-  /// señal de evasión respete el alcance del oponente (Spec 003, plan.md D4).
-  static const unitFraction = 0.27;
 
   /// Diámetro de la punta vista de frente, en unidades de la figura, según la
   /// longitud visible de la hoja: crece al acortarse por el escorzo para que
@@ -42,10 +43,10 @@ class OpponentPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Unidad = media altura de la figura. Se deja sitio para la punta en y = −1.6.
-    final unit = size.height * unitFraction;
-    final origin = Offset(size.width / 2, size.height * 0.58);
-    Offset toScreen(Point2 p) => origin + Offset(p.x * unit, p.y * unit);
+    // Unidad = media altura de la figura; la figura entera queda bajo el HUD.
+    final unit = layout.unit;
+    final origin = layout.origin;
+    final toScreen = layout.toScreen;
 
     final pose = _currentPose();
     final hilt = toScreen(pose.hilt);
@@ -174,6 +175,7 @@ class OpponentPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(OpponentPainter oldDelegate) =>
+      oldDelegate.layout != layout ||
       oldDelegate.saberColor != saberColor ||
       oldDelegate.guard != guard ||
       oldDelegate.cut != cut ||
