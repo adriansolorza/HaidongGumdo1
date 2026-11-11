@@ -53,7 +53,8 @@ Constantes:
 Fórmulas:
 - `uV = (floorLimit − hudBottom) / (saberExtent − topReach + figureBottom)`.
 - `uH = (w / 2 − edgeMargin − minLaneWidth) / (reachX + laneGap)`.
-- `rightLane = Rect.fromLTRB(origin.dx + (reachX + laneGap) · u, hudBottom, w − edgeMargin, floorLimit)`; `leftLane` es su reflejo respecto de `w / 2`.
+- `bottomLeftButton = Rect.fromLTWH(36 · s, h − (28 + 48) · s, 200 · s, 48 · s)`; `bottomRightButton` es su reflejo respecto de `w / 2`.
+- `rightLane = Rect.fromLTRB(origin.dx + (reachX + laneGap) · u, hudBottom, w − edgeMargin, bottomLeftButton.top − 12 · s)`; `leftLane` es su reflejo respecto de `w / 2`.
 
 Valores de referencia (Patrón frontal y transversal del catálogo actual, `topReach = −1.6`, `reachX = 1.43`):
 
@@ -69,6 +70,7 @@ Invariantes (probadas en las cuatro proporciones, research R14):
 - Toda la figura y el sable, en cualquier postura del patrón, quedan entre `hudBottom` y `floorLimit` (FR-017).
 - Ningún carril se cruza con `[origin.dx − (reachX)·u, origin.dx + (reachX)·u]` (FR-002).
 - `bottomLeftButton` y `bottomRightButton` no se cruzan con la caja de la figura.
+- Ningún carril se cruza con `bottomLeftButton` ni con `bottomRightButton` (FR-017: el HUD no tapa la señal).
 
 ## 3. Paleta (presentación)
 
@@ -198,6 +200,7 @@ Se dibujan dentro del carril del lado `signal.screenSide` (`SceneLayout.leftLane
 | Guarda | barra perpendicular al eje, ancho 0.26 del largo | `tsuba` (gris) |
 | Empuñadura | 26 % del largo, ancho `0.09 ×` largo | `grip` |
 | Contorno | todo el símbolo | `outline`, `kOutlineWidth` |
+| Brillo | hoja | color del sable al 60 %, `blur σ = 0.009 h`; `glowExtentDef = 3σ` |
 
 Con `SaberColor.white` o `yellow` no se dibuja ninguna señal (no ocurre: la señal solo existe con sable azul o rojo).
 
