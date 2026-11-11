@@ -12,7 +12,4 @@ abstract final class StringsEs {
   static const back = 'VOLVER';
   static const loadingCatalog = 'Cargando catálogo…';
   static const catalogError = 'No se pudo cargar el catálogo de ejercicios.';
-
-  /// Se elimina en T029, cuando el HUD nuevo deje de usarlo.
-  static const remaining = 'Restante';
 }
