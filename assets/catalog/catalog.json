@@ -38,8 +38,8 @@
       "cutTermId": "hwengdan_ilgom_begi",
       "guard": { "hilt": [0, 0.05], "tip": [0, -0.3] },
       "cut": {
-        "start": { "hilt": [-0.45, 0.1], "tip": [-1.3, -0.1] },
-        "end": { "hilt": [0.45, 0.1], "tip": [1.3, -0.1] },
+        "start": { "hilt": [-0.45, 0.1], "tip": [-1.3, 0.1] },
+        "end": { "hilt": [0.45, 0.1], "tip": [1.3, 0.1] },
         "mirroredBySide": true
       }
     }

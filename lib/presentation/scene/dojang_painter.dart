@@ -59,9 +59,11 @@ class DojangPainter extends CustomPainter {
     final wallBottom = y(_baseboardTop);
     final floorTop = y(_floorTop);
 
-    // Pared.
+    // Pared. Cada banda se extiende bajo la siguiente: con bordes en
+    // fracciones de píxel, dos bandas solo adyacentes dejarían una fila
+    // semitransparente entre ellas (FR-007: sin franjas).
     canvas.drawRect(
-      Rect.fromLTRB(0, 0, w, wallBottom),
+      Rect.fromLTRB(0, 0, w, floorTop),
       Paint()
         ..shader = ui.Gradient.linear(Offset.zero, Offset(0, wallBottom), [
           AppColors.wallTop,
@@ -167,9 +169,9 @@ class DojangPainter extends CustomPainter {
       }
     }
 
-    // Zócalo.
+    // Zócalo (se extiende bajo la duela).
     canvas.drawRect(
-      Rect.fromLTRB(0, wallBottom, w, floorTop),
+      Rect.fromLTRB(0, wallBottom, w, h),
       Paint()..color = AppColors.baseboard,
     );
 

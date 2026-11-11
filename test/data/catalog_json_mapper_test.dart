@@ -281,8 +281,8 @@ void main() {
       expect(
         transversal.cut,
         const CutMotion(
-          start: SaberPose(hilt: Point2(-0.45, 0.1), tip: Point2(-1.3, -0.1)),
-          end: SaberPose(hilt: Point2(0.45, 0.1), tip: Point2(1.3, -0.1)),
+          start: SaberPose(hilt: Point2(-0.45, 0.1), tip: Point2(-1.3, 0.1)),
+          end: SaberPose(hilt: Point2(0.45, 0.1), tip: Point2(1.3, 0.1)),
           mirroredBySide: true,
         ),
       );
@@ -308,23 +308,19 @@ void main() {
       expect(catalog.term('sodose').hangul, isNull);
     });
 
-    test(
-      '(e) reglas del barrido de data-model.md (FR-008, FR-009, FR-011)',
-      () {
-        final start = transversal.cut.start;
-        final end = transversal.cut.end;
-        // cut.end es el reflejo exacto de cut.start en x.
-        expect(end.hilt, Point2(-start.hilt.x, start.hilt.y));
-        expect(end.tip, Point2(-start.tip.x, start.tip.y));
-        // Barrido horizontal: empuñadura y punta no cambian de altura.
-        expect(end.hilt.y, start.hilt.y);
-        expect(end.tip.y, start.tip.y);
-        // A la mitad del barrido la hoja visible no mide cero.
-        expect(
-          (start.tip.y - start.hilt.y).abs(),
-          greaterThanOrEqualTo(0.2 - 1e-9),
-        );
-      },
-    );
+    test('(e) reglas del barrido: hoja horizontal y reflejo exacto (Spec 004, FR-010)', () {
+      final start = transversal.cut.start;
+      final end = transversal.cut.end;
+      // cut.end es el reflejo exacto de cut.start en x.
+      expect(end.hilt, Point2(-start.hilt.x, start.hilt.y));
+      expect(end.tip, Point2(-start.tip.x, start.tip.y));
+      // Barrido horizontal: empuñadura y punta no cambian de altura.
+      expect(end.hilt.y, start.hilt.y);
+      expect(end.tip.y, start.tip.y);
+      // Hoja horizontal en Sodose y al final del corte (Spec 004, FR-010):
+      // a la mitad del barrido apunta al usuario y se ve la punta de frente.
+      expect(start.tip.y, start.hilt.y);
+      expect(end.tip.y, end.hilt.y);
+    });
   });
 }

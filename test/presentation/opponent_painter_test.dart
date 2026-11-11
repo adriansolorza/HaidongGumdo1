@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'dart:math' show sqrt;
 import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:haidonggumdo/data/catalog/catalog_json_mapper.dart';
 import 'package:haidonggumdo/domain/catalog/catalog.dart';
 import 'package:haidonggumdo/domain/exercise/attack.dart';
 import 'package:haidonggumdo/domain/exercise/exercise_snapshot.dart';
@@ -137,7 +139,11 @@ void main() {
   });
 
   group('Patrón transversal (Spec 002)', () {
-    final transversal = testTransversalSession().pattern;
+    // Catálogo real: la Spec 004 (FR-010) cambió sus posturas a horizontales.
+    final transversal = const CatalogJsonMapper()
+        .fromJsonString(File('assets/catalog/catalog.json').readAsStringSync())
+        .patterns
+        .firstWhere((p) => p.id == 'transversal');
     const width = 1600;
     const height = 900;
 
@@ -196,50 +202,56 @@ void main() {
       return columns.where((x) => x < width ~/ 2).length / columns.length;
     }
 
-    /// Fracción de los píxeles pintados (no transparentes en alguna de las
-    /// dos imágenes) de [a] que coinciden (±8 por canal) con [b] volteada en
-    /// horizontal. El fondo transparente no cuenta: inflaría el resultado.
-    double mirrorMatch(Uint8List a, Uint8List b) {
+    /// Fracción de los píxeles del color del sable (en alguna de las dos
+    /// imágenes) de [a] que también lo son en [b] volteada en horizontal. Solo
+    /// cuenta el sable: el cuerpo no se refleja con el lado (Spec 004, Out of
+    /// Scope).
+    double saberMirrorMatch(Uint8List a, Uint8List b) {
       var painted = 0;
       var equal = 0;
       for (var y = 0; y < height; y++) {
         for (var x = 0; x < width; x++) {
           final i = (y * width + x) * 4;
           final j = (y * width + (width - 1 - x)) * 4;
-          if (a[i + 3] == 0 && b[j + 3] == 0) continue;
+          final inA = isSaber(a, i);
+          final inB = isSaber(b, j);
+          if (!inA && !inB) continue;
           painted++;
-          var same = true;
-          for (var c = 0; c < 4; c++) {
-            if ((a[i + c] - b[j + c]).abs() > 8) {
-              same = false;
-              break;
-            }
-          }
-          if (same) equal++;
+          if (inA && inB) equal++;
         }
       }
       return equal / painted;
     }
 
-    test(
-      'tipDiameter: 0 en los extremos y 0.3 u a la mitad del barrido (FR-009)',
-      () {
-        final start = transversal.cut.start;
-        final end = transversal.cut.end;
-        final startLength = length(start.hilt, start.tip);
-        final endLength = length(end.hilt, end.tip);
-        final midLength = length(
-          mid(start.hilt, end.hilt),
-          mid(start.tip, end.tip),
-        );
-        expect(startLength, closeTo(0.873, 0.001));
-        expect(endLength, closeTo(0.873, 0.001));
-        expect(midLength, closeTo(0.2, 1e-9));
-        expect(OpponentPainter.tipDiameter(startLength), 0);
-        expect(OpponentPainter.tipDiameter(endLength), 0);
-        expect(OpponentPainter.tipDiameter(midLength), closeTo(0.3, 1e-9));
-      },
+    final layout = SceneLayout.compute(
+      Size(width.toDouble(), height.toDouble()),
+      transversal,
     );
+
+    /// Filas (y) de todos los píxeles del color del sable.
+    List<int> saberRows(Uint8List px) => [
+      for (var y = 0; y < height; y++)
+        for (var x = 0; x < width; x++)
+          if (isSaber(px, (y * width + x) * 4)) y,
+    ];
+
+    test('tipDiameter: 0 en los extremos y 0.3 u a la mitad del barrido '
+        '(Spec 002 FR-009; Spec 004 FR-011)', () {
+      final start = transversal.cut.start;
+      final end = transversal.cut.end;
+      final startLength = length(start.hilt, start.tip);
+      final endLength = length(end.hilt, end.tip);
+      final midLength = length(
+        mid(start.hilt, end.hilt),
+        mid(start.tip, end.tip),
+      );
+      expect(startLength, closeTo(0.85, 1e-9));
+      expect(endLength, closeTo(0.85, 1e-9));
+      expect(midLength, closeTo(0, 1e-9));
+      expect(OpponentPainter.tipDiameter(startLength), 0);
+      expect(OpponentPainter.tipDiameter(endLength), 0);
+      expect(OpponentPainter.tipDiameter(midLength), closeTo(0.3, 1e-9));
+    });
 
     test('pinta cada postura y tramo con ambos lados sin lanzar', () {
       for (final side in Side.values) {
@@ -315,16 +327,163 @@ void main() {
     for (final key in [PoseKey.stance, PoseKey.cutEnd]) {
       final name = key == PoseKey.stance ? 'Sodose' : 'el fin del barrido';
 
-      test(
-        '(c) $name: el lado left es el reflejo exacto del right (FR-011)',
-        () async {
-          final right = await render(still(key, Side.right));
-          final left = await render(still(key, Side.left));
-          expect(mirrorMatch(right, left), greaterThanOrEqualTo(0.99));
-          // Control: sin reflejar no coincide, así que la prueba puede fallar.
-          expect(mirrorMatch(right, right), lessThan(0.99));
-        },
-      );
+      test('(c) $name: el sable del lado left es el reflejo exacto del right '
+          '(Spec 002 FR-011)', () async {
+        final right = await render(still(key, Side.right));
+        final left = await render(still(key, Side.left));
+        expect(saberMirrorMatch(right, left), greaterThanOrEqualTo(0.98));
+        // Control: sin reflejar no coincide, así que la prueba puede fallar.
+        expect(saberMirrorMatch(right, right), lessThan(0.98));
+      });
+
+      test('$name: hoja horizontal a la altura de la cintura '
+          '(Spec 004, FR-010, US1-4)', () async {
+        final waist = layout.toScreen(const Point2(0, 0.1)).dy;
+        for (final side in Side.values) {
+          final rows = saberRows(await render(still(key, side)));
+          expect(rows, isNotEmpty, reason: '$side');
+          final top = rows.reduce((a, b) => a < b ? a : b);
+          final bottom = rows.reduce((a, b) => a > b ? a : b);
+          expect(
+            bottom - top + 1,
+            lessThanOrEqualTo(0.09 * layout.unit + 2 * kOutlineWidth + 2),
+            reason: '$side',
+          );
+          expect((top + bottom + 1) / 2, closeTo(waist, 2), reason: '$side');
+        }
+      });
     }
+
+    test('a la mitad del barrido se ve la punta de frente: disco del color '
+        'del sable de ≥ 0.3 u (Spec 004, FR-011, US1-5)', () async {
+      final center = layout.toScreen(const Point2(0, 0.1));
+      final row = center.dy.round();
+      for (final side in Side.values) {
+        final px = await render(halfSweep(side));
+        final xs = [
+          for (var x = 0; x < width; x++)
+            if (isSaber(px, (row * width + x) * 4)) x,
+        ];
+        expect(xs, isNotEmpty, reason: '$side');
+        final span = xs.last - xs.first + 1;
+        // El contorno se come media línea por dentro del disco.
+        expect(
+          span,
+          greaterThanOrEqualTo(0.3 * layout.unit - kOutlineWidth - 2),
+          reason: '$side',
+        );
+        expect((xs.first + xs.last + 1) / 2, closeTo(center.dx, 2));
+      }
+    });
   });
+
+  group('escena de la Spec 004 con el catálogo real', () {
+    final catalog = const CatalogJsonMapper().fromJsonString(
+      File('assets/catalog/catalog.json').readAsStringSync(),
+    );
+    const sizes = {
+      '20:9': (1600, 720),
+      '16:9': (1600, 900),
+      '16:10': (1440, 900),
+      '4:3': (1200, 900),
+    };
+
+    final motions = [
+      OpponentMotion.atGuard,
+      for (final side in Side.values)
+        for (final (from, to) in [
+          (PoseKey.guard, PoseKey.stance),
+          (PoseKey.stance, PoseKey.cutEnd),
+          (PoseKey.cutEnd, PoseKey.guard),
+        ])
+          for (var i = 0; i <= 4; i++)
+            OpponentMotion(from: from, to: to, progress: i / 4, side: side),
+    ];
+
+    for (final MapEntry(key: ratio, value: (w, h)) in sizes.entries) {
+      test('$ratio: ningún píxel por encima de hudBottom en ninguna postura '
+          '(FR-017, caso límite Chochôn-se)', () async {
+        final violations = <String>[];
+        for (final pattern in catalog.patterns) {
+          final layout = SceneLayout.compute(
+            Size(w.toDouble(), h.toDouble()),
+            pattern,
+          );
+          final limit = layout.hudBottom.floor();
+          for (final motion in motions) {
+            final recorder = PictureRecorder();
+            OpponentPainter(
+              layout: layout,
+              saberColor: SaberColor.blue,
+              guard: pattern.guard,
+              cut: pattern.cut,
+              motion: motion,
+            ).paint(Canvas(recorder), Size(w.toDouble(), h.toDouble()));
+            final image = await recorder.endRecording().toImage(w, limit);
+            final data = (await image.toByteData())!.buffer.asUint8List();
+            image.dispose();
+            var painted = 0;
+            for (var i = 3; i < data.length; i += 4) {
+              if (data[i] > 0) painted++;
+            }
+            if (painted > 0) violations.add('${pattern.id} $motion: $painted');
+          }
+        }
+        expect(violations, isEmpty);
+      }, timeout: const Timeout(Duration(minutes: 2)));
+    }
+
+    test('la figura no usa rojo, azul ni amarillo (FR-004, US1-3)', () async {
+      const w = 1600;
+      const h = 900;
+      for (final pattern in catalog.patterns) {
+        final recorder = PictureRecorder();
+        OpponentPainter(
+          layout: SceneLayout.compute(const Size(1600, 900), pattern),
+          saberColor: SaberColor.white,
+          guard: pattern.guard,
+          cut: pattern.cut,
+          motion: OpponentMotion.atGuard,
+        ).paint(Canvas(recorder), const Size(1600, 900));
+        final image = await recorder.endRecording().toImage(w, h);
+        final px = (await image.toByteData(
+          format: ImageByteFormat.rawStraightRgba,
+        ))!.buffer.asUint8List();
+        image.dispose();
+        final wrong = <String>[];
+        for (var i = 0; i < px.length; i += 4) {
+          if (px[i + 3] < 128) continue;
+          final r = px[i], g = px[i + 1], b = px[i + 2];
+          final max = [r, g, b].reduce((a, c) => a > c ? a : c);
+          final min = [r, g, b].reduce((a, c) => a < c ? a : c);
+          final chroma = (max - min) / 255;
+          if (chroma <= 0.10) continue;
+          // Familia de la piel y la sombra (tono 15°–40°), no de señal.
+          final hue = _hue(r, g, b);
+          if (hue >= 15 && hue <= 40 && chroma <= 0.32) continue;
+          if (wrong.length < 5) {
+            wrong.add('(${(i ~/ 4) % w}, ${(i ~/ 4) ~/ w}) rgb($r, $g, $b)');
+          }
+        }
+        expect(wrong, isEmpty, reason: pattern.id);
+      }
+    });
+  });
+}
+
+/// Tono HSV en grados.
+double _hue(int r, int g, int b) {
+  final max = [r, g, b].reduce((a, c) => a > c ? a : c);
+  final min = [r, g, b].reduce((a, c) => a < c ? a : c);
+  final d = (max - min).toDouble();
+  if (d == 0) return 0;
+  double h;
+  if (max == r) {
+    h = ((g - b) / d) % 6;
+  } else if (max == g) {
+    h = (b - r) / d + 2;
+  } else {
+    h = (r - g) / d + 4;
+  }
+  return (h * 60 + 360) % 360;
 }
