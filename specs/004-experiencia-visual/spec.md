@@ -220,7 +220,7 @@ El practicante abre la app y ve el encabezado "HAIDONG GUMDO" sobre el dojang os
 - Los bocetos `Retro.dc.html` y `Seleccion.dc.html` definen el estilo, la composición y la paleta; sus medidas en píxeles (1280 × 800) son de referencia y se adaptan a cada pantalla. `Senales.dc.html` aporta solo la forma de las señales, no su estilo cómico.
 - La _hakama_ y la guarda del símbolo de defensa no siguen los colores del boceto, por la regla de color (ver Clarifications).
 - La luz cálida sobre la duela y los tonos madera son desaturados y no se perciben como amarillo ni rojo; SC-003 lo verifica.
-- El sable y las señales mantienen sus colores actuales; solo se les agregan el brillo y, en la flecha, la estela.
+- El sable y la flecha de evasión mantienen sus colores actuales; el símbolo de defensa pasa de blanco al color del sable (FR-014). A todos se les agrega brillo y, a la flecha, la estela.
 - El grosor de contorno de la figura del oponente puede ser más fino que hoy (el boceto usa 3.5 px), siempre que FR-003 y SC-001 se cumplan; el sable y las señales conservan contornos gruesos.
 - Las pruebas de presentación que localizan elementos por su texto o por su tipo de control pueden ajustar solo la forma de localizarlos (por ejemplo, "INICIAR" en mayúsculas o tarjetas en lugar de listas). Las pruebas de dibujo de la flecha y del símbolo se actualizan a las formas nuevas, conservando las comprobaciones de lado, color, dirección y espacio libre. Las expectativas de datos del Patrón transversal cambian por FR-010.
 - La duración del resumen y de la barra de progreso es la de los parámetros vigentes (30 s por defecto hasta la Spec 005).
