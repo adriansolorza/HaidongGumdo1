@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Señales de respuesta</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bangers&amp;family=Inter:wght@400;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#ffd23f}a:hover{color:#fff}
+</style>
+</helmet>
+<div style="width: 1280px; height: 520px; box-sizing: border-box; padding: 40px 48px; display: flex; flex-direction: column; gap: 28px; background: #15151c; color: #f4f1ea; font-family: 'Inter', system-ui, sans-serif;">
+
+<div style="display: flex; flex-direction: column; gap: 6px;">
+<h1 style="margin: 0; font-family: 'Bangers', system-ui, sans-serif; font-size: 44px; letter-spacing: 2px; font-weight: 400;">Señales de respuesta</h1>
+<p style="margin: 0; font-size: 16px; color: #c4c1b8;">Siempre del color del sable, con contorno negro grueso para leerse a 3 m.</p>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px;">
+
+<div style="display: flex; flex-direction: column; gap: 14px; padding: 20px; background: #1e1e28; border: 3px solid #0a0a0a; box-shadow: 6px 6px 0 #0a0a0a;">
+<svg width="240" height="200" viewBox="0 0 240 200" role="img" aria-label="Flecha de evasión actual, larga y delgada" style="align-self: center;">
+<path d="M 10 82 L 160 82 L 160 42 L 230 100 L 160 158 L 160 118 L 10 118 Z" fill="{{saber}}" stroke="#0a0a0a" stroke-width="6" stroke-linejoin="round"></path>
+</svg>
+<div style="font-family: 'Bangers', system-ui, sans-serif; font-size: 26px; letter-spacing: 1px;">Evasión · actual</div>
+<div style="font-size: 14px; color: #c4c1b8;">La de la Spec 003: cuerpo largo y delgado.</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 14px; padding: 20px; background: #1e1e28; border: 3px solid #ffd23f; box-shadow: 6px 6px 0 #0a0a0a;">
+<svg width="240" height="200" viewBox="0 0 240 200" role="img" aria-label="Flecha de evasión propuesta, corta y gruesa con líneas de movimiento" style="align-self: center;">
+<g stroke-linecap="round">
+<g stroke="#0a0a0a" stroke-width="18">
+<line x1="42" y1="72" x2="84" y2="72"></line>
+<line x1="28" y1="100" x2="84" y2="100"></line>
+<line x1="42" y1="128" x2="84" y2="128"></line>
+</g>
+<g stroke="{{saber}}" stroke-width="9">
+<line x1="42" y1="72" x2="84" y2="72"></line>
+<line x1="28" y1="100" x2="84" y2="100"></line>
+<line x1="42" y1="128" x2="84" y2="128"></line>
+</g>
+</g>
+<path d="M 104 64 L 156 64 L 156 24 L 230 100 L 156 176 L 156 136 L 104 136 Z" fill="{{saber}}" stroke="#0a0a0a" stroke-width="7" stroke-linejoin="round"></path>
+<path d="M 116 78 L 146 78" stroke="#ffffff" stroke-opacity="0.55" stroke-width="7" stroke-linecap="round"></path>
+</svg>
+<div style="font-family: 'Bangers', system-ui, sans-serif; font-size: 26px; letter-spacing: 1px;">Evasión · propuesta</div>
+<div style="font-size: 14px; color: #c4c1b8;">Tu boceto: corta, gruesa y con líneas de movimiento en la cola.</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 14px; padding: 20px; background: #1e1e28; border: 3px solid #0a0a0a; box-shadow: 6px 6px 0 #0a0a0a;">
+<svg width="240" height="200" viewBox="0 0 240 200" role="img" aria-label="Símbolo de defensa: un sable en diagonal" style="align-self: center;">
+<g stroke-linecap="round">
+<line x1="108" y1="112" x2="206" y2="22" stroke="{{saber}}" stroke-width="30" stroke-opacity="0.28"></line>
+<line x1="108" y1="112" x2="206" y2="22" stroke="#0a0a0a" stroke-width="20"></line>
+<line x1="108" y1="112" x2="206" y2="22" stroke="{{saber}}" stroke-width="11"></line>
+<line x1="44" y1="176" x2="94" y2="126" stroke="#0a0a0a" stroke-width="30"></line>
+<line x1="44" y1="176" x2="94" y2="126" stroke="#3a2a1e" stroke-width="20"></line>
+<line x1="82" y1="104" x2="118" y2="140" stroke="#0a0a0a" stroke-width="16"></line>
+<line x1="82" y1="104" x2="118" y2="140" stroke="#c9a227" stroke-width="8"></line>
+</g>
+</svg>
+<div style="font-family: 'Bangers', system-ui, sans-serif; font-size: 26px; letter-spacing: 1px;">Defensa</div>
+<div style="font-size: 14px; color: #c4c1b8;">Hoja delgada y empuñadura gruesa, como el sable del oponente.</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 14px; padding: 20px; background: #1e1e28; border: 3px solid #0a0a0a; box-shadow: 6px 6px 0 #0a0a0a;">
+<svg width="240" height="200" viewBox="0 0 240 200" role="img" aria-label="Señal de contraataque: flecha de evasión con un sable junto a la punta" style="align-self: center;">
+<g stroke-linecap="round">
+<g stroke="#0a0a0a" stroke-width="16">
+<line x1="10" y1="82" x2="40" y2="82"></line>
+<line x1="2" y1="104" x2="40" y2="104"></line>
+<line x1="10" y1="126" x2="40" y2="126"></line>
+</g>
+<g stroke="{{saber}}" stroke-width="8">
+<line x1="10" y1="82" x2="40" y2="82"></line>
+<line x1="2" y1="104" x2="40" y2="104"></line>
+<line x1="10" y1="126" x2="40" y2="126"></line>
+</g>
+</g>
+<path d="M 56 74 L 106 74 L 106 40 L 168 104 L 106 168 L 106 134 L 56 134 Z" fill="{{saber}}" stroke="#0a0a0a" stroke-width="6" stroke-linejoin="round"></path>
+<g stroke-linecap="round">
+<line x1="196" y1="88" x2="232" y2="14" stroke="#0a0a0a" stroke-width="15"></line>
+<line x1="196" y1="88" x2="232" y2="14" stroke="{{saber}}" stroke-width="8"></line>
+<line x1="176" y1="130" x2="192" y2="98" stroke="#0a0a0a" stroke-width="22"></line>
+<line x1="176" y1="130" x2="192" y2="98" stroke="#3a2a1e" stroke-width="13"></line>
+<line x1="180" y1="88" x2="206" y2="100" stroke="#0a0a0a" stroke-width="13"></line>
+<line x1="180" y1="88" x2="206" y2="100" stroke="#c9a227" stroke-width="6"></line>
+</g>
+</svg>
+<div style="font-family: 'Bangers', system-ui, sans-serif; font-size: 26px; letter-spacing: 1px;">Contraataque</div>
+<div style="font-size: 14px; color: #c4c1b8;">Para el Nivel 4: la flecha propuesta con un sable junto a la punta.</div>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"senal":{"editor":"enum","options":["azul","rojo"],"default":"azul"},"$preview":{"width":1280,"height":520}}'>
+class Component extends DCLogic {
+renderVals() {
+const rojo = (this.props.senal ?? 'azul') === 'rojo';
+return { saber: rojo ? '#ff3b3b' : '#2f7bff' };
+}
+}
+</script>
+</body>
+</html>

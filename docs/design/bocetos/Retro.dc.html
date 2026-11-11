@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Ejercicio — estilo consola actual</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#ffffff}a:hover{color:#d9dcea}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; position: relative; overflow: hidden; background: #8a867c; font-family: 'Rajdhani', system-ui, sans-serif; color: #ffffff;">
+
+<svg width="1280" height="800" viewBox="0 0 1280 800" role="img" aria-label="Oponente virtual con equipo de protección claro, en Sodose, en un dojang, con la flecha de evasión" style="position: absolute; left: 0; top: 0;">
+<defs>
+<linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#aaa598"></stop><stop offset="1" stop-color="#8c887e"></stop></linearGradient>
+<linearGradient id="floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#694322"></stop><stop offset="1" stop-color="#96622f"></stop></linearGradient>
+<radialGradient id="spot" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffe2b0" stop-opacity="0.38"></stop><stop offset="1" stop-color="#ffe2b0" stop-opacity="0"></stop></radialGradient>
+<radialGradient id="vignette" cx="0.5" cy="0.45" r="0.78"><stop offset="0.62" stop-color="#000000" stop-opacity="0"></stop><stop offset="1" stop-color="#000000" stop-opacity="0.5"></stop></radialGradient>
+<linearGradient id="peto" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f1f3f7"></stop><stop offset="1" stop-color="#c2c8d4"></stop></linearGradient>
+<linearGradient id="hakama" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2e3666"></stop><stop offset="1" stop-color="#181d3c"></stop></linearGradient>
+<linearGradient id="helmet" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff"></stop><stop offset="1" stop-color="#cdd3de"></stop></linearGradient>
+<linearGradient id="sleeve" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff"></stop><stop offset="1" stop-color="#d2d8e3"></stop></linearGradient>
+<linearGradient id="trail" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="{{saber}}" stop-opacity="0"></stop><stop offset="1" stop-color="{{saber}}" stop-opacity="0.85"></stop></linearGradient>
+<filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"></feGaussianBlur></filter>
+</defs>
+
+<rect x="0" y="0" width="1280" height="560" fill="url(#wall)"></rect>
+<polygon points="380,0 520,0 780,560 560,560" fill="#ffffff" fill-opacity="0.07"></polygon>
+<polygon points="560,0 620,0 900,560 800,560" fill="#ffffff" fill-opacity="0.05"></polygon>
+<rect x="0" y="108" width="1280" height="24" fill="#5b4a3a"></rect>
+<rect x="0" y="130" width="1280" height="4" fill="#3f3328"></rect>
+<rect x="280" y="0" width="42" height="560" fill="#6a5644"></rect>
+<rect x="306" y="0" width="16" height="560" fill="#574536"></rect>
+<rect x="958" y="0" width="42" height="560" fill="#6a5644"></rect>
+<rect x="984" y="0" width="16" height="560" fill="#574536"></rect>
+<line x1="168" y1="132" x2="168" y2="150" stroke="#3f3328" stroke-width="3"></line>
+<line x1="1112" y1="132" x2="1112" y2="150" stroke="#3f3328" stroke-width="3"></line>
+<rect x="128" y="150" width="80" height="300" rx="4" fill="#2a2b31"></rect>
+<rect x="1072" y="150" width="80" height="300" rx="4" fill="#2a2b31"></rect>
+<g fill="#f2efe6" font-size="42" text-anchor="middle" font-family="'Noto Sans KR', 'Noto Sans CJK KR', system-ui, sans-serif">
+<text x="168" y="222">해</text><text x="168" y="282">동</text><text x="168" y="342">검</text><text x="168" y="402">도</text>
+<text x="1112" y="222">海</text><text x="1112" y="282">東</text><text x="1112" y="342">劍</text><text x="1112" y="402">道</text>
+</g>
+<rect x="0" y="540" width="1280" height="22" fill="#3d3027"></rect>
+<rect x="0" y="562" width="1280" height="238" fill="url(#floor)"></rect>
+<g stroke="#5a391c" stroke-width="3" stroke-opacity="0.7">
+<line x1="320" y1="562" x2="-64" y2="800"></line>
+<line x1="400" y1="562" x2="112" y2="800"></line>
+<line x1="480" y1="562" x2="288" y2="800"></line>
+<line x1="560" y1="562" x2="464" y2="800"></line>
+<line x1="640" y1="562" x2="640" y2="800"></line>
+<line x1="720" y1="562" x2="816" y2="800"></line>
+<line x1="800" y1="562" x2="992" y2="800"></line>
+<line x1="880" y1="562" x2="1168" y2="800"></line>
+<line x1="960" y1="562" x2="1344" y2="800"></line>
+</g>
+<ellipse cx="640" cy="700" rx="460" ry="110" fill="url(#spot)"></ellipse>
+<ellipse cx="640" cy="742" rx="190" ry="15" fill="#2e1d0d" fill-opacity="0.55"></ellipse>
+
+<g stroke="#1a1d2b" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+<ellipse cx="548" cy="740" rx="34" ry="11" fill="#f1c9a5"></ellipse>
+<ellipse cx="732" cy="740" rx="34" ry="11" fill="#f1c9a5"></ellipse>
+<path d="M 572 432 L 708 432 L 805 735 L 662 735 L 640 570 L 618 735 L 475 735 Z" fill="url(#hakama)"></path>
+<path d="M 600 452 L 545 728 M 680 452 L 735 728" fill="none" stroke="#11142b" stroke-width="3"></path>
+<path d="M 585 282 Q 640 266 695 282 L 714 440 L 566 440 Z" fill="url(#sleeve)"></path>
+<path d="M 588 296 Q 640 284 692 296 L 704 418 Q 640 436 576 418 Z" fill="url(#peto)"></path>
+<path d="M 598 307 Q 640 297 682 307 L 692 408 Q 640 423 588 408 Z" fill="none" stroke="#ffffff" stroke-width="2.5"></path>
+<path d="M 594 350 Q 640 342 686 350 M 592 382 Q 640 374 690 382" fill="none" stroke="#aab1bf" stroke-width="2"></path>
+<rect x="562" y="420" width="156" height="26" rx="5" fill="#15151a"></rect>
+<path d="M 626 444 L 608 496 L 628 496 L 640 448 Z M 654 444 L 668 494 L 688 492 L 662 446 Z" fill="#15151a"></path>
+<path d="M 592 236 Q 588 170 640 168 Q 692 170 688 236 L 680 262 Q 640 276 600 262 Z" fill="url(#helmet)"></path>
+<rect x="613" y="204" width="54" height="54" rx="10" fill="#262833"></rect>
+<path d="M 627 206 L 627 256 M 640 206 L 640 256 M 653 206 L 653 256 M 615 223 L 665 223 M 615 241 L 665 241" stroke="#b7bdcb" stroke-width="2.5"></path>
+</g>
+
+<g transform="{{figureTransform}}">
+<g stroke-linecap="round">
+<line x1="596" y1="294" x2="704" y2="438" stroke="#1a1d2b" stroke-width="40"></line>
+<line x1="596" y1="294" x2="704" y2="438" stroke="#f1f3f7" stroke-width="33"></line>
+<line x1="684" y1="294" x2="712" y2="430" stroke="#1a1d2b" stroke-width="40"></line>
+<line x1="684" y1="294" x2="712" y2="430" stroke="#d2d8e3" stroke-width="33"></line>
+</g>
+<ellipse cx="648" cy="364" rx="22" ry="26" fill="#ffffff" stroke="#1a1d2b" stroke-width="3.5"></ellipse>
+<ellipse cx="698" cy="362" rx="20" ry="25" fill="#e3e7ef" stroke="#1a1d2b" stroke-width="3.5"></ellipse>
+<circle cx="712" cy="440" r="21" fill="#1c1c22" stroke="#1a1d2b" stroke-width="3.5"></circle>
+<line x1="784" y1="437" x2="972" y2="437" stroke="{{saber}}" stroke-width="26" stroke-linecap="round" filter="url(#glow)" opacity="0.75"></line>
+<g stroke-linecap="round">
+<line x1="784" y1="437" x2="972" y2="437" stroke="#1a1d2b" stroke-width="15"></line>
+<line x1="784" y1="437" x2="972" y2="437" stroke="{{saber}}" stroke-width="9"></line>
+<line x1="790" y1="434.5" x2="962" y2="434.5" stroke="#ffffff" stroke-opacity="0.55" stroke-width="2.5"></line>
+<line x1="716" y1="440" x2="772" y2="437" stroke="#1a1d2b" stroke-width="25"></line>
+<line x1="716" y1="440" x2="772" y2="437" stroke="#26201b" stroke-width="17"></line>
+<path d="M 726 434 L 734 446 M 742 433 L 750 445 M 758 432 L 766 444" stroke="#5c5046" stroke-width="2.5"></path>
+</g>
+<ellipse cx="777" cy="437" rx="7" ry="23" fill="#8f8f96" stroke="#1a1d2b" stroke-width="3.5"></ellipse>
+</g>
+
+<g transform="{{arrowTransform}}" stroke-linejoin="round">
+<polygon points="270,328 440,346 440,374 270,392" fill="url(#trail)"></polygon>
+<polygon points="276,318 400,326 400,332 276,326" fill="url(#trail)" opacity="0.7"></polygon>
+<polygon points="276,394 400,388 400,394 276,402" fill="url(#trail)" opacity="0.7"></polygon>
+<path d="M 270 322 L 194 322 L 194 272 L 104 360 L 194 448 L 194 398 L 270 398 Z" fill="{{saber}}" filter="url(#glow)" opacity="0.6"></path>
+<path d="M 270 322 L 194 322 L 194 272 L 104 360 L 194 448 L 194 398 L 270 398 Z" fill="{{saber}}" stroke="#10121c" stroke-width="6"></path>
+<path d="M 262 334 L 188 334 L 188 300 L 140 350" fill="none" stroke="#ffffff" stroke-opacity="0.5" stroke-width="6" stroke-linecap="round"></path>
+</g>
+
+<rect x="0" y="0" width="1280" height="800" fill="url(#vignette)"></rect>
+</svg>
+
+<div style="position: absolute; left: 36px; top: 24px; display: flex; flex-direction: column; gap: 0; padding: 10px 22px; background: rgba(18,20,28,0.74); border: 1.5px solid rgba(255,255,255,0.35); border-radius: 14px;">
+<span style="font-size: 30px; font-weight: 700; letter-spacing: 2px; line-height: 1.1;">NIVEL 2</span>
+<span style="font-size: 16px; font-weight: 500; color: #d6d9e4;">Evasión lateral</span>
+</div>
+
+<div style="position: absolute; right: 36px; top: 24px; display: flex; flex-direction: column; align-items: flex-end; padding: 10px 22px; background: rgba(18,20,28,0.74); border: 1.5px solid rgba(255,255,255,0.35); border-radius: 14px;">
+<span style="font-size: 30px; font-weight: 700; letter-spacing: 2px; line-height: 1.1;">TRANSVERSAL</span>
+<span style="font-size: 16px; font-weight: 500; color: #d6d9e4;">Sodose → Hwengdan ilgôm begi 횡단일검베기</span>
+</div>
+
+<div style="position: absolute; left: 50%; top: 18px; transform: translateX(-50%); width: 150px; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 16px 12px; box-sizing: border-box; background: rgba(18,20,28,0.78); border: 1.5px solid rgba(255,255,255,0.4); border-radius: 18px;">
+<span style="font-size: 64px; font-weight: 700; line-height: 1;">16</span>
+<div style="width: 100%; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.22);">
+<div style="width: 53%; height: 6px; border-radius: 3px; background: #ffffff;"></div>
+</div>
+</div>
+
+<button type="button" style="position: absolute; left: 36px; bottom: 28px; min-height: 48px; padding: 8px 28px; font-family: 'Rajdhani', system-ui, sans-serif; font-size: 20px; font-weight: 700; letter-spacing: 3px; color: #ffffff; background: rgba(18,20,28,0.78); border: 1.5px solid rgba(255,255,255,0.55); border-radius: 999px; cursor: pointer;">DETENER</button>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"senal":{"editor":"enum","options":["rojo","azul"],"default":"rojo"},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+const senal = this.props.senal ?? 'rojo';
+const azul = senal === 'azul';
+const flip = 'translate(1280 0) scale(-1 1)';
+return {
+saber: azul ? '#2f7bff' : '#ff3b3b',
+figureTransform: azul ? flip : 'translate(0 0)',
+arrowTransform: azul ? flip : 'translate(0 0)'
+};
+}
+}
+</script>
+</body>
+</html>
