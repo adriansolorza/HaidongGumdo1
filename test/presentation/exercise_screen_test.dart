@@ -14,7 +14,9 @@ import 'package:haidonggumdo/domain/ports/catalog_repository.dart';
 import 'package:haidonggumdo/presentation/exercise/exercise_screen.dart';
 import 'package:haidonggumdo/presentation/exercise/painters/opponent_painter.dart';
 import 'package:haidonggumdo/presentation/exercise/painters/signal_painter.dart';
+import 'package:haidonggumdo/presentation/exercise/widgets/exercise_hud.dart';
 import 'package:haidonggumdo/presentation/providers.dart';
+import 'package:haidonggumdo/presentation/scene/scene_layout.dart';
 import 'package:haidonggumdo/presentation/selection/selection_screen.dart';
 import 'package:haidonggumdo/presentation/strings_es.dart';
 
@@ -69,11 +71,11 @@ final class _Harness {
     );
     await tester.pumpAndSettle();
     if (level != null) {
-      await tester.tap(find.text(level));
+      await tester.tap(find.text(level.toUpperCase()));
       await tester.pump();
     }
     if (pattern != null) {
-      await tester.tap(find.text(pattern));
+      await tester.tap(find.text(pattern.toUpperCase()));
       await tester.pump();
     }
     await tester.tap(find.text(StringsEs.start));
@@ -254,7 +256,7 @@ void main() {
       await tester.pumpAndSettle();
       _expectBackOnSelection(tester);
 
-      await tester.tap(find.text('Frontal'));
+      await tester.tap(find.text('FRONTAL'));
       await tester.pump();
       await tester.tap(find.text(StringsEs.start));
       await tester.pump();
@@ -328,7 +330,7 @@ void main() {
       await tester.pumpAndSettle();
       _expectBackOnSelection(tester);
 
-      await tester.tap(find.text('Nivel 1'));
+      await tester.tap(find.text('NIVEL 1'));
       await tester.pump();
       await tester.tap(find.text(StringsEs.start));
       await tester.pump();
@@ -365,4 +367,150 @@ void main() {
       expect(h.voice.announced, [VoiceCommand.start]);
     },
   );
+
+  group('HUD de la Spec 004 (FR-015 a FR-019)', () {
+    for (final (level, pattern, levelTitle, response, patternTitle, sequence)
+        in [
+          (
+            'Nivel 1',
+            'Frontal',
+            'NIVEL 1',
+            'Defensa',
+            'FRONTAL',
+            'Chochôn-se 초천세 → Chungmyôn begi 정면베기',
+          ),
+          (
+            'Nivel 1',
+            'Transversal',
+            'NIVEL 1',
+            'Defensa',
+            'TRANSVERSAL',
+            'Sodose → Hwengdan ilgôm begi 횡단일검베기',
+          ),
+          (
+            'Nivel 2',
+            'Frontal',
+            'NIVEL 2',
+            'Evasión lateral',
+            'FRONTAL',
+            'Chochôn-se 초천세 → Chungmyôn begi 정면베기',
+          ),
+          (
+            'Nivel 2',
+            'Transversal',
+            'NIVEL 2',
+            'Evasión lateral',
+            'TRANSVERSAL',
+            'Sodose → Hwengdan ilgôm begi 횡단일검베기',
+          ),
+        ]) {
+      testWidgets('$level + $pattern: paneles con nivel, respuesta, patrón y '
+          'secuencia del catálogo (US3-1)', (tester) async {
+        final h = _Harness();
+        await h.start(tester, level: level, pattern: pattern);
+        for (final (key, texts) in [
+          (ExerciseHud.levelPanelKey, [levelTitle, response]),
+          (ExerciseHud.patternPanelKey, [patternTitle, sequence]),
+        ]) {
+          for (final text in texts) {
+            expect(
+              find.descendant(of: find.byKey(key), matching: find.text(text)),
+              findsOneWidget,
+              reason: text,
+            );
+          }
+        }
+        await tester.tap(find.text(StringsEs.stop));
+        await tester.pumpAndSettle();
+      });
+    }
+
+    testWidgets('los segundos bajan y la barra avanza respecto de la '
+        'duración (US3-2)', (tester) async {
+      final h = _Harness();
+      await h.start(tester);
+      double factor() => tester
+          .widget<FractionallySizedBox>(find.byKey(ExerciseHud.progressKey))
+          .widthFactor!;
+      Finder seconds(String text) => find.descendant(
+        of: find.byKey(ExerciseHud.timerPanelKey),
+        matching: find.text(text),
+      );
+
+      // Cuenta regresiva: 3 s + 30 s restantes, barra vacía.
+      expect(seconds('33'), findsOneWidget);
+      expect(factor(), 0);
+
+      // A la mitad de la duración (3 s + 15 s).
+      await h.advanceTo(tester, 18000);
+      expect(seconds('15'), findsOneWidget);
+      expect(factor(), closeTo(0.5, 0.01));
+
+      await h.advanceTo(tester, _finishedAt);
+      expect(seconds('0'), findsOneWidget);
+      expect(factor(), 1);
+    });
+
+    testWidgets('los paneles quedan en la franja superior y los botones en '
+        'sus zonas, sin tapar la escena (FR-016, FR-017, FR-019)', (
+      tester,
+    ) async {
+      final h = _Harness();
+      await h.start(tester, pattern: 'Transversal');
+      final session = tester
+          .widget<ExerciseScreen>(find.byType(ExerciseScreen))
+          .session;
+      final layout = SceneLayout.compute(
+        const Size(1600, 900),
+        session.pattern,
+      );
+
+      void expectInside(Finder finder, Rect zone, String reason) {
+        final rect = tester.getRect(finder);
+        expect(
+          zone.inflate(0.5).contains(rect.topLeft),
+          isTrue,
+          reason: reason,
+        );
+        expect(
+          zone.inflate(0.5).contains(rect.bottomRight),
+          isTrue,
+          reason: reason,
+        );
+      }
+
+      Finder button<T extends Widget>(String text) =>
+          find.ancestor(of: find.text(text), matching: find.byType(T));
+
+      await h.advanceTo(tester, _warningAt);
+      for (final key in [
+        ExerciseHud.levelPanelKey,
+        ExerciseHud.timerPanelKey,
+        ExerciseHud.patternPanelKey,
+      ]) {
+        expect(
+          tester.getRect(find.byKey(key)).bottom,
+          lessThanOrEqualTo(layout.hudBottom),
+          reason: '$key',
+        );
+      }
+      expectInside(
+        button<OutlinedButton>(StringsEs.stop),
+        layout.bottomLeftButton,
+        'Detener',
+      );
+
+      await h.advanceTo(tester, _finishedAt);
+      expectInside(
+        button<OutlinedButton>(StringsEs.back),
+        layout.bottomLeftButton,
+        'Volver',
+      );
+      expectInside(
+        button<FilledButton>(StringsEs.repeat),
+        layout.bottomRightButton,
+        'Repetir',
+      );
+    });
+  });
 }

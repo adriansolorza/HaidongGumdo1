@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/catalog/enums.dart';
 import '../../domain/exercise/exercise_engine.dart';
 import '../../domain/exercise/exercise_event.dart';
-import '../../domain/exercise/exercise_parameters.dart';
 import '../../domain/exercise/exercise_snapshot.dart';
 import '../../domain/exercise/exercise_status.dart';
 import '../../domain/exercise/opponent_motion.dart';
@@ -25,7 +24,7 @@ final class ExerciseController extends Notifier<ExerciseSnapshot> {
 
   @override
   ExerciseSnapshot build() {
-    final parameters = ExerciseParameters.defaults();
+    final parameters = ref.read(exerciseParametersProvider);
     return ExerciseSnapshot(
       status: ExerciseStatus.ready,
       saberColor: SaberColor.white,
@@ -35,11 +34,11 @@ final class ExerciseController extends Notifier<ExerciseSnapshot> {
     );
   }
 
-  /// Empieza un ejercicio nuevo con los parámetros por defecto.
+  /// Empieza un ejercicio nuevo con los parámetros vigentes.
   void start(Session session) {
     final engine = ExerciseEngine(
       session: session,
-      parameters: ExerciseParameters.defaults(),
+      parameters: ref.read(exerciseParametersProvider),
       random: ref.read(randomSourceProvider),
     );
     _engine = engine;

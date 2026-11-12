@@ -60,6 +60,17 @@ flutter:
   assets:
     - assets/catalog/catalog.json
 
+  # Tipografía de la interfaz (Spec 004, FR-026; ADR 0005). Licencia SIL OFL
+  # 1.1 en assets/fonts/rajdhani/OFL.txt. El hangul y el hanja usan la fuente
+  # del sistema.
+  fonts:
+    - family: Rajdhani
+      fonts:
+        - asset: assets/fonts/rajdhani/Rajdhani-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/rajdhani/Rajdhani-Bold.ttf
+          weight: 700
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

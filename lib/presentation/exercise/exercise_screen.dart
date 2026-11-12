@@ -4,13 +4,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../domain/exercise/exercise_snapshot.dart';
 import '../../domain/exercise/exercise_status.dart';
 import '../../domain/exercise/session.dart';
+import '../providers.dart';
+import '../scene/dojang_painter.dart';
+import '../scene/scene_layout.dart';
 import '../strings_es.dart';
-import '../theme.dart';
 import 'exercise_controller.dart';
 import 'painters/opponent_painter.dart';
 import 'painters/signal_painter.dart';
+import 'widgets/countdown_text.dart';
+import 'widgets/exercise_hud.dart';
 
 /// Pantalla del ejercicio (contracts/ui-screens.md). Un Ticker avanza el motor
 /// en cada cuadro hasta llegar a un estado terminal.
@@ -77,84 +82,136 @@ class _ExerciseScreenState extends ConsumerState<ExerciseScreen>
       }
     });
     final snapshot = ref.watch(exerciseControllerProvider);
-    final textTheme = Theme.of(context).textTheme;
+    final catalog = ref.watch(catalogProvider).value;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          CustomPaint(
-            painter: OpponentPainter(
-              saberColor: snapshot.saberColor,
-              guard: widget.session.pattern.guard,
-              cut: widget.session.pattern.cut,
-              motion: snapshot.motion,
-            ),
-          ),
-          if (snapshot.signal case final signal?)
-            CustomPaint(
-              painter: SignalPainter(
-                signal: signal,
-                saberColor: snapshot.saberColor,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final layout = _layoutFor(constraints.biggest);
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              // Capa 1: el dojang se rasteriza una vez (research R6, R13).
+              RepaintBoundary(
+                child: CustomPaint(painter: DojangPainter(layout: layout)),
               ),
-            ),
-          if (snapshot.status == ExerciseStatus.countdown &&
-              snapshot.countdownValue != null)
-            Center(
-              child: Text(
-                '${snapshot.countdownValue}',
-                style: textTheme.displayLarge,
-              ),
-            ),
-          Positioned(
-            top: 16,
-            right: 24,
-            child: SafeArea(
-              child: Text(
-                '${StringsEs.remaining} ${_seconds(snapshot.remaining)} s',
-                style: textTheme.titleMedium?.copyWith(color: Colors.white70),
-              ),
-            ),
-          ),
-          if (_isActive(snapshot.status))
-            Positioned(
-              top: 16,
-              left: 24,
-              child: SafeArea(
-                child: OutlinedButton(
-                  onPressed: _cancelAndLeave,
-                  child: const Text(StringsEs.stop),
+              CustomPaint(
+                painter: OpponentPainter(
+                  layout: layout,
+                  saberColor: snapshot.saberColor,
+                  guard: widget.session.pattern.guard,
+                  cut: widget.session.pattern.cut,
+                  motion: snapshot.motion,
                 ),
               ),
-            ),
-          if (snapshot.status == ExerciseStatus.finished)
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 24,
-              child: SafeArea(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    FilledButton(
-                      onPressed: () => ref
-                          .read(exerciseControllerProvider.notifier)
-                          .repeat(),
-                      child: const Text(StringsEs.repeat),
-                    ),
-                    const SizedBox(width: 24),
-                    OutlinedButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text(StringsEs.back),
-                    ),
-                  ],
+              if (snapshot.signal case final signal?)
+                CustomPaint(
+                  painter: SignalPainter(
+                    layout: layout,
+                    signal: signal,
+                    saberColor: snapshot.saberColor,
+                  ),
+                ),
+              Positioned.fill(
+                child: ExerciseHud(
+                  layout: layout,
+                  session: widget.session,
+                  catalog: catalog,
                 ),
               ),
-            ),
-        ],
+              ..._buttons(context, snapshot, layout),
+              if (snapshot.status == ExerciseStatus.countdown &&
+                  snapshot.countdownValue != null)
+                Center(child: CountdownText(value: snapshot.countdownValue!)),
+            ],
+          );
+        },
       ),
     );
+  }
+
+  /// Geometría compartida, memoizada por tamaño (el patrón no cambia en la
+  /// vida de la pantalla).
+  SceneLayout _layoutFor(Size size) {
+    final cached = _layout;
+    if (cached != null && cached.size == size) return cached;
+    return _layout = SceneLayout.compute(size, widget.session.pattern);
+  }
+
+  SceneLayout? _layout;
+
+  /// Detener (abajo a la izquierda) mientras se puede cancelar; al terminar,
+  /// Volver en su lugar y Repetir abajo a la derecha, en las zonas de botón de
+  /// `SceneLayout`, que no tapan al oponente ni a la señal (FR-016, FR-017,
+  /// FR-019). El comportamiento no cambia (Spec 001, FR-014, FR-021).
+  List<Widget> _buttons(
+    BuildContext context,
+    ExerciseSnapshot snapshot,
+    SceneLayout layout,
+  ) {
+    final s = layout.hudScale;
+    final textStyle = TextStyle(
+      fontSize: 20 * s,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 3 * s,
+    );
+    final padding = EdgeInsets.symmetric(horizontal: 28 * s);
+
+    Widget zone(Rect rect, Alignment alignment, Widget button) =>
+        Positioned.fromRect(
+          rect: rect,
+          child: Align(
+            alignment: alignment,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: alignment,
+              child: SizedBox(height: rect.height, child: button),
+            ),
+          ),
+        );
+
+    return [
+      if (_isActive(snapshot.status))
+        zone(
+          layout.bottomLeftButton,
+          Alignment.centerLeft,
+          OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              padding: padding,
+              textStyle: textStyle,
+            ),
+            onPressed: _cancelAndLeave,
+            child: const Text(StringsEs.stop),
+          ),
+        ),
+      if (snapshot.status == ExerciseStatus.finished) ...[
+        zone(
+          layout.bottomLeftButton,
+          Alignment.centerLeft,
+          OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              padding: padding,
+              textStyle: textStyle,
+            ),
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text(StringsEs.back),
+          ),
+        ),
+        zone(
+          layout.bottomRightButton,
+          Alignment.centerRight,
+          FilledButton(
+            style: FilledButton.styleFrom(
+              padding: padding,
+              textStyle: textStyle,
+            ),
+            onPressed: () =>
+                ref.read(exerciseControllerProvider.notifier).repeat(),
+            child: const Text(StringsEs.repeat),
+          ),
+        ),
+      ],
+    ];
   }
 
   /// Detener solo se ofrece mientras el ejercicio se puede cancelar.
@@ -162,7 +219,4 @@ class _ExerciseScreenState extends ConsumerState<ExerciseScreen>
       status == ExerciseStatus.countdown ||
       status == ExerciseStatus.running ||
       status == ExerciseStatus.finishing;
-
-  static int _seconds(Duration remaining) =>
-      (remaining.inMilliseconds / 1000).ceil();
 }

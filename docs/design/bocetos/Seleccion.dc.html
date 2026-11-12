@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Selección de nivel y patrón</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#ffffff}a:hover{color:#d9dcea}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; position: relative; overflow: hidden; background: #8a867c; font-family: 'Rajdhani', system-ui, sans-serif; color: #ffffff;">
+
+<svg width="1280" height="800" viewBox="0 0 1280 800" aria-hidden="true" style="position: absolute; left: 0; top: 0;">
+<defs>
+<linearGradient id="selwall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#aaa598"></stop><stop offset="1" stop-color="#8c887e"></stop></linearGradient>
+<linearGradient id="selfloor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#694322"></stop><stop offset="1" stop-color="#96622f"></stop></linearGradient>
+</defs>
+<rect x="0" y="0" width="1280" height="560" fill="url(#selwall)"></rect>
+<polygon points="380,0 520,0 780,560 560,560" fill="#ffffff" fill-opacity="0.07"></polygon>
+<rect x="0" y="108" width="1280" height="24" fill="#5b4a3a"></rect>
+<rect x="280" y="0" width="42" height="560" fill="#6a5644"></rect>
+<rect x="958" y="0" width="42" height="560" fill="#6a5644"></rect>
+<rect x="0" y="540" width="1280" height="22" fill="#3d3027"></rect>
+<rect x="0" y="562" width="1280" height="238" fill="url(#selfloor)"></rect>
+<rect x="0" y="0" width="1280" height="800" fill="#0c0e14" fill-opacity="0.62"></rect>
+</svg>
+
+<div style="position: absolute; inset: 0; box-sizing: border-box; padding: 40px 56px 36px; display: flex; flex-direction: column; gap: 28px;">
+
+<div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px;">
+<div style="display: flex; flex-direction: column; gap: 2px;">
+<span style="font-size: 46px; font-weight: 700; letter-spacing: 6px; line-height: 1;">HAIDONG GUMDO</span>
+<span style="font-size: 20px; font-weight: 500; color: #d6d9e4; letter-spacing: 1px;">Entrenamiento de reacción · 해동검도</span>
+</div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px; flex-grow: 1;">
+
+<div style="display: flex; flex-direction: column; gap: 14px;">
+<span style="font-size: 18px; font-weight: 700; letter-spacing: 4px; color: #c9ccd8;">NIVEL</span>
+<sc-for list="{{levels}}" as="item" hint-placeholder-count="2">
+<button type="button" onClick="{{item.pick}}" aria-pressed="{{item.pressed}}" style="{{item.cardStyle}}">
+<div style="width: 72px; height: 72px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 14px; background: rgba(255,255,255,0.1);">
+<sc-if value="{{item.isDefense}}" hint-placeholder-val="{{true}}">
+<svg width="56" height="56" viewBox="0 0 72 72" aria-hidden="true"><g stroke="#ffffff" stroke-linecap="round"><line x1="16" y1="58" x2="28" y2="46" stroke-width="9"></line><line x1="24" y1="38" x2="36" y2="50" stroke-width="5"></line><line x1="33" y1="41" x2="60" y2="14" stroke-width="4"></line></g></svg>
+</sc-if>
+<sc-if value="{{item.isEvasion}}" hint-placeholder-val="{{false}}">
+<svg width="56" height="56" viewBox="0 0 72 72" aria-hidden="true"><g stroke="#ffffff" stroke-linecap="round" stroke-width="4"><line x1="6" y1="28" x2="18" y2="28"></line><line x1="2" y1="36" x2="18" y2="36"></line><line x1="6" y1="44" x2="18" y2="44"></line></g><path d="M 24 27 L 42 27 L 42 16 L 66 36 L 42 56 L 42 45 L 24 45 Z" fill="#ffffff"></path></svg>
+</sc-if>
+</div>
+<div style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px; flex-grow: 1; text-align: left;">
+<span style="font-size: 28px; font-weight: 700; letter-spacing: 2px; line-height: 1.1;">{{item.name}}</span>
+<span style="font-size: 18px; font-weight: 500; color: #d6d9e4;">{{item.detail}}</span>
+</div>
+<sc-if value="{{item.selected}}" hint-placeholder-val="{{false}}">
+<svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="13" fill="#ffffff"></circle><path d="M 9 15.5 L 13.5 20 L 21.5 11" fill="none" stroke="#12141c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+</sc-if>
+</button>
+</sc-for>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 14px;">
+<span style="font-size: 18px; font-weight: 700; letter-spacing: 4px; color: #c9ccd8;">PATRÓN</span>
+<sc-for list="{{patterns}}" as="item" hint-placeholder-count="2">
+<button type="button" onClick="{{item.pick}}" aria-pressed="{{item.pressed}}" style="{{item.cardStyle}}">
+<div style="width: 72px; height: 72px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 14px; background: rgba(255,255,255,0.1);">
+<sc-if value="{{item.isFrontal}}" hint-placeholder-val="{{true}}">
+<svg width="56" height="56" viewBox="0 0 72 72" aria-hidden="true"><g stroke="#ffffff" stroke-linecap="round" fill="none" stroke-width="4"><circle cx="36" cy="26" r="7" fill="#ffffff"></circle><line x1="36" y1="34" x2="36" y2="52"></line><line x1="36" y1="52" x2="28" y2="68"></line><line x1="36" y1="52" x2="44" y2="68"></line><line x1="36" y1="38" x2="32" y2="16"></line><line x1="36" y1="38" x2="40" y2="16"></line><line x1="36" y1="14" x2="42" y2="2" stroke-width="3"></line></g></svg>
+</sc-if>
+<sc-if value="{{item.isTransversal}}" hint-placeholder-val="{{false}}">
+<svg width="56" height="56" viewBox="0 0 72 72" aria-hidden="true"><g stroke="#ffffff" stroke-linecap="round" fill="none" stroke-width="4"><circle cx="30" cy="16" r="7" fill="#ffffff"></circle><line x1="30" y1="24" x2="30" y2="46"></line><line x1="30" y1="46" x2="22" y2="66"></line><line x1="30" y1="46" x2="38" y2="66"></line><line x1="30" y1="30" x2="44" y2="40"></line><line x1="46" y1="40" x2="70" y2="40" stroke-width="3"></line></g></svg>
+</sc-if>
+</div>
+<div style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px; flex-grow: 1; text-align: left;">
+<span style="font-size: 28px; font-weight: 700; letter-spacing: 2px; line-height: 1.1;">{{item.name}}</span>
+<span style="font-size: 17px; font-weight: 500; color: #d6d9e4;">{{item.detail}}</span>
+<span style="font-size: 15px; font-weight: 500; color: #aeb3c4;">{{item.hangul}}</span>
+</div>
+<sc-if value="{{item.selected}}" hint-placeholder-val="{{false}}">
+<svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="13" fill="#ffffff"></circle><path d="M 9 15.5 L 13.5 20 L 21.5 11" fill="none" stroke="#12141c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+</sc-if>
+</button>
+</sc-for>
+</div>
+
+</div>
+
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 24px;">
+<span style="font-size: 20px; font-weight: 500; color: #d6d9e4; letter-spacing: 1px;">{{summary}}</span>
+<button type="button" style="min-width: 360px; min-height: 64px; padding: 10px 40px; font-family: 'Rajdhani', system-ui, sans-serif; font-size: 30px; font-weight: 700; letter-spacing: 6px; color: #12141c; background: #f4f5f8; border: 0; border-radius: 999px; box-shadow: 0 8px 24px rgba(0,0,0,0.35); cursor: pointer;">INICIAR</button>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { level: 'l1', pattern: 'frontal' };
+}
+card(selected) {
+const base = 'display: flex; align-items: center; gap: 18px; width: 100%; min-height: 104px; box-sizing: border-box; padding: 14px 20px; border-radius: 18px; color: #ffffff; font-family: inherit; cursor: pointer;';
+return selected
+? base + ' background: rgba(255,255,255,0.16); border: 2px solid #ffffff; box-shadow: 0 0 0 4px rgba(255,255,255,0.12);'
+: base + ' background: rgba(18,20,28,0.6); border: 2px solid rgba(255,255,255,0.22);';
+}
+renderVals() {
+const levels = [
+{ id: 'l1', name: 'NIVEL 1', detail: 'Defensa · Calentamiento', isDefense: true, isEvasion: false },
+{ id: 'l2', name: 'NIVEL 2', detail: 'Evasión lateral · Calentamiento / base', isDefense: false, isEvasion: true }
+].map((l) => ({ ...l, selected: this.state.level === l.id, pressed: this.state.level === l.id ? 'true' : 'false', cardStyle: this.card(this.state.level === l.id), pick: () => this.setState({ level: l.id }) }));
+const patterns = [
+{ id: 'frontal', name: 'FRONTAL', detail: 'Chayôn-se → Chochôn-se → Chungmyôn begi', hangul: '자연세 → 초천세 → 정면베기', isFrontal: true, isTransversal: false },
+{ id: 'transversal', name: 'TRANSVERSAL', detail: 'Chayôn-se → Sodose → Hwengdan ilgôm begi', hangul: '자연세 → 횡단일검베기', isFrontal: false, isTransversal: true }
+].map((p) => ({ ...p, selected: this.state.pattern === p.id, pressed: this.state.pattern === p.id ? 'true' : 'false', cardStyle: this.card(this.state.pattern === p.id), pick: () => this.setState({ pattern: p.id }) }));
+const lv = levels.find((l) => l.selected);
+const pt = patterns.find((p) => p.selected);
+const cap = (s) => s.charAt(0) + s.slice(1).toLowerCase();
+return { levels, patterns, summary: cap(lv.name) + ' · ' + cap(pt.name) + ' · 30 s' };
+}
+}
+</script>
+</body>
+</html>

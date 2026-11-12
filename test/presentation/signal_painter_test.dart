@@ -13,9 +13,10 @@ import 'package:haidonggumdo/domain/exercise/opponent_motion.dart';
 import 'package:haidonggumdo/domain/exercise/signal.dart';
 import 'package:haidonggumdo/presentation/exercise/painters/opponent_painter.dart';
 import 'package:haidonggumdo/presentation/exercise/painters/signal_painter.dart';
+import 'package:haidonggumdo/presentation/scene/scene_layout.dart';
 import 'package:haidonggumdo/presentation/theme.dart';
 
-/// Lienzos horizontales de las 4 proporciones de research R4.
+/// Lienzos horizontales de las 4 proporciones (Spec 003 R4; Spec 004 SC-004).
 const _sizes = {
   '20:9': (2000, 900),
   '16:9': (1600, 900),
@@ -23,18 +24,8 @@ const _sizes = {
   '4:3': (1200, 900),
 };
 
-const _evasionRight = Signal(
-  responseType: ResponseType.evasion,
-  screenSide: Side.right,
-);
-const _evasionLeft = Signal(
-  responseType: ResponseType.evasion,
-  screenSide: Side.left,
-);
-const _defenseLeft = Signal(
-  responseType: ResponseType.defense,
-  screenSide: Side.left,
-);
+Signal _sig(ResponseType type, Side side) =>
+    Signal(responseType: type, screenSide: side);
 
 /// Píxeles RGBA de [painter] en un lienzo de [w] × [h].
 Future<Uint8List> _render(CustomPainter painter, int w, int h) async {
@@ -46,16 +37,32 @@ Future<Uint8List> _render(CustomPainter painter, int w, int h) async {
   return data!.buffer.asUint8List();
 }
 
-SignalPainter _signal(Signal signal, SaberColor color) =>
-    SignalPainter(signal: signal, saberColor: color);
+/// Catálogo real: la geometría de la escena depende de sus posturas.
+final _catalog = const CatalogJsonMapper().fromJsonString(
+  File('assets/catalog/catalog.json').readAsStringSync(),
+);
 
-OpponentPainter _opponent(Pattern pattern, OpponentMotion motion) =>
-    OpponentPainter(
-      saberColor: SaberColor.blue,
-      guard: pattern.guard,
-      cut: pattern.cut,
-      motion: motion,
-    );
+/// Geometría compartida para un lienzo de [w] × [h] (Spec 004, research R5).
+SceneLayout _layout(int w, int h, [Pattern? pattern]) => SceneLayout.compute(
+  Size(w.toDouble(), h.toDouble()),
+  pattern ?? _catalog.patterns.first,
+);
+
+SignalPainter _signal(Signal signal, SaberColor color, int w, int h) =>
+    SignalPainter(layout: _layout(w, h), signal: signal, saberColor: color);
+
+OpponentPainter _opponent(
+  Pattern pattern,
+  OpponentMotion motion,
+  int w,
+  int h,
+) => OpponentPainter(
+  layout: _layout(w, h, pattern),
+  saberColor: SaberColor.blue,
+  guard: pattern.guard,
+  cut: pattern.cut,
+  motion: motion,
+);
 
 bool _painted(Uint8List px, int i) => px[i + 3] > 0;
 
@@ -65,266 +72,395 @@ bool _isColor(Uint8List px, int i, Color c) =>
     (px[i + 2] - (c.b * 255).round()).abs() <= 10 &&
     px[i + 3] > 200;
 
-/// Columnas con al menos un píxel pintado, y cuántos píxeles tiene cada una.
-Map<int, int> _columnHeights(Uint8List px, int w, int h) {
-  final heights = <int, int>{};
+Color _fill(SaberColor c) =>
+    c == SaberColor.blue ? AppColors.saberBlue : AppColors.saberRed;
+
+Color _other(SaberColor c) =>
+    c == SaberColor.blue ? AppColors.saberRed : AppColors.saberBlue;
+
+/// Caja de los píxeles que cumplen [test], o `null` si no hay ninguno.
+Rect? _bounds(Uint8List px, int w, int h, bool Function(int i) test) {
+  int? left, top, right, bottom;
   for (var y = 0; y < h; y++) {
     for (var x = 0; x < w; x++) {
-      if (_painted(px, (y * w + x) * 4)) {
-        heights[x] = (heights[x] ?? 0) + 1;
+      if (!test((y * w + x) * 4)) continue;
+      left = left == null || x < left ? x : left;
+      right = right == null || x > right ? x : right;
+      top ??= y;
+      bottom = y;
+    }
+  }
+  if (left == null) return null;
+  return Rect.fromLTRB(
+    left.toDouble(),
+    top!.toDouble(),
+    right! + 1.0,
+    bottom! + 1.0,
+  );
+}
+
+/// Píxeles pintados fuera de [lane] (con 1 px de tolerancia por el
+/// suavizado de bordes).
+int _outside(Uint8List px, int w, int h, Rect lane) {
+  final allowed = lane.inflate(1);
+  var count = 0;
+  for (var y = 0; y < h; y++) {
+    for (var x = 0; x < w; x++) {
+      if (!_painted(px, (y * w + x) * 4)) continue;
+      if (!allowed.contains(Offset(x + 0.5, y + 0.5))) count++;
+    }
+  }
+  return count;
+}
+
+/// Fracción de píxeles pintados de [a] iguales (±8 por canal) a los de [b]
+/// volteada en horizontal.
+double _mirrorMatch(Uint8List a, Uint8List b, int w, int h) {
+  var painted = 0;
+  var equal = 0;
+  for (var y = 0; y < h; y++) {
+    for (var x = 0; x < w; x++) {
+      final i = (y * w + x) * 4;
+      final j = (y * w + (w - 1 - x)) * 4;
+      if (a[i + 3] == 0 && b[j + 3] == 0) continue;
+      painted++;
+      if ([0, 1, 2, 3].every((c) => (a[i + c] - b[j + c]).abs() <= 8)) {
+        equal++;
       }
     }
   }
-  return heights;
-}
-
-/// Alcance del oponente en píxeles para un lienzo de alto [h].
-double _clearancePx(int h) =>
-    SignalPainter.opponentClearanceUnits * OpponentPainter.unitFraction * h;
-
-/// Largo pintado esperado: el tramo entre el alcance y el 4 % del borde, con
-/// tope de 0.36 h más el contorno, que sobresale media línea en cada extremo.
-double _expectedPaintedLength(int w, int h) {
-  final span = w * 0.96 - (w / 2 + _clearancePx(h));
-  final capped = 0.36 * h + kOutlineWidth;
-  return span < capped ? span : capped;
+  return equal / painted;
 }
 
 void main() {
-  group('evasión: colocación y forma (FR-006, FR-007)', () {
+  group('evasión: flecha corta con estela (Spec 003 FR-006 a FR-008; '
+      'Spec 004 FR-002, FR-013)', () {
     for (final MapEntry(key: ratio, value: (w, h)) in _sizes.entries) {
-      for (final (signal, color) in [
-        (_evasionRight, SaberColor.blue),
-        (_evasionLeft, SaberColor.red),
+      for (final (side, color) in [
+        (Side.right, SaberColor.blue),
+        (Side.left, SaberColor.red),
       ]) {
-        final side = signal.screenSide;
         final name = '$ratio, ${side.name}';
+        final signal = _sig(ResponseType.evasion, side);
+        final lane = _layout(w, h).laneFor(side);
 
-        test('$name: en su mitad, fuera del alcance del oponente y a ≥ 4 % '
-            'del borde', () async {
-          final columns = _columnHeights(
-            await _render(_signal(signal, color), w, h),
-            w,
-            h,
-          ).keys;
-          expect(columns, isNotEmpty);
-          // ±1 px de tolerancia por el suavizado de bordes.
-          final inner = w / 2 + _clearancePx(h) - 1;
-          final outer = w * 0.96 + 1;
-          for (final x in columns) {
-            // La columna x cubre [x, x + 1); en la izquierda se refleja.
-            final fromLeft = side == Side.right ? x : w - 1 - x;
-            expect(fromLeft, greaterThanOrEqualTo(inner), reason: 'x = $x');
-            expect(fromLeft + 1, lessThanOrEqualTo(outer), reason: 'x = $x');
-          }
+        test('$name: en su mitad y sin píxeles fuera del carril', () async {
+          final px = await _render(_signal(signal, color, w, h), w, h);
+          final box = _bounds(px, w, h, (i) => _painted(px, i))!;
+          expect(
+            side == Side.right ? box.left >= w / 2 : box.right <= w / 2,
+            isTrue,
+          );
+          expect(_outside(px, w, h, lane), 0);
         });
 
-        test('$name: largo y punta hacia el borde exterior', () async {
-          final heights = _columnHeights(
-            await _render(_signal(signal, color), w, h),
-            w,
-            h,
-          );
-          final columns = heights.keys.toList()..sort();
-          // Distancia de cada columna al extremo interior, hacia el borde.
-          final toEdge = side == Side.right
-              ? columns
-              : columns.reversed.toList();
-          final length = (toEdge.last - toEdge.first).abs() + 1;
-          expect(length, closeTo(_expectedPaintedLength(w, h), 3));
+        test('$name: punta hacia el borde exterior y estela hacia el '
+            'centro', () async {
+          final px = await _render(_signal(signal, color, w, h), w, h);
+          final fill = _fill(color);
+          final body = _bounds(px, w, h, (i) => _isColor(px, i, fill))!;
+          // La punta (extremo angosto) está del lado del borde exterior; el
+          // extremo interior es la cola del cuerpo, más alta. Además, la
+          // columna más alta (base de la punta) es más alta que el cuerpo.
+          int heightAt(int x) {
+            var n = 0;
+            for (var y = 0; y < h; y++) {
+              if (_isColor(px, (y * w + x) * 4, fill)) n++;
+            }
+            return n;
+          }
 
-          int heightAt(double fraction) =>
-              heights[toEdge[(fraction * (toEdge.length - 1)).round()]]!;
-          final body = heightAt(0.25);
-          final nearTip = heightAt(0.98);
-          final tallest = toEdge.indexWhere(
-            (x) => heights[x] == heights.values.reduce((a, b) => a > b ? a : b),
-          );
-          // El cuerpo mide 0.24 L y la punta 0.62 L: la columna más alta
-          // está en la base de la punta (a 0.58 L del extremo interior).
-          expect(tallest / toEdge.length, greaterThan(0.5));
-          expect(heights[toEdge[tallest]]! / body, closeTo(0.62 / 0.24, 0.6));
-          expect(nearTip, lessThan(body));
+          final inset = (0.05 * body.width).round();
+          final rightEnd = heightAt(body.right.toInt() - 1 - inset);
+          final leftEnd = heightAt(body.left.toInt() + inset);
+          final (outerEnd, innerEnd) = side == Side.right
+              ? (rightEnd, leftEnd)
+              : (leftEnd, rightEnd);
+          expect(outerEnd, lessThan(innerEnd), reason: 'punta hacia el borde');
+          var tallest = 0;
+          for (var x = body.left.toInt(); x < body.right; x++) {
+            final n = heightAt(x);
+            if (n > tallest) tallest = n;
+          }
+          expect(tallest, greaterThan(1.8 * innerEnd), reason: 'punta ancha');
+
+          // Estela: píxeles semitransparentes del color más allá de la cola
+          // (fuera del alcance del brillo, 3σ = 0.12 L).
+          final l = body.width;
+          final beyond = side == Side.right
+              ? body.left - 0.15 * l
+              : body.right + 0.15 * l;
+          final pastTipLimit = side == Side.right
+              ? body.right + 0.15 * l
+              : body.left - 0.15 * l;
+          var trail = 0;
+          var pastTip = 0;
+          for (var y = 0; y < h; y++) {
+            for (var x = 0; x < w; x++) {
+              final i = (y * w + x) * 4;
+              final a = px[i + 3];
+              if (a == 0 || a > 200) continue;
+              final tinted = color == SaberColor.blue
+                  ? px[i + 2] > px[i]
+                  : px[i] > px[i + 2];
+              if (!tinted) continue;
+              if (side == Side.right ? x < beyond : x > beyond) trail++;
+              if (side == Side.right ? x > pastTipLimit : x < pastTipLimit) {
+                pastTip++;
+              }
+            }
+          }
+          expect(trail, greaterThan(0), reason: 'estela hacia el centro');
+          expect(pastTip, 0, reason: 'nada más allá de la punta');
         });
 
         test('$name: relleno del color del sable, sin el otro color '
-            '(FR-008)', () async {
-          final px = await _render(_signal(signal, color), w, h);
-          final fill = color == SaberColor.blue
-              ? AppColors.saberBlue
-              : AppColors.saberRed;
-          final other = color == SaberColor.blue
-              ? AppColors.saberRed
-              : AppColors.saberBlue;
-          final columns = _columnHeights(px, w, h).keys.toList()..sort();
-          final midX = (columns.first + columns.last) ~/ 2;
-          expect(_isColor(px, ((h ~/ 2) * w + midX) * 4, fill), isTrue);
+            '(Spec 003 FR-008)', () async {
+          final px = await _render(_signal(signal, color, w, h), w, h);
+          final body = _bounds(px, w, h, (i) => _isColor(px, i, _fill(color)))!;
+          final center = body.center.dy.toInt() * w + body.center.dx.toInt();
+          expect(_isColor(px, center * 4, _fill(color)), isTrue);
           var wrong = 0;
           for (var i = 0; i < px.length; i += 4) {
-            if (_isColor(px, i, other)) wrong++;
+            if (_isColor(px, i, _other(color))) wrong++;
           }
           expect(wrong, 0);
         });
       }
 
-      test(
-        '$ratio: la flecha izquierda es el reflejo exacto de la derecha',
-        () async {
-          final right = await _render(
-            _signal(_evasionRight, SaberColor.blue),
+      test('$ratio: la flecha izquierda es el reflejo exacto de la '
+          'derecha', () async {
+        final right = await _render(
+          _signal(
+            _sig(ResponseType.evasion, Side.right),
+            SaberColor.blue,
             w,
             h,
-          );
-          final left = await _render(
-            _signal(_evasionLeft, SaberColor.blue),
-            w,
-            h,
-          );
-          var painted = 0;
-          var equal = 0;
-          for (var y = 0; y < h; y++) {
-            for (var x = 0; x < w; x++) {
-              final i = (y * w + x) * 4;
-              final j = (y * w + (w - 1 - x)) * 4;
-              if (right[i + 3] == 0 && left[j + 3] == 0) continue;
-              painted++;
-              if ([
-                0,
-                1,
-                2,
-                3,
-              ].every((c) => (right[i + c] - left[j + c]).abs() <= 8)) {
-                equal++;
-              }
-            }
-          }
-          expect(painted, greaterThan(0));
-          expect(equal / painted, greaterThanOrEqualTo(0.99));
-        },
-      );
+          ),
+          w,
+          h,
+        );
+        final left = await _render(
+          _signal(_sig(ResponseType.evasion, Side.left), SaberColor.blue, w, h),
+          w,
+          h,
+        );
+        expect(_mirrorMatch(right, left, w, h), greaterThanOrEqualTo(0.99));
+      });
     }
   });
 
-  group('defensa sin cambios (FR-012)', () {
-    test('ignora saberColor: sigue blanca, sin azul ni rojo', () async {
-      const w = 1600;
-      const h = 900;
-      final blue = await _render(_signal(_defenseLeft, SaberColor.blue), w, h);
-      final red = await _render(_signal(_defenseLeft, SaberColor.red), w, h);
-      expect(blue, red);
-      var white = 0;
-      var colored = 0;
-      for (var i = 0; i < blue.length; i += 4) {
-        if (_isColor(blue, i, AppColors.saberBlue) ||
-            _isColor(blue, i, AppColors.saberRed)) {
-          colored++;
-        }
-        if (_isColor(blue, i, AppColors.saberWhite)) white++;
+  group('defensa del color del sable (Spec 004, FR-014)', () {
+    for (final MapEntry(key: ratio, value: (w, h)) in _sizes.entries) {
+      for (final (side, color) in [
+        (Side.left, SaberColor.blue),
+        (Side.right, SaberColor.red),
+      ]) {
+        final name = '$ratio, ${side.name}';
+        final signal = _sig(ResponseType.defense, side);
+        final lane = _layout(w, h).laneFor(side);
+
+        test('$name: en su carril, con hoja del color, guarda gris y sin el '
+            'otro color', () async {
+          final px = await _render(_signal(signal, color, w, h), w, h);
+          expect(_outside(px, w, h, lane), 0);
+          var blade = 0;
+          var guard = 0;
+          var wrong = 0;
+          for (var i = 0; i < px.length; i += 4) {
+            if (_isColor(px, i, _fill(color))) blade++;
+            if (_isColor(px, i, AppColors.tsuba)) guard++;
+            if (_isColor(px, i, _other(color))) wrong++;
+          }
+          expect(blade, greaterThan(0));
+          expect(guard, greaterThan(0));
+          expect(wrong, 0);
+        });
+
+        test('$name: en diagonal, de al menos 30 % del alto, con la punta '
+            'arriba y hacia el borde exterior', () async {
+          final px = await _render(_signal(signal, color, w, h), w, h);
+          final box = _bounds(px, w, h, (i) => px[i + 3] > 200)!;
+          expect(box.height, greaterThanOrEqualTo(0.30 * h));
+          final diagonal = box.size.longestSide;
+          expect(box.width, greaterThanOrEqualTo(0.25 * diagonal));
+          expect(box.height, greaterThanOrEqualTo(0.25 * diagonal));
+
+          // La fila más alta del color está del lado exterior de la más baja.
+          final fill = _fill(color);
+          final colored = _bounds(px, w, h, (i) => _isColor(px, i, fill))!;
+          double meanX(int row) {
+            var sum = 0, n = 0;
+            for (var x = 0; x < w; x++) {
+              if (_isColor(px, (row * w + x) * 4, fill)) {
+                sum += x;
+                n++;
+              }
+            }
+            return sum / n;
+          }
+
+          final topX = meanX(colored.top.toInt() + 2);
+          final bottomX = meanX(colored.bottom.toInt() - 3);
+          expect(
+            side == Side.right ? topX > bottomX : topX < bottomX,
+            isTrue,
+            reason: 'top $topX, bottom $bottomX',
+          );
+        });
       }
-      expect(colored, 0);
-      expect(white, greaterThan(0));
-      final columns = _columnHeights(blue, w, h).keys;
-      expect(columns.every((x) => x < w ~/ 2), isTrue);
-    });
+
+      test('$ratio: la defensa izquierda es el reflejo exacto de la '
+          'derecha', () async {
+        final right = await _render(
+          _signal(_sig(ResponseType.defense, Side.right), SaberColor.red, w, h),
+          w,
+          h,
+        );
+        final left = await _render(
+          _signal(_sig(ResponseType.defense, Side.left), SaberColor.red, w, h),
+          w,
+          h,
+        );
+        expect(_mirrorMatch(right, left, w, h), greaterThanOrEqualTo(0.99));
+      });
+    }
   });
 
   group('shouldRepaint', () {
-    SignalPainter p(Signal s, SaberColor c) =>
-        SignalPainter(signal: s, saberColor: c);
+    SignalPainter p(Signal s, SaberColor c, [int w = 1600]) =>
+        SignalPainter(layout: _layout(w, 900), signal: s, saberColor: c);
+    final right = _sig(ResponseType.evasion, Side.right);
+    final left = _sig(ResponseType.evasion, Side.left);
 
     test('false con los mismos valores', () {
       expect(
-        p(
-          _evasionRight,
-          SaberColor.blue,
-        ).shouldRepaint(p(_evasionRight, SaberColor.blue)),
+        p(right, SaberColor.blue).shouldRepaint(p(right, SaberColor.blue)),
         isFalse,
       );
     });
 
-    test('true si cambia la señal o el color', () {
-      final base = p(_evasionRight, SaberColor.blue);
-      expect(p(_evasionRight, SaberColor.red).shouldRepaint(base), isTrue);
-      expect(p(_evasionLeft, SaberColor.blue).shouldRepaint(base), isTrue);
+    test('true si cambia la señal, el color o la geometría', () {
+      final base = p(right, SaberColor.blue);
+      expect(p(right, SaberColor.red).shouldRepaint(base), isTrue);
+      expect(p(left, SaberColor.blue).shouldRepaint(base), isTrue);
+      expect(p(right, SaberColor.blue, 2000).shouldRepaint(base), isTrue);
     });
   });
 
-  group('alcance del oponente con el catálogo real (FR-007, research R4)', () {
-    final catalog = const CatalogJsonMapper().fromJsonString(
-      File('assets/catalog/catalog.json').readAsStringSync(),
-    );
-    final transversal = catalog.patterns.firstWhere(
-      (p) => p.id == 'transversal',
-    );
-
+  group('alcance con el catálogo real (Spec 003 FR-007; Spec 004 SC-004)', () {
     OpponentMotion still(PoseKey key, Side side) =>
         OpponentMotion(from: key, to: key, progress: 0, side: side);
 
-    // Todos los tramos del ataque, en pasos de 0.1, con los dos lados.
+    // Tramos de T024: guardia, subida a la postura, postura, mitad del
+    // barrido, fin del corte y regreso, con los dos lados.
     final motions = [
       OpponentMotion.atGuard,
-      for (final side in Side.values)
-        for (final (from, to) in [
-          (PoseKey.guard, PoseKey.stance),
-          (PoseKey.stance, PoseKey.cutEnd),
-          (PoseKey.cutEnd, PoseKey.guard),
-        ])
-          for (var i = 0; i <= 10; i++)
-            OpponentMotion(from: from, to: to, progress: i / 10, side: side),
+      for (final side in Side.values) ...[
+        OpponentMotion(
+          from: PoseKey.guard,
+          to: PoseKey.stance,
+          progress: 0.5,
+          side: side,
+        ),
+        still(PoseKey.stance, side),
+        OpponentMotion(
+          from: PoseKey.stance,
+          to: PoseKey.cutEnd,
+          progress: 0.5,
+          side: side,
+        ),
+        still(PoseKey.cutEnd, side),
+        OpponentMotion(
+          from: PoseKey.cutEnd,
+          to: PoseKey.guard,
+          progress: 0.5,
+          side: side,
+        ),
+      ],
     ];
 
     for (final MapEntry(key: ratio, value: (w, h)) in _sizes.entries) {
-      test('$ratio: ningún patrón pinta fuera del alcance en ninguna fase', () async {
-        // Basta con mirar las columnas fuera del alcance, a los dos lados:
-        // [0, leftEnd) y [rightStart, w).
-        final limit = _clearancePx(h);
-        final leftEnd = (w / 2 - limit).floor();
-        final rightStart = (w / 2 + limit).ceil();
+      test('$ratio: ningún patrón pinta dentro de los carriles en ninguna '
+          'fase', () async {
+        final layout = _layout(w, h);
         final violations = <String>[];
-        for (final pattern in catalog.patterns) {
-          for (final motion in motions) {
-            final px = await _render(_opponent(pattern, motion), w, h);
-            var maxOut = 0.0;
-            for (var y = 0; y < h; y++) {
-              for (final range in [(0, leftEnd), (rightStart, w)]) {
-                for (var x = range.$1; x < range.$2; x++) {
-                  if (!_painted(px, (y * w + x) * 4)) continue;
-                  final out = (x + 0.5 - w / 2).abs() - limit;
-                  if (out > maxOut) maxOut = out;
+        for (final pattern in _catalog.patterns) {
+          for (final motion in [
+            ...motions,
+            for (final side in Side.values)
+              for (var i = 0; i <= 10; i++)
+                OpponentMotion(
+                  from: PoseKey.stance,
+                  to: PoseKey.cutEnd,
+                  progress: i / 10,
+                  side: side,
+                ),
+          ]) {
+            final px = await _render(_opponent(pattern, motion, w, h), w, h);
+            var inside = 0;
+            for (final lane in [layout.leftLane, layout.rightLane]) {
+              for (var y = lane.top.floor(); y < lane.bottom.ceil(); y++) {
+                for (var x = lane.left.floor(); x < lane.right.ceil(); x++) {
+                  if (_painted(px, (y * w + x) * 4)) inside++;
                 }
               }
             }
-            if (maxOut > 0) {
-              violations.add(
-                '${pattern.id} $motion: ${maxOut.toStringAsFixed(1)} px fuera',
-              );
-            }
+            if (inside > 0) violations.add('${pattern.id} $motion: $inside');
           }
         }
         expect(violations, isEmpty);
       }, timeout: const Timeout(Duration(minutes: 2)));
 
-      test('$ratio: Sodose y el fin del barrido no tocan la flecha '
-          '(caso límite)', () async {
-        for (final (side, color, signal) in [
-          (Side.right, SaberColor.blue, _evasionRight),
-          (Side.left, SaberColor.red, _evasionLeft),
-        ]) {
-          final arrow = await _render(_signal(signal, color), w, h);
-          for (final key in [PoseKey.stance, PoseKey.cutEnd]) {
-            final opponent = await _render(
-              _opponent(transversal, still(key, side)),
+      test('$ratio: ninguna señal comparte píxeles con el oponente ni cae en '
+          'las zonas de botón (SC-004, FR-017)', () async {
+        final layout = _layout(w, h);
+        final signals = <String, Uint8List>{};
+        for (final type in ResponseType.values) {
+          for (final (side, color) in [
+            (Side.right, SaberColor.blue),
+            (Side.left, SaberColor.red),
+          ]) {
+            final name = '${type.name} ${side.name}';
+            final px = await _render(
+              _signal(_sig(type, side), color, w, h),
               w,
               h,
             );
-            var shared = 0;
-            for (var i = 0; i < arrow.length; i += 4) {
-              if (_painted(arrow, i) && _painted(opponent, i)) shared++;
+            signals[name] = px;
+            var inButtons = 0;
+            for (final zone in [
+              layout.bottomLeftButton,
+              layout.bottomRightButton,
+            ]) {
+              for (var y = zone.top.floor(); y < zone.bottom.ceil(); y++) {
+                for (var x = zone.left.floor(); x < zone.right.ceil(); x++) {
+                  if (px[(y * w + x) * 4 + 3] > 2) inButtons++;
+                }
+              }
             }
-            expect(shared, 0, reason: '$side $key');
+            expect(inButtons, 0, reason: name);
           }
         }
-      });
+        final shared = <String>[];
+        for (final pattern in _catalog.patterns) {
+          for (final motion in motions) {
+            final opponent = await _render(
+              _opponent(pattern, motion, w, h),
+              w,
+              h,
+            );
+            for (final MapEntry(key: name, value: px) in signals.entries) {
+              var n = 0;
+              for (var i = 0; i < px.length; i += 4) {
+                if (_painted(px, i) && _painted(opponent, i)) n++;
+              }
+              if (n > 0) shared.add('${pattern.id} $motion $name: $n');
+            }
+          }
+        }
+        expect(shared, isEmpty);
+      }, timeout: const Timeout(Duration(minutes: 3)));
     }
   });
 }
