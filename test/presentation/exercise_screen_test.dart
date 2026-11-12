@@ -71,11 +71,11 @@ final class _Harness {
     );
     await tester.pumpAndSettle();
     if (level != null) {
-      await tester.tap(find.text(level));
+      await tester.tap(find.text(level.toUpperCase()));
       await tester.pump();
     }
     if (pattern != null) {
-      await tester.tap(find.text(pattern));
+      await tester.tap(find.text(pattern.toUpperCase()));
       await tester.pump();
     }
     await tester.tap(find.text(StringsEs.start));
@@ -256,7 +256,7 @@ void main() {
       await tester.pumpAndSettle();
       _expectBackOnSelection(tester);
 
-      await tester.tap(find.text('Frontal'));
+      await tester.tap(find.text('FRONTAL'));
       await tester.pump();
       await tester.tap(find.text(StringsEs.start));
       await tester.pump();
@@ -330,7 +330,7 @@ void main() {
       await tester.pumpAndSettle();
       _expectBackOnSelection(tester);
 
-      await tester.tap(find.text('Nivel 1'));
+      await tester.tap(find.text('NIVEL 1'));
       await tester.pump();
       await tester.tap(find.text(StringsEs.start));
       await tester.pump();
