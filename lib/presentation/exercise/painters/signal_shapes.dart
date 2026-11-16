@@ -41,9 +41,11 @@ abstract final class SignalShapes {
 
   // ── Símbolo de defensa: sable en diagonal visto desde arriba ──
 
-  /// Ángulo del eje sobre la horizontal (65°: en 4:3 el símbolo llega al
-  /// 30 % del alto, research R10).
-  static const defenseAngleDegrees = 65.0;
+  /// Ángulo del eje sobre la horizontal (115°: punta arriba a la izquierda,
+  /// hacia el centro en el lado derecho; spec, Clarifications 2026-11-16). La
+  /// proporción de la caja es la de 65°, así que en 4:3 el símbolo llega al
+  /// 30 % del alto (research R10).
+  static const defenseAngleDegrees = 115.0;
 
   /// Tramos a lo largo del eje, como fracción del largo total: empuñadura
   /// (26 %), guarda y hoja (70 %).
@@ -56,9 +58,10 @@ abstract final class SignalShapes {
   static const _guardWidth = 0.26;
   static const _guardThickness = 0.035;
 
-  /// Sable en diagonal con la punta arriba a la derecha, ajustado a [box]
-  /// (centrado y con su proporción). Devuelve la hoja, la guarda, la
-  /// empuñadura y los extremos del eje de la hoja (para el reflejo).
+  /// Sable en diagonal con la punta arriba a la izquierda (hacia el centro en
+  /// el lado derecho), ajustado a [box] (centrado y con su proporción).
+  /// Devuelve la hoja, la guarda, la empuñadura y los extremos del eje de la
+  /// hoja (para el reflejo).
   static ({
     Path blade,
     Path guard,
@@ -142,7 +145,7 @@ abstract final class SignalShapes {
   /// [across] de él (positivo hacia abajo a la derecha), con largo total 1.
   static Offset _axisPoint(double along, double across) {
     final a = defenseAngleDegrees * math.pi / 180;
-    final dir = Offset(math.cos(a), -math.sin(a)); // arriba a la derecha
+    final dir = Offset(math.cos(a), -math.sin(a)); // arriba a la izquierda
     final normal = Offset(-dir.dy, dir.dx);
     return dir * along + normal * across;
   }

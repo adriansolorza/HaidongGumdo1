@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ciclo SDD Haidong Gumdo</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: una columna de lectura; el ciclo es un riel vertical de estaciones con lazos de regreso en rojo */
+:root {
+  --bg: #efece5;
+  --surface: #f8f6f1;
+  --surface-2: #e4e0d6;
+  --ink: #23242a;
+  --ink-soft: #55565e;
+  --line: #cfc9bb;
+  --wood: #6a5644;
+  --code-bg: #2a2b31;
+  --code-ink: #eceae4;
+  --go: #1e5fe0;        /* avanza (sable azul) */
+  --back: #d0282a;      /* regresa / corrige (sable rojo) */
+  --check: #a87700;     /* tu revisión (amarillo de guardia, oscurecido para texto) */
+  --check-bg: #fff3c4;
+  --go-bg: #e3ecff;
+  --back-bg: #ffe3e1;
+  --display: 'Rajdhani', 'Arial Narrow', system-ui, sans-serif;
+  --body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1b1c21; --surface: #24252c; --surface-2: #2e2f37; --ink: #ecebe6; --ink-soft: #b4b3ad;
+    --line: #3d3e47; --wood: #b89a7c; --code-bg: #121317; --code-ink: #e6e4de;
+    --go: #6f9dff; --back: #ff6b66; --check: #ffd23f; --check-bg: #3a3218; --go-bg: #1f2a45; --back-bg: #3d2120;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1b1c21; --surface: #24252c; --surface-2: #2e2f37; --ink: #ecebe6; --ink-soft: #b4b3ad;
+  --line: #3d3e47; --wood: #b89a7c; --code-bg: #121317; --code-ink: #e6e4de;
+  --go: #6f9dff; --back: #ff6b66; --check: #ffd23f; --check-bg: #3a3218; --go-bg: #1f2a45; --back-bg: #3d2120;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.55; }
+.wrap { max-width: 920px; margin: 0 auto; padding-block: 40px 72px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 56px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 700; text-wrap: balance; margin: 0; line-height: 1.1; }
+h1 { font-size: clamp(38px, 7vw, 60px); letter-spacing: 1px; }
+h2 { font-size: 32px; letter-spacing: .5px; }
+h3 { font-size: 22px; letter-spacing: .3px; }
+p { margin: 0; }
+.eyebrow { font-family: var(--display); font-weight: 700; font-size: 15px; letter-spacing: 3px; text-transform: uppercase; color: var(--wood); }
+.lead { font-size: 18px; color: var(--ink-soft); max-width: 62ch; }
+header { display: flex; flex-direction: column; gap: 14px; }
+section { display: flex; flex-direction: column; gap: 20px; }
+.section-head { display: flex; flex-direction: column; gap: 6px; }
+.section-head p { color: var(--ink-soft); max-width: 62ch; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 10px 22px; padding: 14px 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; font-size: 14px; }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.sw { width: 30px; height: 6px; border-radius: 3px; display: inline-block; }
+
+code { font-family: var(--mono); font-size: .88em; background: var(--surface-2); padding: 1px 6px; border-radius: 5px; }
+.cmd { position: relative; background: var(--code-bg); color: var(--code-ink); border-radius: 10px; min-width: 0; }
+.cmd pre { margin: 0; padding: 14px 92px 14px 16px; font-family: var(--mono); font-size: 13.5px; line-height: 1.6; overflow-x: auto; white-space: pre; }
+.copy { position: absolute; top: 8px; right: 8px; font-family: var(--body); font-size: 12px; font-weight: 600; color: var(--code-ink); background: transparent; border: 1px solid rgba(255,255,255,.3); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.copy:hover { border-color: rgba(255,255,255,.7); }
+.copy:focus-visible, .copy-target:focus-visible { outline: 2px solid var(--go); outline-offset: 2px; }
+
+/* Preparación y arranque */
+.steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: s; }
+.steps > li { counter-increment: s; display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 4px 14px; padding: 16px 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.steps > li::before { content: counter(s); grid-row: 1 / span 3; width: 34px; height: 34px; border-radius: 50%; background: var(--ink); color: var(--bg); font-family: var(--display); font-weight: 700; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+.steps > li > * { grid-column: 2; min-width: 0; }
+.steps > li > .cmd { margin-top: 8px; }
+.steps.plain > li { grid-template-columns: minmax(0, 1fr); }
+.steps.plain > li::before { display: none; }
+.steps.plain > li > * { grid-column: 1; }
+.muted { color: var(--ink-soft); font-size: 14.5px; }
+
+/* El ciclo */
+.rail { position: relative; display: flex; flex-direction: column; gap: 0; }
+.station { position: relative; display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 0 16px; padding-bottom: 26px; }
+.station::before { content: ""; position: absolute; left: 21px; top: 44px; bottom: 0; width: 4px; background: var(--go); border-radius: 2px; }
+.station:last-child::before { display: none; }
+.dot { width: 44px; height: 44px; border-radius: 50%; border: 4px solid var(--go); background: var(--surface); display: flex; align-items: center; justify-content: center; font-family: var(--display); font-weight: 700; font-size: 18px; color: var(--go); z-index: 1; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.card .kicker { font-size: 13px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-soft); }
+.produces { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 14px; }
+.produces b { font-weight: 600; margin-right: 4px; }
+.file { font-family: var(--mono); font-size: 12.5px; padding: 2px 8px; border-radius: 6px; background: var(--go-bg); color: var(--ink); }
+.check { background: var(--check-bg); border-left: 4px solid var(--check); border-radius: 8px; padding: 10px 14px; font-size: 14.5px; }
+.check strong { color: var(--ink); }
+.loop { background: var(--back-bg); border-left: 4px solid var(--back); border-radius: 8px; padding: 10px 14px; font-size: 14.5px; }
+.loop strong { color: var(--back); }
+.commit { font-size: 14px; color: var(--ink-soft); }
+.commit code { color: var(--ink); }
+ul.tight { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+
+/* Tablas */
+.table-box { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; min-width: 560px; }
+th, td { text-align: left; vertical-align: top; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+th { font-family: var(--display); font-size: 16px; letter-spacing: 1px; text-transform: uppercase; background: var(--surface-2); }
+tr:last-child td { border-bottom: 0; }
+
+.rules { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.rule { padding: 16px 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; display: flex; flex-direction: column; gap: 6px; }
+.rule h3 { font-size: 20px; }
+.rule p { font-size: 14.5px; color: var(--ink-soft); }
+@media (max-width: 640px) {
+  .rules { grid-template-columns: minmax(0, 1fr); }
+  .station { grid-template-columns: 34px minmax(0, 1fr); gap: 0 10px; }
+  .dot { width: 34px; height: 34px; font-size: 15px; border-width: 3px; }
+  .station::before { left: 15.5px; top: 34px; width: 3px; }
+  .card { padding: 14px 14px; }
+  .cmd pre { padding-right: 16px; padding-top: 40px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<header>
+  <span class="eyebrow">Spec-Driven Development · Spec Kit + Claude Code + Flutter</span>
+  <h1>Ciclo SDD Haidong Gumdo</h1>
+  <p class="lead">Recordatorio de cómo armamos el proyecto de cero y del ciclo que repetimos en cada spec del brief. Los colores son los del sable de la app.</p>
+  <div class="legend" aria-label="Significado de los colores">
+    <span><i class="sw" style="background: var(--go)"></i>Azul: el camino que avanza</span>
+    <span><i class="sw" style="background: var(--back)"></i>Rojo: regresar y corregir</span>
+    <span><i class="sw" style="background: var(--check)"></i>Amarillo: tu revisión, en guardia</span>
+  </div>
+</header>
+
+<section aria-labelledby="prep">
+  <div class="section-head">
+    <span class="eyebrow">Una sola vez por computadora</span>
+    <h2 id="prep">Preparar la máquina</h2>
+  </div>
+  <ol class="steps plain">
+    <li>
+      <h3>Git</h3>
+      <p class="muted">Que git ignore los finales de línea de Windows (CRLF) y que el primer push de cada rama la cree en GitHub.</p>
+      <div class="cmd"><button class="copy" type="button">Copiar</button><pre>git config --global user.name "Tu nombre"
+git config --global user.email "tu@correo"
+git config --global core.autocrlf true
+git config --global push.autoSetupRemote true</pre></div>
+    </li>
+    <li>
+      <h3>Flutter y Android</h3>
+      <p class="muted">Flutter estable, Android Studio con al menos un emulador, licencias aceptadas. En Windows, Modo de desarrollador encendido (los plugins necesitan enlaces simbólicos).</p>
+      <div class="cmd"><button class="copy" type="button">Copiar</button><pre>flutter doctor
+flutter doctor --android-licenses
+start ms-settings:developers</pre></div>
+    </li>
+    <li>
+      <h3>Spec Kit</h3>
+      <p class="muted">Se instala con <code>uv</code>. Para actualizar después, la CLI se actualiza sola.</p>
+      <div class="cmd"><button class="copy" type="button">Copiar</button><pre>uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
+specify self check
+specify self upgrade</pre></div>
+    </li>
+    <li>
+      <h3>Claude Code</h3>
+      <p class="muted">En la terminal (<code>claude</code>) o con la extensión de VS Code. Los comandos de Spec Kit son los mismos en los dos: viven como Skills en <code>.claude/skills/</code>.</p>
+    </li>
+  </ol>
+</section>
+
+<section aria-labelledby="start">
+  <div class="section-head">
+    <span class="eyebrow">Una sola vez por proyecto</span>
+    <h2 id="start">Arrancar el proyecto de cero</h2>
+    <p>Cada paso termina en su propio commit, para que el historial cuente cómo nació el proyecto.</p>
+  </div>
+  <ol class="steps">
+    <li>
+      <h3>Carpeta, git y Flutter</h3>
+      <div class="cmd"><button class="copy" type="button">Copiar</button><pre>mkdir C:\Proyectos\haidonggumdo
+cd C:\Proyectos\haidonggumdo
+git init
+flutter create .
+git add .
+git commit -m "chore: scaffold Flutter project"</pre></div>
+    </li>
+    <li>
+      <h3>Spec Kit con la integración de Claude</h3>
+      <p class="muted">Haz commit antes y después: así ves exactamente qué agregó Spec Kit.</p>
+      <div class="cmd"><button class="copy" type="button">Copiar</button><pre>specify init --here --integration claude
+git add .
+git commit -m "chore: initialize Spec Kit with Claude integration"</pre></div>
+    </li>
+    <li>
+      <h3>Repositorio en GitHub</h3>
+      <p class="muted">Crea el repositorio vacío en GitHub (sin README) y sube <code>main</code>.</p>
+      <div class="cmd"><button class="copy" type="button">Copiar</button><pre>git remote add origin https://github.com/&lt;usuario&gt;/&lt;repo&gt;.git
+git branch -M main
+git push -u origin main</pre></div>
+    </li>
+    <li>
+      <h3>El brief: tu intención</h3>
+      <p class="muted"><code>docs/brief.md</code>: qué problemas resuelve, usuarios, glosario y la tabla de ciclos (qué spec va primero). Spec Kit no lo lee solo; tú se lo pasas con <code>@</code>. Es tu guía y la mantienes al día.</p>
+      <div class="cmd"><button class="copy" type="button">Copiar</button><pre>git add docs/brief.md
+git commit -m "docs: add product brief"</pre></div>
+    </li>
+    <li>
+      <h3>La constitution: tus formas</h3>
+      <p class="muted">Escribe en <code>docs/constitution-input.md</code> lo que no se negocia: stack, arquitectura, pruebas, qué decide la IA y qué apruebas tú. Luego, en su rama:</p>
+      <div class="cmd"><button class="copy" type="button">Copiar</button><pre>git checkout -b docs/constitution
+claude</pre></div>
+      <div class="cmd"><button class="copy" type="button">Copiar</button><pre>/speckit-constitution Genera la constitution del proyecto usando como entrada @docs/constitution-input.md. No agregues principios que no estén en ese archivo. Si encuentras huecos o contradicciones, pregúntame antes de escribir.</pre></div>
+      <p class="muted">Lee completo <code>.specify/memory/constitution.md</code>, haz commit (<code>docs: ratify constitution v1.0.0</code>), push, PR y merge a <code>main</code>.</p>
+    </li>
+    <li>
+      <h3>La spec base de la v1</h3>
+      <p class="muted"><code>docs/000-…md</code>: la visión completa de la versión (todas las historias, reglas y criterios). No se implementa de golpe: es el contexto que cada <code>/speckit-specify</code> recorta al alcance de su ciclo.</p>
+    </li>
+  </ol>
+</section>
+
+<section aria-labelledby="cycle">
+  <div class="section-head">
+    <span class="eyebrow">Se repite hasta acabar la tabla del brief</span>
+    <h2 id="cycle">El ciclo de cada spec</h2>
+    <p>Una rama por spec y un solo PR al final. Commit por cada artefacto y por cada fase, con push para tener respaldo.</p>
+  </div>
+
+  <div class="rail">
+
+    <div class="station">
+      <div class="dot" aria-hidden="true">A</div>
+      <div class="card">
+        <span class="kicker">Rama nueva</span>
+        <h3>Partir de main actualizado</h3>
+        <div class="cmd"><button class="copy" type="button">Copiar</button><pre>git checkout main
+git pull origin main
+git branch -d &lt;rama-anterior&gt;
+git checkout -b NNN-nombre-corto
+git push -u origin NNN-nombre-corto
+claude</pre></div>
+        <p class="muted">El número de la rama es el número de la spec (<code>003-nivel2-evasion</code>). Nunca uses un número que ya signifique otra spec.</p>
+      </div>
+    </div>
+
+    <div class="station">
+      <div class="dot" aria-hidden="true">B</div>
+      <div class="card">
+        <span class="kicker">Qué debe hacer el sistema</span>
+        <h3>/speckit-specify</h3>
+        <div class="cmd"><button class="copy" type="button">Copiar</button><pre>/speckit-specify Spec NNN: &lt;nombre&gt;. Usa como contexto @docs/000-…md, @docs/brief.md y las specs anteriores. Alcance y decisiones del responsable:
+- &lt;qué entra, con el porqué&gt;
+- &lt;qué queda fuera&gt;
+Reutiliza el motor sin rediseñarlo (Principio III). Hazme antes las preguntas que necesites para resolver ambigüedades. No implementes nada.</pre></div>
+        <div class="produces"><b>Produce:</b><span class="file">spec.md</span><span class="file">checklists/</span></div>
+        <div class="check"><strong>Tu revisión:</strong> ¿describe qué y por qué, sin tecnología? ¿Las decisiones de dominio (posturas, cortes, lados) son correctas? Eso solo lo sabes tú.</div>
+        <div class="loop"><strong>↺ Si algo falta o quedó un [NEEDS CLARIFICATION]:</strong> <code>/speckit-clarify</code> y vuelve a revisar.</div>
+        <p class="commit">Commit: <code>docs: add spec NNN &lt;nombre&gt;</code></p>
+      </div>
+    </div>
+
+    <div class="station">
+      <div class="dot" aria-hidden="true">C</div>
+      <div class="card">
+        <span class="kicker">Cómo se resuelve técnicamente</span>
+        <h3>/speckit-plan</h3>
+        <div class="produces"><b>Produce:</b><span class="file">plan.md</span><span class="file">research.md</span><span class="file">data-model.md</span><span class="file">contracts/</span><span class="file">quickstart.md</span><span class="file">docs/decisions/ (ADR)</span></div>
+        <div class="check"><strong>Tu revisión:</strong> ¿cuánto toca <code>lib/domain/</code>? Lo ideal es poco o nada. ¿Paquetes nuevos? Solo con ADR aprobado por ti. ¿El Constitution Check pasa?</div>
+        <div class="loop"><strong>↺ Si el plan descubre un hueco en la spec:</strong> se corrige primero la spec y después el plan.</div>
+        <p class="commit">Commit: <code>docs: add plan for spec NNN</code></p>
+      </div>
+    </div>
+
+    <div class="station">
+      <div class="dot" aria-hidden="true">D</div>
+      <div class="card">
+        <span class="kicker">Lista de trabajo del agente</span>
+        <h3>/speckit-tasks y luego /speckit-analyze</h3>
+        <div class="produces"><b>Produce:</b><span class="file">tasks.md</span><span class="muted">por fases e historias</span></div>
+        <p><code>/speckit-analyze</code> revisa que spec, plan y tasks digan lo mismo. Entrega un informe; no corrige solo. Le pides que aplique lo que apruebes.</p>
+        <div class="check"><strong>Tu revisión:</strong> ¿qué fases hay? ¿Cuáles tareas son manuales (tuyas)? ¿Alguna prueba existente cambia? Si cambia, que sea porque cambió lo que describe.</div>
+        <div class="loop"><strong>↺ Si analyze encuentra hallazgos:</strong> pide la corrección y vuelve a correr analyze.</div>
+        <p class="commit">Commit: <code>docs: add tasks for spec NNN</code></p>
+      </div>
+    </div>
+
+    <div class="station">
+      <div class="dot" aria-hidden="true">E</div>
+      <div class="card">
+        <span class="kicker">Por fases, nunca de un jalón</span>
+        <h3>/speckit-implement</h3>
+        <div class="cmd"><button class="copy" type="button">Copiar</button><pre>/speckit-implement Ejecuta solo la Fase N (T0XX a T0YY). Detente al terminar y dime qué verificar.</pre></div>
+        <div class="check"><strong>Tu revisión al cerrar cada fase:</strong>
+          <ul class="tight">
+            <li><code>flutter analyze</code> y <code>flutter test</code> en verde.</li>
+            <li>Las tareas de la fase quedaron en <code>[X]</code>.</li>
+            <li>Al terminar una historia, pruébala en el emulador.</li>
+          </ul>
+        </div>
+        <div class="cmd"><button class="copy" type="button">Copiar</button><pre>git status
+git restore macos windows
+git add &lt;rutas&gt;
+git commit -m "feat: &lt;lo que hace la fase&gt;"
+git push</pre></div>
+        <p class="muted">Tipos de commit: <code>feat</code> funcionalidad, <code>test</code> pruebas, <code>chore</code> configuración y pulido, <code>docs</code> documentos, <code>fix</code> errores. El <code>git restore</code> descarta los archivos que Flutter regenera para macOS y Windows.</p>
+        <div class="loop"><strong>↺ Si algo no quedó bien, primero clasifícalo:</strong>
+          <ul class="tight">
+            <li><strong>Bug</strong> (no hace lo que dice la spec): pide la corrección citando el requisito, por ejemplo "FR-015: con azul el símbolo sale a la derecha".</li>
+            <li><strong>Cambio de idea o error de definición</strong>: corrige la spec, actualiza plan y tasks (desmarcando las afectadas), corre analyze y vuelve a implementar. Como el corte transversal de 180°.</li>
+          </ul>
+        </div>
+        <p class="muted">Repite esta estación con la siguiente fase hasta terminar todas.</p>
+      </div>
+    </div>
+
+    <div class="station">
+      <div class="dot" aria-hidden="true">F</div>
+      <div class="card">
+        <span class="kicker">Tus tareas manuales</span>
+        <h3>Validar en el mundo real</h3>
+        <p>Las pruebas en dispositivo y con personas a 3 m las haces tú. Si las dejas para el dojang, no las marques: agrégales la nota <em>"Pospuesta: validación en dojang"</em>.</p>
+        <div class="cmd"><button class="copy" type="button">Copiar</button><pre>flutter build apk --release
+flutter install -d &lt;id-del-dispositivo&gt;</pre></div>
+      </div>
+    </div>
+
+    <div class="station">
+      <div class="dot" aria-hidden="true">G</div>
+      <div class="card">
+        <span class="kicker">Cerrar el ciclo</span>
+        <h3>PR y merge a main</h3>
+        <ul class="tight">
+          <li>Push final de la rama.</li>
+          <li>En GitHub: abre el PR a <code>main</code>, revisa el diff completo del ciclo y fusiónalo.</li>
+          <li>Borra la rama en GitHub (botón "Delete branch").</li>
+          <li>Actualiza el brief si cambió el orden o surgieron ideas.</li>
+        </ul>
+        <div class="loop"><strong>↺ Siguiente spec del brief:</strong> vuelve a la estación A.</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section aria-labelledby="trouble">
+  <div class="section-head">
+    <span class="eyebrow">Lo que ya nos pasó</span>
+    <h2 id="trouble">Cuando algo sale raro</h2>
+  </div>
+  <div class="table-box">
+    <table>
+      <thead><tr><th>Síntoma</th><th>Qué hacer</th></tr></thead>
+      <tbody>
+        <tr><td><code>git status</code> muestra archivos modificados que nadie tocó</td><td>Solo cambiaron los finales de línea. Con <code>core.autocrlf true</code> ya no aparecen; si aparecen, <code>git restore &lt;rutas&gt;</code>.</td></tr>
+        <tr><td><em>"has no upstream branch"</em> al hacer push</td><td>Es el primer push de la rama: <code>git push -u origin &lt;rama&gt;</code>.</td></tr>
+        <tr><td><code>git checkout -b</code> dice que la rama ya existe</td><td>Usa <code>git checkout &lt;rama&gt;</code> y luego <code>git pull origin main</code>.</td></tr>
+        <tr><td>El editor marca un error que <code>flutter analyze</code> no marca</td><td>Manda la terminal. En VS Code: "Dart: Restart Analysis Server" o "Flutter: Change SDK".</td></tr>
+        <tr><td>Una prueba vieja falla porque la spec nueva cambió algo</td><td>Se actualiza la prueba porque cambió lo que describe, y queda escrito en las tareas como cambio de datos o de presentación, no de lógica.</td></tr>
+        <tr><td>Aviso de "new version of Flutter"</td><td>No actualices a mitad de una spec ni antes de una prueba. Hazlo entre specs, con su propio commit (Principio I).</td></tr>
+        <tr><td>Algo se ve mal pero "funciona"</td><td>Si es funcional (no se lee, confunde), corrígelo ya. Si es estético, anótalo en el brief para la spec de experiencia visual.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section aria-labelledby="rules">
+  <div class="section-head">
+    <span class="eyebrow">Lo que aprendimos</span>
+    <h2 id="rules">Reglas del proyecto</h2>
+  </div>
+  <div class="rules">
+    <div class="rule"><h3>La spec es la fuente de verdad</h3><p>Si corriges el código y no la spec, la próxima vez que la IA lea la spec va a "corregir" tu corrección.</p></div>
+    <div class="rule"><h3>Spec: qué. Plan: cómo.</h3><p>La tecnología y la arquitectura entran en la constitution (decisiones permanentes) y en el plan (decisiones de cada spec). Nunca en la spec.</p></div>
+    <div class="rule"><h3>Guarda intención, no prompts</h3><p>El brief, el constitution-input y las sesiones de Clarifications guardan el porqué. Los prompts son desechables.</p></div>
+    <div class="rule"><h3>Datos sobre código</h3><p>Patrones y niveles viven en el catálogo. Si una spec solo agrega datos y pruebas, el diseño anterior quedó bien hecho, como en la 002.</p></div>
+    <div class="rule"><h3>La IA propone, tú decides</h3><p>Paquetes, tipografías y cambios a la constitution se proponen con pros y contras y se registran como ADR.</p></div>
+    <div class="rule"><h3>El conocimiento de dominio es tuyo</h3><p>Dirección de los cortes, evasiones válidas, alturas: ninguna prueba automática las detecta. Revisa la spec como cinta negra.</p></div>
+  </div>
+</section>
+
+</div>
+
+<script>
+document.querySelectorAll('.cmd').forEach(function (box) {
+  var btn = box.querySelector('.copy');
+  var pre = box.querySelector('pre');
+  if (!btn || !pre) return;
+  btn.addEventListener('click', function () {
+    var text = pre.textContent;
+    var done = function () { btn.textContent = 'Copiado'; setTimeout(function () { btn.textContent = 'Copiar'; }, 1600); };
+    var fallback = function () {
+      var range = document.createRange();
+      range.selectNodeContents(pre);
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      btn.textContent = 'Seleccionado';
+      setTimeout(function () { btn.textContent = 'Copiar'; }, 1600);
+    };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, fallback);
+      } else { fallback(); }
+    } catch (e) { fallback(); }
+  });
+});
+</script>
+</body>
+</html>

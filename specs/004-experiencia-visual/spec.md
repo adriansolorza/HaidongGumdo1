@@ -55,6 +55,10 @@ Los demás términos (_Si-jak_, _Guman_, _Chayôn-se_, _Chochôn-se_, _Sodose_, 
 - Q: La _hakama_ azul marino y la guarda dorada del símbolo de defensa de los bocetos rompen la regla de color. ¿Qué colores llevan? → A: Ambos neutros, sin excepciones: _hakama_ gris carbón o negra sin tinte azul, y guarda del símbolo de defensa gris, como la tsuba del oponente.
 - Q: ¿Cómo se hacen los íconos de silueta de los patrones en la selección? → A: Se generan a partir de la postura del patrón en el catálogo. Un patrón nuevo tiene ícono sin cambiar código (Principio III; Spec 001, SC-009).
 
+### Session 2026-11-16 (retroalimentación del dojang)
+
+- Q: ¿Hacia dónde se inclina el símbolo de defensa? → A: Con la **punta arriba y hacia el centro de la pantalla** (hacia el oponente), en ambos lados: a la derecha, la punta queda arriba a la izquierda; a la izquierda, arriba a la derecha. Sustituye la inclinación anterior, que apuntaba hacia el borde exterior. El lado (Spec 001) no cambia.
+
 ## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Entrenar frente a un oponente en un dojang (Priority: P1)
@@ -86,7 +90,7 @@ El practicante ve una flecha de evasión corta y gruesa, con una estela que se d
 **Acceptance Scenarios**:
 
 1. **Given** el Nivel 2, **When** aparece la señal, **Then** es una flecha corta y gruesa, del color del sable, con contorno oscuro, brillo suave y una estela que se desvanece hacia la cola, del mismo lado y apuntando hacia el mismo borde que en la Spec 003.
-2. **Given** el Nivel 1, **When** aparece la señal, **Then** es un sable en diagonal visto desde arriba, con hoja delgada del color del sable y empuñadura más gruesa, guarda gris y contorno oscuro, del mismo lado que en la Spec 001.
+2. **Given** el Nivel 1, **When** aparece la señal, **Then** es un sable en diagonal visto desde arriba, con hoja delgada del color del sable y empuñadura más gruesa, guarda gris y contorno oscuro, con la punta arriba y hacia el centro de la pantalla (hacia el oponente), del mismo lado que en la Spec 001.
 3. **Given** cualquier patrón, lado, proporción de pantalla y fase del movimiento, **When** la señal está visible, **Then** ninguna parte de ella (incluidos la estela y el brillo) se cruza con el oponente ni con su sable.
 
 ---
@@ -170,7 +174,7 @@ El practicante abre la app y ve el encabezado "HAIDONG GUMDO" sobre el dojang os
 **Señales**
 
 - **FR-013**: La señal de evasión MUST ser una flecha **corta y gruesa**, del color del sable, con contorno oscuro, brillo suave y una **estela** que se desvanece hacia la cola, según `docs/design/flecha-evasion-boceto.png` y `Senales.dc.html` (flecha propuesta). Conserva el lado, la dirección y el espacio libre de la Spec 003 (FR-006 a FR-008).
-- **FR-014**: La señal de defensa MUST ser un sable en diagonal visto desde arriba, con **hoja delgada** del color del sable, **empuñadura más gruesa**, guarda gris y contorno oscuro (Spec 001, FR-025a). Conserva el lado de la Spec 001.
+- **FR-014**: La señal de defensa MUST ser un sable en diagonal visto desde arriba, con **hoja delgada** del color del sable, **empuñadura más gruesa**, guarda gris y contorno oscuro (Spec 001, FR-025a), inclinado con la **punta arriba y hacia el centro de la pantalla** (hacia el oponente) en ambos lados (Clarifications, 2026-11-16). Conserva el lado de la Spec 001.
 
 **HUD del ejercicio**
 

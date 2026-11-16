@@ -20,7 +20,7 @@ import 'signal_shapes.dart';
 /// el brillo y la estela, sale del carril. Se dibujan del color del sable:
 /// - evasión: flecha corta y gruesa con estela, apuntando al borde exterior;
 /// - defensa: sable en diagonal visto desde arriba, con la punta arriba y
-///   hacia el borde exterior, hoja delgada del color del sable, guarda gris y
+///   hacia el centro de la pantalla (hacia el oponente), hoja delgada del color del sable, guarda gris y
 ///   empuñadura más gruesa.
 ///
 /// Se construye la señal del lado derecho y se refleja en `x` para la

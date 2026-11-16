@@ -278,7 +278,7 @@ void main() {
         });
 
         test('$name: en diagonal, de al menos 30 % del alto, con la punta '
-            'arriba y hacia el borde exterior', () async {
+            'arriba y hacia el centro (hacia el oponente)', () async {
           final px = await _render(_signal(signal, color, w, h), w, h);
           final box = _bounds(px, w, h, (i) => px[i + 3] > 200)!;
           expect(box.height, greaterThanOrEqualTo(0.30 * h));
@@ -286,7 +286,8 @@ void main() {
           expect(box.width, greaterThanOrEqualTo(0.25 * diagonal));
           expect(box.height, greaterThanOrEqualTo(0.25 * diagonal));
 
-          // La fila más alta del color está del lado exterior de la más baja.
+          // La fila más alta del color está del lado del centro respecto de la
+          // más baja (punta hacia el oponente; spec, Clarifications 2026-11-16).
           final fill = _fill(color);
           final colored = _bounds(px, w, h, (i) => _isColor(px, i, fill))!;
           double meanX(int row) {
@@ -303,7 +304,7 @@ void main() {
           final topX = meanX(colored.top.toInt() + 2);
           final bottomX = meanX(colored.bottom.toInt() - 3);
           expect(
-            side == Side.right ? topX > bottomX : topX < bottomX,
+            side == Side.right ? topX < bottomX : topX > bottomX,
             isTrue,
             reason: 'top $topX, bottom $bottomX',
           );
