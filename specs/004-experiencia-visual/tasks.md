@@ -222,12 +222,24 @@ Proyecto Flutter único: `lib/`, `test/`, `assets/` y `docs/` en la raíz del re
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [X] T038 [P] Crear `test/presentation/palette_test.dart` (research R9, data-model §3): `chroma(c) = (max(r,g,b) − min(r,g,b)) / 255`; todo color de `AppColors.interfaceColors` y `AppColors.figureColors` tiene croma ≤ 0.10 (sin contar alfa); todo color de `AppColors.dojangColors` tiene croma ≤ 0.45; `saberBlue`, `saberRed` y `saberYellow` no aparecen en esas listas; y `buildAppTheme().colorScheme` (`primary`, `secondary`, `tertiary`, `surface`, `onSurface`, `onPrimary`, `outline`) no usa ningún color con croma > 0.10 (FR-004, FR-005).
-- [X] T039 [P] Comprobar alcance del diff (quickstart §1): `git diff --stat main -- lib/domain lib/data` vacío; `git diff main -- assets/catalog/catalog.json` solo con las dos puntas del transversal; `git diff main -- pubspec.yaml` solo con la sección `fonts:`. Si algo más cambió, revertirlo o justificarlo.
-- [X] T040 Ejecutar `flutter analyze` y `flutter test` completos: todo verde, y las pruebas de `test/domain/` sin cambios respecto de `main` (`git diff --stat main -- test/domain` vacío) (SC-007).
+- [x] T038 [P] Crear `test/presentation/palette_test.dart` (research R9, data-model §3): `chroma(c) = (max(r,g,b) − min(r,g,b)) / 255`; todo color de `AppColors.interfaceColors` y `AppColors.figureColors` tiene croma ≤ 0.10 (sin contar alfa); todo color de `AppColors.dojangColors` tiene croma ≤ 0.45; `saberBlue`, `saberRed` y `saberYellow` no aparecen en esas listas; y `buildAppTheme().colorScheme` (`primary`, `secondary`, `tertiary`, `surface`, `onSurface`, `onPrimary`, `outline`) no usa ningún color con croma > 0.10 (FR-004, FR-005).
+- [x] T039 [P] Comprobar alcance del diff (quickstart §1): `git diff --stat main -- lib/domain lib/data` vacío; `git diff main -- assets/catalog/catalog.json` solo con las dos puntas del transversal; `git diff main -- pubspec.yaml` solo con la sección `fonts:`. Si algo más cambió, revertirlo o justificarlo.
+- [x] T040 Ejecutar `flutter analyze` y `flutter test` completos: todo verde, y las pruebas de `test/domain/` sin cambios respecto de `main` (`git diff --stat main -- test/domain` vacío) (SC-007).
 - [ ] T041 Medición de tiempos en el dispositivo de referencia (quickstart §3, "Tiempos"): grabar un ejercicio a 60 fps y medir aviso, corte e intervalo con el método de la Spec 001; desvío < 50 ms y sin saltos (SC-006). Si hay saltos, aplicar research R13 (perfilar con DevTools; pre-renderizar el brillo si es la causa).Pospuesta: validación en dojang
-- [ ] T042 Pruebas con personas a 3 m (quickstart §3): SC-001 y SC-002 (3 observadores, 4 combos), SC-003 (regla de color en las dos pantallas), SC-005 (5 practicantes, app nueva y anterior lado a lado) y SC-008. Registrar resultados en la descripción del PR. Si un elemento del dojang o los pies se nombran rojo o amarillo, ajustar ese token (research R7, R9) y repetir SC-003.Pospuesta: validación en dojang
-- [ ] T043 Abrir el PR de `004-experiencia-visual` a `main` con Conventional Commits (p. ej. `feat: add dojang scene and opponent gear`, `feat: redesign signals with glow and trail`, `feat: add exercise hud panels`, `feat: redesign selection screen`, `docs: add ADR 0005 rajdhani font`, `test: cover scene layout and palette`), mencionando el cambio de datos del transversal (FR-010) y la ADR 0005; verificar en el PR la revisión de cumplimiento de la constitution.
+- [x] T042 Pruebas con personas a 3 m (quickstart §3): SC-001 y SC-002 (3 observadores, 4 combos), SC-003 (regla de color en las dos pantallas), SC-005 (5 practicantes, app nueva y anterior lado a lado) y SC-008. Registrar resultados en la descripción del PR. Si un elemento del dojang o los pies se nombran rojo o amarillo, ajustar ese token (research R7, R9) y repetir SC-003.Pospuesta: validación en dojang
+- [x] T043 Abrir el PR de `004-experiencia-visual` a `main` con Conventional Commits (p. ej. `feat: add dojang scene and opponent gear`, `feat: redesign signals with glow and trail`, `feat: add exercise hud panels`, `feat: redesign selection screen`, `docs: add ADR 0005 rajdhani font`, `test: cover scene layout and palette`), mencionando el cambio de datos del transversal (FR-010) y la ADR 0005; verificar en el PR la revisión de cumplimiento de la constitution.
+
+---
+
+## Phase 8: Ajustes tras el dojang
+
+**Purpose**: Aplicar la retroalimentación del dojang sobre el símbolo de defensa (spec, Clarifications 2026-11-16; FR-014; US2, escenario 2): la punta va arriba y hacia el centro de la pantalla (hacia el oponente) en ambos lados.
+
+- [x] T044 [US2] Cambiar `defenseAngleDegrees` de `65` a `115` en `lib/presentation/exercise/painters/signal_shapes.dart` (la caja del símbolo conserva su proporción, así que el alto ≥ 0.30 h en 4:3 se mantiene) y actualizar los comentarios de `SignalShapes` y `SignalPainter` que dicen "hacia el borde exterior".
+- [x] T045 [US2] Invertir la expectativa de la prueba "en diagonal… hacia el borde exterior" de `test/presentation/signal_painter_test.dart`: la fila más alta del color queda del lado del **centro** respecto de la más baja (derecha: `topX < bottomX`; izquierda: `topX > bottomX`), y renombrarla a "…hacia el centro (hacia el oponente)" (depende de T044).
+- [x] T046 [US2] Verificar que el ícono del Nivel 1 en la selección (`lib/presentation/selection/level_icon.dart`, que usa `SignalShapes.defenseSaber`) sigue viéndose bien con la nueva inclinación (ahora la punta queda arriba a la izquierda): `flutter test` verde y revisión visual en el emulador.
+
+**Checkpoint**: `flutter analyze` y `flutter test` verdes; revisión en el emulador pendiente.
 
 ---
 

@@ -194,7 +194,7 @@ Se dibujan dentro del carril del lado `signal.screenSide` (`SceneLayout.leftLane
 
 | Elemento | Geometría | Estilo |
 |---|---|---|
-| Eje | recta a 65° sobre la horizontal, punta arriba y hacia el borde exterior | — |
+| Eje | recta a 115° sobre la horizontal, punta arriba y hacia el centro de la pantalla (hacia el oponente; Clarifications 2026-11-16) | — |
 | Alto total `H` | `min(0.45 h, alto que cabe en el ancho del carril)`; ≥ 0.30 h en 4:3 | — |
 | Hoja | 70 % del largo, ancho `0.55 ×` empuñadura, termina en punta | color del sable + brillo + reflejo |
 | Guarda | barra perpendicular al eje, ancho 0.26 del largo | `tsuba` (gris) |
