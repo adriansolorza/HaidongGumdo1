@@ -39,7 +39,7 @@ Se usan los términos del glosario de la Spec 001. Se agregan:
 | Configuración         | Conjunto de los cinco parámetros del ejercicio guardado por el usuario                                                  |
 | Configuración guardada | La última configuración que el usuario guardó; es la que usan los ejercicios                                           |
 | Borrador              | Valores que el usuario está editando en la pantalla de configuración y que todavía no guarda                            |
-| Piso del intervalo    | Valor mínimo del sorteo del intervalo: velocidad del corte + 0.5 s (Spec 001). Es también el mínimo del intervalo configurable |
+| Piso del intervalo    | Valor mínimo del sorteo del intervalo: velocidad del corte + 0.5 s (Spec 001). El mínimo del intervalo configurable es el piso redondeado hacia arriba a 0.1 s (FR-004) |
 | Ajuste automático     | Subida del intervalo al menor valor permitido cuando un cambio en la velocidad del corte lo deja por debajo del piso   |
 
 ## Clarifications
@@ -173,7 +173,7 @@ Como practicante, quiero descartar cambios que no me convencen y volver a los va
 **Uso en el ejercicio**
 
 - **FR-014**: Todo ejercicio MUST usar la configuración guardada en el momento de pulsar Iniciar o Repetir. Los tiempos derivados se calculan a partir de ella como en las Specs 001 a 003 (subida en la primera mitad del aviso, corte con la velocidad configurada, regreso de 0.5 s, sorteo del intervalo entre el piso y el valor configurado).
-- **FR-015**: El resumen de la sesión de la pantalla de selección (Spec 004, FR-024) y la barra de progreso y los segundos restantes del HUD (Spec 004) MUST usar la duración guardada, con el formato de FR-006.
+- **FR-015**: El resumen de la sesión de la pantalla de selección (Spec 004, FR-024) MUST mostrar la duración guardada con el formato de FR-006 (por ejemplo, "Nivel 1 · Frontal · 1 min 15 s"). La barra de progreso y los segundos restantes del HUD (Spec 004) MUST calcularse sobre la duración guardada y conservar su formato actual: una cuenta regresiva en segundos (por ejemplo, "75").
 - **FR-016**: Esta spec MUST NOT cambiar el motor, los estados, las reglas de secuencia, las señales, las voces ni la cancelación. Todas las pruebas funcionales de las Specs 001 a 004 MUST seguir pasando.
 
 **Presentación**

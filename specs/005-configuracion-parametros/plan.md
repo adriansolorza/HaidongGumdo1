@@ -134,7 +134,7 @@ test/
     ├── fakes/in_memory_settings_repository.dart  # nuevo (con modo "falla al guardar")
     ├── parameter_format_test.dart                # nuevo
     ├── settings_screen_test.dart                 # nuevo
-    ├── selection_screen_test.dart                # + botón CONFIGURACIÓN y resumen formateado
+    ├── selection_screen_test.dart                # sin cambios; debe seguir pasando (SC-008, T017)
     └── palette_test.dart                         # + colores nuevos, si los hay
 ```
 

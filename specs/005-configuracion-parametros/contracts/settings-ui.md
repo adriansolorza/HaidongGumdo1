@@ -42,13 +42,15 @@ Implementación: `JsonFileSettingsRepository` (`lib/data/settings/`), con el for
 ┌──────────────────────────────────────────────────────────────────────┐
 │ CONFIGURACIÓN                                                        │
 │ ┌──────────────────────────────────────────────────────────────────┐ │
-│ │ Duración del ejercicio            30 s a 3 min      (−)  30 s (+)│ │
-│ │ Máximo de repeticiones seguidas   Ataques seguidos  (−)   5   (+)│ │
-│ │ Tiempo de aviso                   1 s: cinta blanca (−) 0.7 s (+)│ │
-│ │                                   · ⅓ s: avanzado                │ │
-│ │ Velocidad del corte               0.3 s a 1 s       (−) 0.5 s (+)│ │
-│ │ Intervalo máximo entre ataques    Cada ataque: entre (−) 2.5 s(+)│ │
-│ │                                   1.0 s y 2.5 s, al azar         │ │
+│ │ Duración del ejercicio · Tiempo total · 30 s a 3 min (−) 30 s (+)│ │
+│ │ Máximo de repeticiones seguidas · Ataques seguidos   (−)  5   (+)│ │
+│ │   al mismo lado · 1 a 5                                          │ │
+│ │ Tiempo de aviso · Desde la señal hasta el corte     (−) 0.7 s (+)│ │
+│ │   ⅓ s a 1 s · 1 s: cinta blanca · ⅓ s: avanzado                  │ │
+│ │ Velocidad del corte · Duración del corte · 0.3 s a 1 s (−)0.5 s(+)│ │
+│ │ Intervalo máximo entre ataques · Desde el inicio    (−) 2.5 s (+)│ │
+│ │   del corte hasta la siguiente señal                             │ │
+│ │   Cada ataque: entre 1.0 s y 2.5 s, al azar                      │ │
 │ │   ⓘ Intervalo ajustado a 1.3 s: debe ser al menos …   (si aplica)│ │
 │ └───────────────────────────────────────── (lista desplazable) ────┘ │
 │ [RESTABLECER]                            [CANCELAR]  [  GUARDAR  ]   │
@@ -77,11 +79,14 @@ Implementación: `JsonFileSettingsRepository` (`lib/data/settings/`), con el for
 | `save` / `cancel` / `reset` | `GUARDAR` / `CANCELAR` / `RESTABLECER` |
 | `durationLabel` | `Duración del ejercicio` |
 | `maxRepeatsLabel` | `Máximo de repeticiones seguidas` |
-| `maxRepeatsHint` | `Ataques seguidos al mismo lado, como máximo` |
+| `durationHint` / `durationRange` | `Tiempo total del ejercicio` / `30 s a 3 min` |
+| `maxRepeatsHint` / `maxRepeatsRange` | `Ataques seguidos al mismo lado, como máximo` / `1 a 5` |
 | `warningTimeLabel` | `Tiempo de aviso` |
-| `warningTimeHint` | `1 s: cinta blanca · ⅓ s: avanzado` |
+| `warningTimeHint` / `warningTimeRange` | `Desde la señal hasta el corte` / `⅓ s a 1 s` |
+| `warningTimeReference` | `1 s: cinta blanca · ⅓ s: avanzado` |
 | `cutSpeedLabel` | `Velocidad del corte` |
-| `cutSpeedHint` | `Duración del corte del oponente` |
+| `cutSpeedHint` / `cutSpeedRange` | `Duración del corte del oponente` / `0.3 s a 1 s` |
+| `attackIntervalHint` | `Desde el inicio del corte hasta la siguiente señal` |
 | `attackIntervalLabel` | `Intervalo máximo entre ataques` |
 | `saveErrorTitle` | `No se pudo guardar` |
 | `saveErrorBody` | `Tus cambios siguen aquí. Inténtalo de nuevo.` |
@@ -93,5 +98,5 @@ Los textos de rangos, ajustes y rangos del sorteo se generan con las funciones d
 - `test/domain/parameter_editor_test.dart`: §3 de data-model.
 - `test/data/settings_json_mapper_test.dart`, `test/data/json_file_settings_repository_test.dart`: §1 y el esquema.
 - `test/presentation/settings_screen_test.dart`: §4 (keys) y §5.
-- `test/presentation/selection_screen_test.dart`: §3 (botón y resumen).
+- `test/presentation/settings_screen_test.dart` (grupos US1 y "disposición"): §3 (botón CONFIGURACIÓN y resumen formateado). `selection_screen_test.dart` no cambia (SC-008).
 - `test/presentation/palette_test.dart`: colores nuevos, si los hay (R8).
