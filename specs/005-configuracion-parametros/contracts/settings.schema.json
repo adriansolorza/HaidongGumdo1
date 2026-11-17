@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "haidonggumdo/settings.schema.json",
+  "title": "Configuración del usuario (settings.json)",
+  "description": "Spec 005, FR-010 a FR-012. Además de este esquema, el archivo debe cumplir la invariante attackIntervalMs >= cutSpeedMs + 500; si no la cumple, la app usa los valores por defecto.",
+  "type": "object",
+  "required": ["version", "durationMs", "maxRepeats", "warningTimeMs", "cutSpeedMs", "attackIntervalMs"],
+  "properties": {
+    "version": { "const": 1 },
+    "durationMs": { "type": "integer", "minimum": 30000, "maximum": 180000 },
+    "maxRepeats": { "type": "integer", "minimum": 1, "maximum": 5 },
+    "warningTimeMs": { "type": "integer", "minimum": 330, "maximum": 1000 },
+    "cutSpeedMs": { "type": "integer", "minimum": 300, "maximum": 1000 },
+    "attackIntervalMs": { "type": "integer", "minimum": 500, "maximum": 5000 }
+  },
+  "additionalProperties": true
+}

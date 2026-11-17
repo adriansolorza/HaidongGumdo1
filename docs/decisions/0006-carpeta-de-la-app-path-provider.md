@@ -1,6 +1,6 @@
 # ADR 0006: Carpeta de la app con `path_provider`
 
-- **Estado**: Aprobado
+- **Estado**: Aceptada
 - **Fecha**: 2026-11-16
 - **Spec**: `specs/005-configuracion-parametros` (FR-010, FR-011)
 - **Aprobó**: Adrián Solorza
