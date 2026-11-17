@@ -1,0 +1,211 @@
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:haidonggumdo/app.dart';
+import 'package:haidonggumdo/data/catalog/catalog_json_mapper.dart';
+import 'package:haidonggumdo/domain/catalog/catalog.dart';
+import 'package:haidonggumdo/domain/exercise/exercise_parameters.dart';
+import 'package:haidonggumdo/domain/ports/catalog_repository.dart';
+import 'package:haidonggumdo/domain/ports/settings_repository.dart';
+import 'package:haidonggumdo/presentation/providers.dart';
+import 'package:haidonggumdo/presentation/selection/selection_screen.dart';
+import 'package:haidonggumdo/presentation/settings/settings_screen.dart';
+
+import '../domain/fakes/fake_screen_wake_lock.dart';
+import '../domain/fakes/fake_voice_announcer.dart';
+import '../domain/fakes/manual_clock.dart';
+import '../domain/fakes/seeded_random_source.dart';
+import 'fakes/in_memory_settings_repository.dart';
+
+final class _AssetFileRepository implements CatalogRepository {
+  @override
+  Future<Catalog> load() async => const CatalogJsonMapper().fromJsonString(
+    File('assets/catalog/catalog.json').readAsStringSync(),
+  );
+}
+
+final class _ThrowingLoadRepository implements SettingsRepository {
+  @override
+  Future<ExerciseParameters?> load() async => throw StateError('falla');
+
+  @override
+  Future<void> save(ExerciseParameters parameters) async {}
+}
+
+const _custom = ExerciseParameters(
+  duration: Duration(seconds: 75),
+  maxRepeats: 1,
+  warningTime: Duration(milliseconds: 330),
+  cutSpeed: Duration(milliseconds: 500),
+  attackInterval: Duration(milliseconds: 2500),
+);
+
+/// Monta la app completa (selección como raíz) con la configuración ya
+/// cargada desde [settings], como hace `main` (research R5).
+Future<ProviderContainer> _pumpApp(
+  WidgetTester tester,
+  SettingsRepository settings, {
+  Size size = const Size(1280, 800),
+}) async {
+  tester.view.physicalSize = size;
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+  final container = ProviderContainer(
+    overrides: [
+      settingsRepositoryProvider.overrideWithValue(settings),
+      catalogRepositoryProvider.overrideWithValue(_AssetFileRepository()),
+      elapsedClockProvider.overrideWithValue(ManualClock()),
+      randomSourceProvider.overrideWithValue(SeededRandomSource(1)),
+      voiceAnnouncerProvider.overrideWithValue(FakeVoiceAnnouncer()),
+      screenWakeLockProvider.overrideWithValue(FakeScreenWakeLock()),
+    ],
+  );
+  addTearDown(container.dispose);
+  await container.read(exerciseParametersProvider.notifier).load();
+  await tester.pumpWidget(
+    UncontrolledProviderScope(
+      container: container,
+      child: const HaidongGumdoApp(),
+    ),
+  );
+  await tester.pumpAndSettle();
+  return container;
+}
+
+Future<void> _openSettings(WidgetTester tester) async {
+  await tester.tap(find.byKey(const Key('settingsButton')));
+  await tester.pumpAndSettle();
+  expect(find.byType(SettingsScreen), findsOneWidget);
+}
+
+/// Toca el botón con [key] después de hacerlo visible en la lista.
+Future<void> _tap(WidgetTester tester, String key) async {
+  final finder = find.byKey(Key(key));
+  await tester.ensureVisible(finder);
+  await tester.pumpAndSettle();
+  await tester.tap(finder);
+  await tester.pumpAndSettle();
+}
+
+String _value(WidgetTester tester, String field) =>
+    tester.widget<Text>(find.byKey(Key('value-$field'))).data!;
+
+bool _enabled(WidgetTester tester, String key) =>
+    tester.widget<ButtonStyleButton>(find.byKey(Key(key))).onPressed != null;
+
+String _summary(WidgetTester tester) => tester
+    .widgetList<Text>(
+      find.descendant(
+        of: find.byType(SelectionScreen),
+        matching: find.byType(Text),
+      ),
+    )
+    .map((t) => t.data ?? '')
+    .firstWhere((t) => t.startsWith('Nivel '));
+
+void main() {
+  group('US1: ajustar y guardar (Spec 005)', () {
+    testWidgets('CONFIGURACIÓN muestra los valores guardados (US1-1)', (
+      tester,
+    ) async {
+      await _pumpApp(tester, InMemorySettingsRepository());
+      await _openSettings(tester);
+      expect(_value(tester, 'duration'), '30 s');
+      expect(_value(tester, 'maxRepeats'), '5');
+      expect(_value(tester, 'warningTime'), '0.7 s');
+      expect(_value(tester, 'cutSpeed'), '0.5 s');
+      expect(_value(tester, 'attackInterval'), '2.5 s');
+    });
+
+    testWidgets('− y + avanzan un paso y se desactivan en los límites '
+        '(US1-2, US1-3, FR-004a)', (tester) async {
+      await _pumpApp(tester, InMemorySettingsRepository());
+      await _openSettings(tester);
+
+      for (var i = 0; i < 3; i++) {
+        await _tap(tester, 'inc-duration');
+      }
+      expect(_value(tester, 'duration'), '1 min 15 s');
+      for (var i = 0; i < 7; i++) {
+        await _tap(tester, 'inc-duration');
+      }
+      expect(_value(tester, 'duration'), '3 min');
+      expect(_enabled(tester, 'inc-duration'), isFalse);
+      expect(_enabled(tester, 'dec-duration'), isTrue);
+
+      while (_enabled(tester, 'dec-warningTime')) {
+        await _tap(tester, 'dec-warningTime');
+      }
+      expect(_value(tester, 'warningTime'), '0.33 s');
+    });
+
+    testWidgets('GUARDAR guarda y el resumen usa la duración nueva (US1-5)', (
+      tester,
+    ) async {
+      final repo = InMemorySettingsRepository();
+      await _pumpApp(tester, repo);
+      expect(_summary(tester), endsWith('· 30 s'));
+      await _openSettings(tester);
+
+      for (var i = 0; i < 10; i++) {
+        await _tap(tester, 'inc-duration');
+      }
+      await _tap(tester, 'saveButton');
+
+      expect(find.byType(SettingsScreen), findsNothing);
+      expect(_summary(tester), endsWith('· 3 min'));
+      expect(repo.stored?.duration, const Duration(minutes: 3));
+    });
+
+    testWidgets('error al guardar: aviso, sigue en la pantalla y no cambia '
+        'nada (FR-013)', (tester) async {
+      final repo = InMemorySettingsRepository()..failOnSave = true;
+      await _pumpApp(tester, repo);
+      await _openSettings(tester);
+
+      await _tap(tester, 'inc-duration');
+      expect(find.byKey(const Key('saveError')), findsNothing);
+      await _tap(tester, 'saveButton');
+
+      expect(find.byType(SettingsScreen), findsOneWidget);
+      expect(find.byKey(const Key('saveError')), findsOneWidget);
+      expect(_value(tester, 'duration'), '45 s');
+      expect(repo.stored, isNull);
+
+      // El siguiente cambio borra el aviso.
+      await _tap(tester, 'inc-duration');
+      expect(find.byKey(const Key('saveError')), findsNothing);
+
+      // Atrás del sistema.
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(_summary(tester), endsWith('· 30 s'));
+    });
+
+    testWidgets('al reabrir la app se carga la configuración guardada '
+        '(US1-7, SC-002, CA7)', (tester) async {
+      final repo = InMemorySettingsRepository(stored: _custom);
+      final container = await _pumpApp(tester, repo);
+      expect(container.read(exerciseParametersProvider), _custom);
+      expect(_summary(tester), endsWith('· 1 min 15 s'));
+
+      await _openSettings(tester);
+      expect(_value(tester, 'duration'), '1 min 15 s');
+      expect(_value(tester, 'maxRepeats'), '1');
+      expect(_value(tester, 'warningTime'), '0.33 s');
+    });
+
+    testWidgets('si la carga falla se usan los valores por defecto (FR-012)', (
+      tester,
+    ) async {
+      final container = await _pumpApp(tester, _ThrowingLoadRepository());
+      expect(
+        container.read(exerciseParametersProvider),
+        ExerciseParameters.defaults(),
+      );
+      expect(_summary(tester), endsWith('· 30 s'));
+    });
+  });
+}

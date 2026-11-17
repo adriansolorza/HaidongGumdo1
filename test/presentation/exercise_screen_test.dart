@@ -8,9 +8,12 @@ import 'package:haidonggumdo/data/catalog/catalog_json_mapper.dart';
 import 'package:haidonggumdo/domain/catalog/catalog.dart';
 import 'package:haidonggumdo/domain/catalog/enums.dart';
 import 'package:haidonggumdo/domain/exercise/attack.dart';
+import 'package:haidonggumdo/domain/exercise/exercise_engine.dart';
+import 'package:haidonggumdo/domain/exercise/exercise_parameters.dart';
 import 'package:haidonggumdo/domain/exercise/exercise_snapshot.dart';
 import 'package:haidonggumdo/domain/exercise/session.dart';
 import 'package:haidonggumdo/domain/ports/catalog_repository.dart';
+import 'package:haidonggumdo/presentation/exercise/exercise_controller.dart';
 import 'package:haidonggumdo/presentation/exercise/exercise_screen.dart';
 import 'package:haidonggumdo/presentation/exercise/painters/opponent_painter.dart';
 import 'package:haidonggumdo/presentation/exercise/painters/signal_painter.dart';
@@ -24,6 +27,7 @@ import '../domain/fakes/fake_screen_wake_lock.dart';
 import '../domain/fakes/fake_voice_announcer.dart';
 import '../domain/fakes/manual_clock.dart';
 import '../domain/fakes/scripted_random_source.dart';
+import 'fakes/in_memory_settings_repository.dart';
 
 final class _AssetFileRepository implements CatalogRepository {
   @override
@@ -513,4 +517,90 @@ void main() {
       );
     });
   });
+
+  testWidgets(
+    'Spec 005: el ejercicio usa la configuración guardada; REPETIR también '
+    '(US1-4, US1-5, US1-6, US1-8, SC-005)',
+    (tester) async {
+      const saved = ExerciseParameters(
+        duration: Duration(seconds: 60),
+        maxRepeats: 1,
+        warningTime: Duration(milliseconds: 500),
+        cutSpeed: Duration(milliseconds: 500),
+        attackInterval: Duration(milliseconds: 2500),
+      );
+      final clock = ManualClock();
+      tester.view.physicalSize = const Size(1600, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final container = ProviderContainer(
+        overrides: [
+          settingsRepositoryProvider.overrideWithValue(
+            InMemorySettingsRepository(stored: saved),
+          ),
+          catalogRepositoryProvider.overrideWithValue(_AssetFileRepository()),
+          elapsedClockProvider.overrideWithValue(clock),
+          randomSourceProvider.overrideWithValue(
+            ScriptedRandomSource(List.filled(500, 0)),
+          ),
+          voiceAnnouncerProvider.overrideWithValue(FakeVoiceAnnouncer()),
+          screenWakeLockProvider.overrideWithValue(FakeScreenWakeLock()),
+        ],
+      );
+      addTearDown(container.dispose);
+      await container.read(exerciseParametersProvider.notifier).load();
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const HaidongGumdoApp(),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(StringsEs.start));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      ExerciseSnapshot snapshot() => container.read(exerciseControllerProvider);
+
+      Future<void> advanceTo(int ms) async {
+        while (clock.elapsed.inMilliseconds < ms) {
+          final next = clock.elapsed.inMilliseconds + 100;
+          clock.set(_ms(next > ms ? ms : next));
+          await tester.pump(const Duration(milliseconds: 16));
+        }
+      }
+
+      // Con Si-jak, el HUD cuenta desde la duración guardada (US1-5).
+      await advanceTo(3000);
+      expect(find.text('60'), findsOneWidget);
+
+      // Aviso de 0.5 s (US1-4) y lados alternos con N = 1 (US1-6).
+      final attacks = <int, Attack>{};
+      while (attacks.length < 7) {
+        await advanceTo(clock.elapsed.inMilliseconds + 100);
+        final attack = snapshot().currentAttack;
+        if (attack != null) attacks[attack.index] = attack;
+      }
+      for (final attack in attacks.values) {
+        expect(attack.cutStartAt - attack.signalAt, _ms(500));
+      }
+      final sides = [for (var i = 0; i < 7; i++) attacks[i]!.side];
+      for (var i = 1; i < sides.length; i++) {
+        expect(sides[i], isNot(sides[i - 1]), reason: 'ataque $i');
+      }
+
+      // REPETIR usa la misma configuración guardada (US1-8).
+      await advanceTo(65000);
+      expect(find.text(StringsEs.repeat), findsOneWidget);
+      await tester.tap(find.text(StringsEs.repeat));
+      await tester.pump();
+      expect(
+        snapshot().remaining,
+        ExerciseEngine.countdownLength + saved.duration,
+      );
+      await advanceTo(4300);
+      final attack = snapshot().currentAttack!;
+      expect(attack.cutStartAt - attack.signalAt, _ms(500));
+    },
+  );
 }

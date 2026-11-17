@@ -92,6 +92,22 @@ final class ExerciseParameters {
   /// Valor mínimo del sorteo del intervalo.
   Duration get intervalFloor => cutSpeed + ParameterLimits.intervalFloorMargin;
 
+  /// Copia con los campos indicados reemplazados. Igual que el constructor,
+  /// no valida (Spec 005, data-model §1).
+  ExerciseParameters copyWith({
+    Duration? duration,
+    int? maxRepeats,
+    Duration? warningTime,
+    Duration? cutSpeed,
+    Duration? attackInterval,
+  }) => ExerciseParameters(
+    duration: duration ?? this.duration,
+    maxRepeats: maxRepeats ?? this.maxRepeats,
+    warningTime: warningTime ?? this.warningTime,
+    cutSpeed: cutSpeed ?? this.cutSpeed,
+    attackInterval: attackInterval ?? this.attackInterval,
+  );
+
   List<ParameterViolation> validate() => [
     if (!_inRange(
       duration,

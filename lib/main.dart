@@ -16,6 +16,10 @@ Future<void> main() async {
   // cuenta (R8). Si algo falla, la app arranca igual sin voz.
   final container = ProviderContainer();
   try {
+    // Configuración guardada antes de mostrar la selección, para que INICIAR
+    // y el resumen nunca usen los valores por defecto por error (Spec 005,
+    // FR-012, research R5). Si falla, quedan los valores por defecto.
+    await container.read(exerciseParametersProvider.notifier).load();
     final catalog = await container.read(catalogProvider.future);
     await container.read(voiceAnnouncerProvider).prepare(catalog);
   } catch (_) {}

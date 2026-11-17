@@ -9,6 +9,8 @@ import '../exercise/widgets/hud_panel.dart';
 import '../providers.dart';
 import '../scene/dojang_painter.dart';
 import '../scene/scene_layout.dart';
+import '../settings/parameter_format.dart';
+import '../settings/settings_screen.dart';
 import '../strings_es.dart';
 import '../theme.dart';
 import 'level_icon.dart';
@@ -23,8 +25,8 @@ class SelectionScreen extends ConsumerWidget {
   const SelectionScreen({super.key});
 
   /// Solo para la geometría del fondo mientras el catálogo carga o falla:
-  /// las posturas del Patrón frontal.
-  static const _backgroundPattern = Pattern(
+  /// las posturas del Patrón frontal. También la usa la configuración.
+  static const backgroundPattern = Pattern(
     id: '_background',
     order: 0,
     name: '',
@@ -51,7 +53,7 @@ class SelectionScreen extends ConsumerWidget {
           final size = constraints.biggest;
           final layout = SceneLayout.compute(
             size,
-            catalog.value?.patterns.first ?? _backgroundPattern,
+            catalog.value?.patterns.first ?? backgroundPattern,
           );
           final s = layout.hudScale;
 
@@ -118,10 +120,11 @@ class SelectionScreen extends ConsumerWidget {
                         summary: session == null
                             ? ''
                             : '${session.level.name} · ${session.pattern.name}'
-                                  ' · ${duration.inSeconds} s',
+                                  ' · ${formatDuration(duration)}',
                         onStart: catalog.hasValue && session != null
                             ? () => _start(context, ref, session)
                             : null,
+                        onSettings: () => _openSettings(context),
                       ),
                     ],
                   ),
@@ -140,6 +143,12 @@ class SelectionScreen extends ConsumerWidget {
     Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => ExerciseScreen(session: session)),
     );
+  }
+
+  /// La configuración solo se abre desde aquí (Spec 005, FR-001, FR-003).
+  void _openSettings(BuildContext context) {
+    Navigator.of(context)
+        .push(MaterialPageRoute<void>(builder: (_) => const SettingsScreen()));
   }
 }
 
@@ -305,11 +314,15 @@ class _Footer extends StatelessWidget {
     required this.scale,
     required this.summary,
     required this.onStart,
+    required this.onSettings,
   });
 
   final double scale;
   final String summary;
   final VoidCallback? onStart;
+
+  /// Siempre habilitado: la configuración no depende del catálogo.
+  final VoidCallback onSettings;
 
   @override
   Widget build(BuildContext context) {
@@ -319,12 +332,32 @@ class _Footer extends StatelessWidget {
         Expanded(
           child: Text(
             summary,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 20 * s,
               fontWeight: FontWeight.w500,
               letterSpacing: 1 * s,
               color: AppColors.textSecondary,
             ),
+          ),
+        ),
+        SizedBox(width: 24 * s),
+        // Secundario frente a INICIAR: píldora con borde (Spec 005, FR-001).
+        SizedBox(
+          height: 64 * s,
+          child: OutlinedButton(
+            key: const Key('settingsButton'),
+            style: OutlinedButton.styleFrom(
+              padding: EdgeInsets.symmetric(horizontal: 28 * s),
+              textStyle: TextStyle(
+                fontSize: 22 * s,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 3 * s,
+              ),
+            ),
+            onPressed: onSettings,
+            child: const Text(StringsEs.settings),
           ),
         ),
         SizedBox(width: 24 * s),
