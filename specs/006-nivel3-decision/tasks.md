@@ -109,12 +109,12 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
 
 ### Tests for User Story 1 (después del código, Principio VI)
 
-- [ ] T012 [P] [US1] Ampliar `test/domain/streak_sequencer_test.dart` con un grupo nuevo, `'StreakSequencer genérico (Spec 006)'` (contrato G2, G3):
+- [X] T012 [P] [US1] Ampliar `test/domain/streak_sequencer_test.dart` con un grupo nuevo, `'StreakSequencer genérico (Spec 006)'` (contrato G2, G3):
   - una opción (`[ResponseType.evasion]`) con `ScriptedRandomSource(const [])`: 100 llamadas devuelven `evasion` y `consumed == 0`;
   - `[ResponseType.defense, ResponseType.evasion]` con N = 2 y el guion `[0, 0, 1]`: devuelve `defense, defense, evasion (forzado), evasion`. El tercer valor no consume sorteo: `consumed` es 2 tras la tercera llamada y 3 tras la cuarta;
   - `ArgumentError` con `options: []`, con `[Side.right, Side.right]` y con `maxRepeats: 0`;
   - con `SeededRandomSource` y N de 1 a 5, 10 000 llamadas sin ninguna racha mayor que N.
-- [ ] T013 [P] [US1] Crear `test/domain/exercise_engine_level3_test.dart` (FR-004 a FR-007; contrato E2, E3, E4, E5):
+- [X] T013 [P] [US1] Crear `test/domain/exercise_engine_level3_test.dart` (FR-004 a FR-007; contrato E2, E3, E4, E5):
   - **Orden de sorteos (E5)**: `ExerciseEngine` con `testLevel3TransversalSession()`, valores por defecto (N = 5) y `ScriptedRandomSource` con el guion `[i0, 0, 1, i1, 1, 0, i2, …]`. Los `i` son sorteos de intervalo válidos en `[0, 1501)`; usar 0. Comprobar que los ataques salen (right, evasion), (left, defense)…, en el orden lado → tipo → intervalo.
   - **Consumo en los Niveles 1 y 2 (E2)**: con `testSession()` y `testLevel2Session()`, contar los ataques de un ejercicio de 30 s con `ScriptedRandomSource` y comprobar `consumed == 1 + 2 × ataques`, porque con N = 5 y sin racha completa cada ataque consume lado e intervalo. Usar un guion que alterne lados para que nunca se fuerce.
   - **Rachas (E3, SC-004)**: 1 000 ejercicios de 180 s con `SeededRandomSource(seed)` por cada N de 1 a 5, con `testLevel3TransversalSession()`. En ningún ejercicio hay una racha de lado ni de tipo mayor que N.
@@ -127,14 +127,14 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
     3. `StartVoice` llega en `startVoiceAt`, antes del primer `SignalShown`.
 
     Seguir las pruebas equivalentes de `exercise_engine_states_test.dart` y `exercise_engine_timeline_test.dart`, sin modificarlas.
-- [ ] T014 [P] [US1] En `test/domain/exercise_engine_simulation_test.dart`, agregar `_level3Simulations(String name, Session Function() session, {required bool checkMotionSide})`, con la misma estructura de `_level2Simulations`. En cada fotograma con ataque comprobar:
+- [X] T014 [P] [US1] En `test/domain/exercise_engine_simulation_test.dart`, agregar `_level3Simulations(String name, Session Function() session, {required bool checkMotionSide})`, con la misma estructura de `_level2Simulations`. En cada fotograma con ataque comprobar:
   - `signal != null` y `signal.responseType == attack.responseType`;
   - con `defense`, `signal.screenSide == attack.side.opposite`; con `evasion`, `signal.screenSide == attack.side`;
   - `s.saberColor` es azul con `right` y rojo con `left`;
   - si `checkMotionSide`, el costado del movimiento depende solo del color, sea cual sea el tipo: `s.motion.side == attack.side`. Es la misma relación que comprueba `_level2Simulations` (`motion.side == signal.screenSide`, con `screenSide == attack.side` en la evasión). Con defensa, por lo tanto, `motion.side == signal.screenSide.opposite` (FR-010).
   - Además, las comprobaciones de tiempos de `_level2Simulations`: intervalo en `[1000, 2500]` ms y *Guman* entre E y E + 1 200 ms.
   - Llamarla con `'Nivel 3 transversal (Spec 006, US1)'`, `testLevel3TransversalSession` y `checkMotionSide: true`. No modificar los grupos existentes.
-- [ ] T015 [US1] En `test/presentation/exercise_screen_test.dart`, agregar la prueba `'(j) Nivel 3 transversal: una sola señal por ataque, del tipo sorteado, y HUD NIVEL 3'`, con el mismo arnés `h` de las pruebas (h) e (i): `h.start(tester, level: 'Nivel 3', pattern: 'Transversal')`. Comprobar que:
+- [X] T015 [US1] En `test/presentation/exercise_screen_test.dart`, agregar la prueba `'(j) Nivel 3 transversal: una sola señal por ataque, del tipo sorteado, y HUD NIVEL 3'`, con el mismo arnés `h` de las pruebas (h) e (i): `h.start(tester, level: 'Nivel 3', pattern: 'Transversal')`. Comprobar que:
   - `session.level.id == 'level_3'`;
   - el HUD muestra `NIVEL 3` y `Defensa o evasión lateral`;
   - en los 6 primeros ataques, el `SignalPainter` recibe exactamente una señal con `responseType == attack.responseType`, en el lado de `SignalPlacement.forAttack(attack)` y del color del sable. El arnés ya inyecta `ScriptedRandomSource(List.filled(500, 0))` mediante `randomSourceProvider`. Con N = 5 por defecto, los ataques 1 a 5 son (right, defense) y el 6.º es (left, evasion), forzado por las dos rachas. Comprobar exactamente esa secuencia: símbolo de defensa azul a la izquierda × 5 y después flecha roja a la izquierda;
@@ -152,8 +152,8 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
 
 ### Tests for User Story 2 (después del código)
 
-- [ ] T016 [P] [US2] En `test/domain/exercise_engine_simulation_test.dart`, llamar `_level3Simulations('Nivel 3 frontal (Spec 006, US2)', testLevel3Session, checkMotionSide: false)`, con el comentario "El frontal no se refleja: la comprobación de motion.side no aplica". Depende de T014.
-- [ ] T017 [P] [US2] En `test/domain/exercise_engine_level3_test.dart`, agregar un grupo `'Nivel 3 frontal (Spec 006, US2)'` con dos pruebas:
+- [X] T016 [P] [US2] En `test/domain/exercise_engine_simulation_test.dart`, llamar `_level3Simulations('Nivel 3 frontal (Spec 006, US2)', testLevel3Session, checkMotionSide: false)`, con el comentario "El frontal no se refleja: la comprobación de motion.side no aplica". Depende de T014.
+- [X] T017 [P] [US2] En `test/domain/exercise_engine_level3_test.dart`, agregar un grupo `'Nivel 3 frontal (Spec 006, US2)'` con dos pruebas:
   - **US2-3**: con `testLevel3Session()`, N = 5, duración de 60 s y semillas 1 a 100, cada ejercicio tiene al menos una defensa y al menos una evasión;
   - **US2-2, FR-011**: para cada ataque, la postura del oponente en `signalAt + warningTime / 2` y en `cutStartAt` es la misma con `defense` que con `evasion` para el mismo lado; es decir, `OpponentMotion` no depende del tipo de respuesta. Comparar dos ataques del mismo lado y distinto tipo de una simulación sembrada.
   Depende de T013.

@@ -372,6 +372,62 @@ void main() {
     },
   );
 
+  testWidgets(
+    '(k) Nivel 3 transversal: una sola señal por ataque, del tipo sorteado, y '
+    'HUD NIVEL 3 sin la respuesta en curso (Spec 006, US1, FR-008, FR-015)',
+    (tester) async {
+      final h = _Harness();
+      await h.start(tester, level: 'Nivel 3', pattern: 'Transversal');
+      final session = tester
+          .widget<ExerciseScreen>(find.byType(ExerciseScreen))
+          .session;
+      expect(session.level.id, 'level_3');
+      expect(session.pattern.id, 'transversal');
+
+      Iterable<CustomPainter> painters() => tester
+          .widgetList<CustomPaint>(find.byType(CustomPaint))
+          .map((w) => w.painter)
+          .whereType<CustomPainter>();
+      List<String> hudLevelTexts() => tester
+          .widgetList<Text>(
+            find.descendant(
+              of: find.byKey(ExerciseHud.levelPanelKey),
+              matching: find.byType(Text),
+            ),
+          )
+          .map((t) => t.data!)
+          .toList();
+
+      // Con todos los sorteos en 0 y N = 5: ataques 1 a 5 (right, defense) y
+      // el 6.º (left, evasion), forzado por las dos rachas. Las señales llegan
+      // cada 1.7 s desde 4.0 s; se mira 300 ms después, durante el aviso.
+      final expected = [
+        for (var i = 0; i < 5; i++)
+          (ResponseType.defense, Side.left, SaberColor.blue),
+        (ResponseType.evasion, Side.left, SaberColor.red),
+      ];
+      final hudByType = <ResponseType, List<String>>{};
+      for (final (i, (type, screenSide, color)) in expected.indexed) {
+        await h.advanceTo(tester, 4000 + 1700 * i + 300);
+        final signals = painters().whereType<SignalPainter>().toList();
+        final opponent = painters().whereType<OpponentPainter>().single;
+        expect(signals, hasLength(1), reason: 'ataque ${i + 1}');
+        expect(signals.single.signal.responseType, type);
+        expect(signals.single.signal.screenSide, screenSide);
+        expect(signals.single.saberColor, color);
+        expect(opponent.saberColor, color);
+        hudByType[type] = hudLevelTexts();
+      }
+
+      // FR-015: el HUD no indica la respuesta del ataque en curso.
+      expect(hudByType[ResponseType.defense], [
+        'NIVEL 3',
+        'Defensa o evasión lateral',
+      ]);
+      expect(hudByType[ResponseType.evasion], hudByType[ResponseType.defense]);
+    },
+  );
+
   group('HUD de la Spec 004 (FR-015 a FR-019)', () {
     for (final (level, pattern, levelTitle, response, patternTitle, sequence)
         in [

@@ -1,8 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:haidonggumdo/domain/catalog/enums.dart';
 import 'package:haidonggumdo/domain/exercise/attack.dart';
 import 'package:haidonggumdo/domain/exercise/streak_sequencer.dart';
 
 import 'fakes/scripted_random_source.dart';
+import 'fakes/seeded_random_source.dart';
 
 void main() {
   test('sorteo 0 → right y 1 → left', () {
@@ -69,5 +71,80 @@ void main() {
     expect(second.streak, 0);
     expect(second.next(), Side.right);
     expect(random.consumed, 6);
+  });
+
+  group('StreakSequencer genérico (Spec 006)', () {
+    test('una sola opción: la devuelve siempre sin consumir sorteos (G2)', () {
+      final random = ScriptedRandomSource(const []);
+      final sequencer = StreakSequencer(
+        options: const [ResponseType.evasion],
+        maxRepeats: 5,
+        random: random,
+      );
+      for (var i = 0; i < 100; i++) {
+        expect(sequencer.next(), ResponseType.evasion);
+      }
+      expect(random.consumed, 0);
+    });
+
+    test('tipos con N = 2: el 3.º se fuerza sin consumir sorteo (FR-005)', () {
+      final random = ScriptedRandomSource(const [0, 0, 1]);
+      final sequencer = StreakSequencer(
+        options: const [ResponseType.defense, ResponseType.evasion],
+        maxRepeats: 2,
+        random: random,
+      );
+      expect(sequencer.next(), ResponseType.defense);
+      expect(sequencer.next(), ResponseType.defense);
+      expect(random.consumed, 2);
+      expect(sequencer.next(), ResponseType.evasion);
+      expect(random.consumed, 2);
+      expect(sequencer.next(), ResponseType.evasion);
+      expect(random.consumed, 3);
+    });
+
+    test('ArgumentError con opciones vacías, duplicadas o N < 1', () {
+      final random = ScriptedRandomSource(const []);
+      expect(
+        () => StreakSequencer<Side>(
+          options: const [],
+          maxRepeats: 5,
+          random: random,
+        ),
+        throwsArgumentError,
+      );
+      expect(
+        () => StreakSequencer(
+          options: const [Side.right, Side.right],
+          maxRepeats: 5,
+          random: random,
+        ),
+        throwsArgumentError,
+      );
+      expect(
+        () => StreakSequencer(
+          options: const [Side.right, Side.left],
+          maxRepeats: 0,
+          random: random,
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    for (var n = 1; n <= 5; n++) {
+      test('N = $n: 10 000 sorteos de tipo sin racha mayor que N (G3)', () {
+        final sequencer = StreakSequencer(
+          options: const [ResponseType.defense, ResponseType.evasion],
+          maxRepeats: n,
+          random: SeededRandomSource(n),
+        );
+        var longest = 0;
+        for (var i = 0; i < 10000; i++) {
+          sequencer.next();
+          if (sequencer.streak > longest) longest = sequencer.streak;
+        }
+        expect(longest, lessThanOrEqualTo(n));
+      });
+    }
   });
 }
