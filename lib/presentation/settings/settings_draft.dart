@@ -72,6 +72,12 @@ final class SettingsDraftNotifier extends Notifier<SettingsDraft> {
     );
   }
 
+  /// RESTABLECER (FR-002, US3-2): los valores por defecto, solo en el
+  /// borrador. Sin aviso ni error; no toca el repositorio hasta GUARDAR.
+  void resetToDefaults() {
+    state = SettingsDraft(values: ExerciseParameters.defaults());
+  }
+
   /// Guarda el borrador. true si tuvo éxito; false si falló o ya se estaba
   /// guardando.
   Future<bool> save() async {

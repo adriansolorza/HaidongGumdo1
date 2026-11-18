@@ -300,4 +300,128 @@ void main() {
       );
     });
   });
+
+  group('US3: cancelar y restablecer (Spec 005)', () {
+    const stored = ExerciseParameters(
+      duration: Duration(seconds: 60),
+      maxRepeats: 1,
+      warningTime: Duration(milliseconds: 330),
+      cutSpeed: Duration(milliseconds: 1000),
+      attackInterval: Duration(milliseconds: 5000),
+    );
+
+    Future<void> editDurationAndWarning(WidgetTester tester) async {
+      await _tap(tester, 'inc-duration');
+      await _tap(tester, 'dec-warningTime');
+      expect(_value(tester, 'duration'), '45 s');
+      expect(_value(tester, 'warningTime'), '0.65 s');
+    }
+
+    Future<void> expectUnchanged(
+      WidgetTester tester,
+      InMemorySettingsRepository repo,
+    ) async {
+      expect(find.byType(SettingsScreen), findsNothing);
+      expect(_summary(tester), endsWith('· 30 s'));
+      expect(repo.saveCalls, 0);
+      await _openSettings(tester);
+      expect(_value(tester, 'duration'), '30 s');
+      expect(_value(tester, 'warningTime'), '0.7 s');
+    }
+
+    testWidgets('CANCELAR descarta los cambios (US3-1)', (tester) async {
+      final repo = InMemorySettingsRepository();
+      await _pumpApp(tester, repo);
+      await _openSettings(tester);
+      await editDurationAndWarning(tester);
+      await _tap(tester, 'cancelButton');
+      await expectUnchanged(tester, repo);
+    });
+
+    testWidgets('Atrás del sistema descarta los cambios (FR-002)', (
+      tester,
+    ) async {
+      final repo = InMemorySettingsRepository();
+      await _pumpApp(tester, repo);
+      await _openSettings(tester);
+      await editDurationAndWarning(tester);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      await expectUnchanged(tester, repo);
+    });
+
+    testWidgets('RESTABLECER cambia solo el borrador; CANCELAR lo descarta; '
+        'GUARDAR lo guarda (US3-2, US3-3, US3-4)', (tester) async {
+      final repo = InMemorySettingsRepository(stored: stored);
+      await _pumpApp(tester, repo);
+      await _openSettings(tester);
+
+      await _tap(tester, 'resetButton');
+      expect(_value(tester, 'duration'), '30 s');
+      expect(_value(tester, 'maxRepeats'), '5');
+      expect(_value(tester, 'warningTime'), '0.7 s');
+      expect(_value(tester, 'cutSpeed'), '0.5 s');
+      expect(_value(tester, 'attackInterval'), '2.5 s');
+      expect(find.byType(SettingsScreen), findsOneWidget);
+      expect(repo.stored, stored);
+      expect(repo.saveCalls, 0);
+
+      await _tap(tester, 'cancelButton');
+      expect(repo.stored, stored);
+      expect(_summary(tester), endsWith('· 1 min'));
+
+      await _openSettings(tester);
+      expect(_value(tester, 'duration'), '1 min');
+      await _tap(tester, 'resetButton');
+      await _tap(tester, 'saveButton');
+      expect(find.byType(SettingsScreen), findsNothing);
+      expect(repo.stored, ExerciseParameters.defaults());
+      expect(_summary(tester), endsWith('· 30 s'));
+    });
+
+    testWidgets('RESTABLECER borra el aviso de ajuste y el error de guardar', (
+      tester,
+    ) async {
+      final repo = InMemorySettingsRepository()..failOnSave = true;
+      await _pumpApp(tester, repo);
+      await _openSettings(tester);
+      while (_enabled(tester, 'dec-attackInterval')) {
+        await _tap(tester, 'dec-attackInterval');
+      }
+      await _tap(tester, 'inc-cutSpeed');
+      await _tap(tester, 'saveButton');
+      expect(find.byKey(const Key('intervalAdjustedNotice')), findsOneWidget);
+      expect(find.byKey(const Key('saveError')), findsOneWidget);
+
+      await _tap(tester, 'resetButton');
+      expect(find.byKey(const Key('intervalAdjustedNotice')), findsNothing);
+      expect(find.byKey(const Key('saveError')), findsNothing);
+    });
+
+    testWidgets('ajuste automático y luego CANCELAR: el intervalo guardado no '
+        'cambia', (tester) async {
+      const saved = ExerciseParameters(
+        duration: Duration(seconds: 30),
+        maxRepeats: 5,
+        warningTime: Duration(milliseconds: 700),
+        cutSpeed: Duration(milliseconds: 500),
+        attackInterval: Duration(milliseconds: 1000),
+      );
+      final repo = InMemorySettingsRepository(stored: saved);
+      final container = await _pumpApp(tester, repo);
+      await _openSettings(tester);
+      for (var i = 0; i < 6; i++) {
+        await _tap(tester, 'inc-cutSpeed');
+      }
+      expect(_value(tester, 'attackInterval'), '1.3 s');
+      await _tap(tester, 'cancelButton');
+
+      expect(repo.stored, saved);
+      expect(repo.saveCalls, 0);
+      expect(container.read(exerciseParametersProvider), saved);
+      await _openSettings(tester);
+      expect(_value(tester, 'attackInterval'), '1.0 s');
+      expect(find.byKey(const Key('intervalAdjustedNotice')), findsNothing);
+    });
+  });
 }

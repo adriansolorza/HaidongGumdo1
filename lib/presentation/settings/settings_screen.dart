@@ -127,6 +127,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       SizedBox(height: 24 * s),
                       _Actions(
                         scale: s,
+                        onReset: notifier.resetToDefaults,
+                        // Sin guardar: el borrador autoDispose se descarta,
+                        // igual que con Atrás del sistema (FR-002).
+                        onCancel: () => Navigator.of(context).pop(),
                         onSave: draft.saving
                             ? null
                             : () async {
@@ -316,19 +320,48 @@ class _SaveError extends StatelessWidget {
   }
 }
 
-/// Barra de acciones fija. US3 agrega RESTABLECER y CANCELAR.
+/// Barra de acciones fija (contrato §4, research R7): RESTABLECER a la
+/// izquierda; CANCELAR y GUARDAR a la derecha. Sin diálogos de confirmación.
 class _Actions extends StatelessWidget {
-  const _Actions({required this.scale, required this.onSave});
+  const _Actions({
+    required this.scale,
+    required this.onReset,
+    required this.onCancel,
+    required this.onSave,
+  });
 
   final double scale;
+  final VoidCallback onReset;
+  final VoidCallback onCancel;
   final VoidCallback? onSave;
 
   @override
   Widget build(BuildContext context) {
     final s = scale;
+    final outlinedText = TextStyle(
+      fontSize: 22 * s,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 3 * s,
+    );
+    Widget outlined(Key key, String label, VoidCallback onPressed) => SizedBox(
+      height: 64 * s,
+      child: OutlinedButton(
+        key: key,
+        style: OutlinedButton.styleFrom(
+          padding: EdgeInsets.symmetric(horizontal: 32 * s),
+          textStyle: outlinedText,
+        ),
+        onPressed: onPressed,
+        child: Text(label),
+      ),
+    );
+
     return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
       children: [
+        outlined(const Key('resetButton'), StringsEs.reset, onReset),
+        const Spacer(),
+        outlined(const Key('cancelButton'), StringsEs.cancel, onCancel),
+        SizedBox(width: 24 * s),
         SizedBox(
           height: 64 * s,
           child: ConstrainedBox(
