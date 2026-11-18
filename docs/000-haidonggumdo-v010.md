@@ -46,11 +46,11 @@
   |---|---|---|---|
   | Duración del ejercicio | 30 s | 3 min | 30 s |
   | Máximo de repeticiones seguidas (N) | 1 | 5 | 5 |
-  | Tiempo de aviso | [NEEDS CLARIFICATION: mínimo] | [NEEDS CLARIFICATION: máximo] | [NEEDS CLARIFICATION: valor por defecto] |
+  | Tiempo de aviso | 0.33 s | 1 s | 0.7 s |
   | Velocidad del corte | 0.3 s | 1 s | 0.5 s |
-  | Intervalo entre ataques | 0.5 s | 5 s | 2.5 s |
+  | Intervalo entre ataques | velocidad del corte + 0.5 s | 5 s | 2.5 s |
 
-  [NEEDS CLARIFICATION: ¿el intervalo entre ataques es fijo o aleatorio, por ejemplo entre el mínimo y el valor configurado?]
+  El intervalo entre ataques es aleatorio: cada ataque espera un tiempo al azar entre el piso (velocidad del corte + 0.5 s) y el valor configurado (Specs 001 y 005).
 
 - **RF2. Patrones.** Existen dos patrones para el oponente virtual:
 
@@ -116,7 +116,7 @@
 
 ## 7. Casos límite
 
-- **CL1.** El usuario configura un intervalo entre ataques menor o igual que la velocidad del corte. [NEEDS CLARIFICATION: ¿la app impide guardar o ajusta el intervalo automáticamente?]
+- **CL1.** El usuario configura un intervalo entre ataques menor o igual que la velocidad del corte. **Resuelto:** la app no deja bajar el intervalo del piso (velocidad del corte + 0.5 s) y, si el usuario sube la velocidad del corte, el intervalo sube automáticamente y la app lo avisa (Spec 005).
 - **CL2.** El usuario sale de la app o la app pasa a segundo plano a la mitad de un ejercicio. [NEEDS CLARIFICATION: ¿el ejercicio se cancela o se pausa?]
 
 ## 8. Fuera de alcance (v1)
