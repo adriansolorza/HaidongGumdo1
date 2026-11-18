@@ -24,7 +24,7 @@ Proyecto Flutter único: `lib/`, `test/` y `docs/` en la raíz del repositorio (
 ## Reglas para todas las tareas
 
 - **No cambiar** el motor ni sus reglas: en `lib/domain/exercise/` solo se agrega `ExerciseParameters.copyWith` (FR-016, research R1). `ExerciseController` y `ExerciseHud` no se tocan. Si una tarea parece requerir otra cosa, detenerse y consultarlo.
-- **Único paquete nuevo**: `path_provider` (ADR 0006, aprobado). Solo se importa en `lib/presentation/providers.dart`. `lib/domain/` sigue siendo Dart puro y `lib/data/settings/` solo usa `dart:io` y `dart:convert`.
+- **Único paquete nuevo**: `path_provider` (ADR 0006, aprobado). Solo se importa en `lib/data/settings/json_file_settings_repository.dart` (fábrica `inAppDocuments()`, ADR 0006). `lib/domain/` sigue siendo Dart puro.
 - Toda la rejilla y la invariante se calculan en **milisegundos enteros** (`Duration.inMilliseconds`), nunca con `double` (research R2).
 - En la pantalla de configuración, nada de `AppColors.saberBlue`, `saberRed`, `saberYellow` ni `ColorScheme.error` (FR-018, research R8).
 - `s` = `SceneLayout.hudScale`, como en la Spec 004.
@@ -240,7 +240,7 @@ Proyecto Flutter único: `lib/`, `test/` y `docs/` en la raíz del repositorio (
   - `git diff main -- lib/presentation/exercise` vacío.
   - `git diff main -- pubspec.yaml` solo con `path_provider`.
   - `Select-String -Path lib/domain -Pattern "package:flutter|path_provider" -Recurse` sin resultados.
-  - `path_provider` solo importado en `lib/presentation/providers.dart`.
+  - `path_provider` solo importado en `lib/data/settings/`.
 - [x] T036 [P] Actualizar los documentos de intención con lo decidido, sin cambiar su alcance:
   - En `docs/brief.md`, tabla "Parámetros configurables": rangos y valores por defecto (30 s a 3 min / 30 s; 1 a 5 / 5; ⅓ s a 1 s / 0.7 s; 0.3 s a 1 s / 0.5 s; tope del sorteo hasta 5 s, con mínimo = velocidad del corte + 0.5 s / 2.5 s). "Preguntas abiertas": marcarlas resueltas, con referencia a las Specs 001 y 005.
   - En `docs/000-haidonggumdo-v010.md`, RF1 (tiempo de aviso 0.33 s / 1 s / 0.7 s; intervalo aleatorio entre el piso y el valor configurado) y CL1 (el intervalo sube automáticamente; Spec 005).

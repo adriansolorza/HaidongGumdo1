@@ -63,7 +63,7 @@ El stack y la arquitectura son los de la Spec 001. El motor ya acepta cualquier 
   - **Lectura**: si el archivo no existe, el JSON es inválido, falta un campo, un tipo no es entero, la versión no es 1 o `validate()` devuelve violaciones → `null`. Nunca lanza.
   - **Escritura atómica**: escribe `settings.json.tmp` con `flush: true` y lo renombra a `settings.json`. Cualquier `FileSystemException` (o error al obtener la carpeta) se convierte en `SettingsSaveException`. Un archivo dañado solo se reemplaza al guardar con éxito.
 - **Rationale**: El renombrado evita que un cierre a mitad de la escritura deje un JSON truncado, que se leería como "dañado" y haría perder la configuración. Usar milisegundos enteros evita decimales ambiguos.
-- **Dependencia**: `path_provider` (versión estable vigente de la línea 2.x, fijada con `flutter pub add path_provider` al implementar), solo importado en `lib/presentation/providers.dart`, donde se crea el repositorio, como ya se hace con `FlutterTts`. `lib/data/settings/` no lo importa.
+- **Dependencia**: `path_provider` (versión estable vigente de la línea 2.x, fijada con `flutter pub add path_provider` al implementar), solo importado en `lib/data/settings/json_file_settings_repository.dart`, en la fábrica `inAppDocuments()` (ADR 0006: solo en la capa de datos). `providers.dart` llama a la fábrica y no lo importa. El constructor que recibe la carpeta queda para las pruebas.
 - **Alternatives considered**: Las del ADR 0006 (`shared_preferences`, canal nativo). Escribir directo sin archivo temporal: más simple, pero arriesga corrupción. Se rechaza.
 
 ## R5. Carga al arrancar y proveedor de parámetros (FR-012, FR-014, FR-015; Principio V)

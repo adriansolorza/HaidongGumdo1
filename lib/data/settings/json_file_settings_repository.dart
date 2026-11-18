@@ -1,16 +1,23 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:path_provider/path_provider.dart';
+
 import '../../domain/exercise/exercise_parameters.dart';
 import '../../domain/ports/settings_repository.dart';
 import 'settings_json_mapper.dart';
 
 /// Configuración en un archivo JSON local (Spec 005, FR-010 a FR-013;
 /// research R4). La carpeta la da [directory]: en producción,
-/// `getApplicationDocumentsDirectory` de `path_provider` (ADR 0006); en
-/// pruebas, una carpeta temporal.
+/// [JsonFileSettingsRepository.inAppDocuments]; en pruebas, una carpeta
+/// temporal.
 final class JsonFileSettingsRepository implements SettingsRepository {
   JsonFileSettingsRepository({required this.directory});
+
+  /// Carpeta de documentos de la app, privada y sin permisos
+  /// (`path_provider`, ADR 0006: solo en la capa de datos).
+  factory JsonFileSettingsRepository.inAppDocuments() =>
+      JsonFileSettingsRepository(directory: getApplicationDocumentsDirectory);
 
   static const fileName = 'settings.json';
   static const tempFileName = 'settings.json.tmp';

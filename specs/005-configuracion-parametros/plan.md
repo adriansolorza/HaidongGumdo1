@@ -18,7 +18,7 @@ Permitir que el usuario edite los cinco parámetros del ejercicio con botones �
 
 **Language/Version**: Dart 3.13.5 / Flutter 3.47.7 (canal stable), sin cambios
 
-**Primary Dependencies**: `flutter_riverpod`, `flutter_tts`, `wakelock_plus` (ADR 0001–0003); `CustomPainter` (ADR 0004); Rajdhani (ADR 0005). **Nuevo**: `path_provider` 2.x (ADR 0006, aprobado el 2026-11-16), solo para crear el repositorio en `providers.dart`.
+**Primary Dependencies**: `flutter_riverpod`, `flutter_tts`, `wakelock_plus` (ADR 0001–0003); `CustomPainter` (ADR 0004); Rajdhani (ADR 0005). **Nuevo**: `path_provider` 2.x (ADR 0006, aprobado el 2026-11-16), solo en `lib/data/settings/` (fábrica `JsonFileSettingsRepository.inAppDocuments()`).
 
 **Storage**: Archivo JSON local `settings.json` en la carpeta de documentos de la app ([contracts/settings.schema.json](./contracts/settings.schema.json)); unos 150 bytes.
 
@@ -47,7 +47,7 @@ No hay incógnitas abiertas: las decisiones están en [research.md](./research.m
 | Principio | Cumplimiento en este plan | Estado |
 |---|---|---|
 | I. Stack | Sin cambios de SDK | ✅ |
-| II. Clean Architecture | `ParameterEditor` y `SettingsRepository` en el dominio, Dart puro. El repositorio de archivo está en datos y solo usa `dart:io`. `path_provider` solo se importa en `providers.dart`, donde se arman las dependencias (R4) | ✅ |
+| II. Clean Architecture | `ParameterEditor` y `SettingsRepository` en el dominio, Dart puro. El repositorio de archivo está en datos. `path_provider` solo se importa ahí, en la fábrica `inAppDocuments()`; `providers.dart` solo la llama (R4, ADR 0006) | ✅ |
 | III. Datos sobre código | Sin cambios en el catálogo; los parámetros no son datos del catálogo | ✅ |
 | IV. Persistencia | JSON local detrás de una interfaz de repositorio del dominio; un backend sería otra implementación (R3, R4) | ✅ |
 | V. Gestión de estado | Riverpod: `NotifierProvider` para la configuración guardada y `autoDispose` para el borrador (R5, R6) | ✅ |

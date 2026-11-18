@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-import 'package:path_provider/path_provider.dart';
 
 import '../data/catalog/asset_catalog_repository.dart';
 import '../data/platform/dart_random_source.dart';
@@ -40,8 +39,7 @@ final screenWakeLockProvider = Provider<ScreenWakeLock>(
 
 /// Configuración del usuario en JSON local (Spec 005, FR-011; ADR 0006).
 final settingsRepositoryProvider = Provider<SettingsRepository>(
-  (ref) =>
-      JsonFileSettingsRepository(directory: getApplicationDocumentsDirectory),
+  (ref) => JsonFileSettingsRepository.inAppDocuments(),
 );
 
 /// Configuración guardada: los parámetros vigentes del ejercicio (duración,
