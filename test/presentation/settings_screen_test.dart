@@ -208,4 +208,96 @@ void main() {
       expect(_summary(tester), endsWith('· 30 s'));
     });
   });
+
+  group('US2: invariante de tiempos al editar (Spec 005)', () {
+    String range(WidgetTester tester) =>
+        tester.widget<Text>(find.byKey(const Key('intervalRange'))).data!;
+
+    Finder notice() => find.byKey(const Key('intervalAdjustedNotice'));
+
+    testWidgets('el rango del sorteo sigue al intervalo (FR-005, US2-2)', (
+      tester,
+    ) async {
+      await _pumpApp(tester, InMemorySettingsRepository());
+      await _openSettings(tester);
+      expect(range(tester), 'Cada ataque: entre 1.0 s y 2.5 s, al azar');
+
+      while (_enabled(tester, 'dec-attackInterval')) {
+        await _tap(tester, 'dec-attackInterval');
+      }
+      expect(_value(tester, 'attackInterval'), '1.0 s');
+      expect(range(tester), 'Cada ataque: 1.0 s');
+    });
+
+    testWidgets('subir el corte ajusta el intervalo y lo avisa; bajar el '
+        'corte no lo cambia; tocar el intervalo borra el aviso '
+        '(US2-1, US2-4, US2-6, FR-008, FR-009)', (tester) async {
+      final repo = InMemorySettingsRepository();
+      await _pumpApp(tester, repo);
+      await _openSettings(tester);
+      while (_enabled(tester, 'dec-attackInterval')) {
+        await _tap(tester, 'dec-attackInterval');
+      }
+      expect(notice(), findsNothing);
+
+      for (var i = 0; i < 6; i++) {
+        await _tap(tester, 'inc-cutSpeed');
+      }
+      expect(_value(tester, 'cutSpeed'), '0.8 s');
+      expect(_value(tester, 'attackInterval'), '1.3 s');
+      expect(notice(), findsOneWidget);
+      expect(
+        find.descendant(
+          of: notice(),
+          matching: find.text(
+            'Intervalo ajustado a 1.3 s: debe ser al menos la velocidad del '
+            'corte + 0.5 s',
+          ),
+        ),
+        findsOneWidget,
+      );
+      expect(_enabled(tester, 'saveButton'), isTrue);
+
+      await _tap(tester, 'dec-cutSpeed');
+      expect(_value(tester, 'attackInterval'), '1.3 s');
+      expect(notice(), findsOneWidget);
+
+      await _tap(tester, 'inc-attackInterval');
+      expect(notice(), findsNothing);
+      expect(_value(tester, 'attackInterval'), '1.4 s');
+
+      await _tap(tester, 'saveButton');
+      expect(repo.stored, isNotNull);
+      expect(repo.stored!.validate(), isEmpty);
+      expect(repo.stored!.cutSpeed, const Duration(milliseconds: 750));
+      expect(repo.stored!.attackInterval, const Duration(milliseconds: 1400));
+    });
+
+    testWidgets('en 4:3 el aviso queda a la vista al editar el corte', (
+      tester,
+    ) async {
+      await _pumpApp(
+        tester,
+        InMemorySettingsRepository(),
+        size: const Size(1024, 768),
+      );
+      await _openSettings(tester);
+      while (_enabled(tester, 'dec-attackInterval')) {
+        await _tap(tester, 'dec-attackInterval');
+      }
+      // Volver arriba de la lista y subir el corte desde ahí.
+      await tester.ensureVisible(find.byKey(const Key('param-duration')));
+      await tester.pumpAndSettle();
+      await _tap(tester, 'inc-cutSpeed');
+
+      expect(notice(), findsOneWidget);
+      final viewport = tester.getRect(find.byType(SingleChildScrollView));
+      final rect = tester.getRect(notice());
+      expect(
+        viewport.top <= rect.top && rect.bottom <= viewport.bottom,
+        isTrue,
+        reason: 'aviso $rect fuera de la lista $viewport',
+      );
+    });
+  });
 }

@@ -61,8 +61,15 @@ final class SettingsDraftNotifier extends Notifier<SettingsDraft> {
   void decrement(ParameterField field) =>
       _apply(field, ParameterEditor.decrement(state.values, field));
 
+  /// Aviso de ajuste (data-model §6, research R6): tocar el intervalo lo
+  /// borra; un ajuste nuevo lo reemplaza; cualquier otro cambio lo conserva.
   void _apply(ParameterField field, EditResult result) {
-    state = state.copyWith(values: result.parameters, saveFailed: false);
+    state = state.copyWith(
+      values: result.parameters,
+      saveFailed: false,
+      intervalAdjustedTo: result.adjustedInterval,
+      clearAdjustment: field == ParameterField.attackInterval,
+    );
   }
 
   /// Guarda el borrador. true si tuvo éxito; false si falló o ya se estaba

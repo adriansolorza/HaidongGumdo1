@@ -16,7 +16,11 @@ class ParameterRow extends StatelessWidget {
     required this.onIncrement,
     required this.scale,
     this.footer,
+    this.lastHintKey,
   });
+
+  /// Key de la última pista (el rango del sorteo en el intervalo, US2).
+  final Key? lastHintKey;
 
   final ParameterField field;
   final String label;
@@ -53,9 +57,10 @@ class ParameterRow extends StatelessWidget {
                     color: AppColors.textPrimary,
                   ),
                 ),
-                for (final hint in hints)
+                for (final (i, hint) in hints.indexed)
                   Text(
                     hint,
+                    key: i == hints.length - 1 ? lastHintKey : null,
                     style: TextStyle(
                       fontSize: 16 * s,
                       fontWeight: FontWeight.w500,

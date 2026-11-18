@@ -172,19 +172,19 @@ Proyecto Flutter único: `lib/`, `test/` y `docs/` en la raíz del repositorio (
 
 ### Implementation for User Story 2
 
-- [ ] T024 [US2] En `lib/presentation/settings/settings_draft.dart`, `SettingsDraftNotifier.increment/decrement` (data-model §6, tabla de transiciones; research R6):
+- [X] T024 [US2] En `lib/presentation/settings/settings_draft.dart`, `SettingsDraftNotifier.increment/decrement` (data-model §6, tabla de transiciones; research R6):
   - Si `f == ParameterField.attackInterval` → `intervalAdjustedTo: null`.
   - Si no, y `result.adjustedInterval != null` → `intervalAdjustedTo: result.adjustedInterval`, que reemplaza un aviso anterior.
   - Si no → se conserva el `intervalAdjustedTo` actual.
   - `copyWith` debe permitir poner `intervalAdjustedTo` en `null` explícitamente, por ejemplo con un parámetro `bool clearAdjustment = false`.
-- [ ] T025 [US2] En `lib/presentation/settings/settings_screen.dart` (FR-005, FR-008, research R8). Depende de T024.
+- [X] T025 [US2] En `lib/presentation/settings/settings_screen.dart` (FR-005, FR-008, research R8). Depende de T024.
   - Fila del intervalo: `hints: [StringsEs.attackIntervalHint, formatIntervalRange(draft.values)]`, con el texto envuelto en `Key('intervalRange')`.
   - `footer` de esa fila: si `draft.intervalAdjustedTo != null`, un `HudPanel` (`Key('intervalAdjustedNotice')`) con borde `panelBorderStrong`, `Icons.info_outline` (`textPrimary`, `22·s`) y `formatAdjustment(draft.intervalAdjustedTo!)` (500, `16·s`, `textPrimary`).
   - Al aparecer el aviso, hacer visible la fila del intervalo con `Scrollable.ensureVisible` si la lista está desplazada, para que en 4:3 el usuario vea el ajuste aunque esté editando el corte.
 
 ### Tests for User Story 2
 
-- [ ] T026 [P] [US2] En `test/domain/parameter_editor_test.dart`, grupo "invariante y ajuste automático" (FR-007, FR-008, SC-003, SC-004). Depende de T009.
+- [X] T026 [P] [US2] En `test/domain/parameter_editor_test.dart`, grupo "invariante y ajuste automático" (FR-007, FR-008, SC-003, SC-004). Depende de T009.
   - US2-1: corte 500 → 800 (seis `increment`) con intervalo 1000 → el intervalo queda en 1300 y el último `adjustedInterval == 1300 ms`.
   - US2-2: corte 500, intervalo 1000 → `canDecrement(attackInterval) == false`.
   - US2-3: corte 350, intervalo al mínimo → 900.
@@ -192,13 +192,13 @@ Proyecto Flutter único: `lib/`, `test/` y `docs/` en la raíz del repositorio (
   - US2-5: intervalo 2500, corte hasta 1000 → intervalo 2500 y ningún `adjustedInterval`.
   - **Exhaustivo** (SC-003): para cada corte de `allowedValues(cutSpeed)` y cada intervalo de `allowedValues(attackInterval)` con ese corte (y para N, duración y aviso por defecto), aplicar `increment` y `decrement` a cada `ParameterField`. Todo resultado cumple `validate().isEmpty`, y `adjustedInterval != null` si y solo si el campo es `cutSpeed`, la operación es `increment` y el intervalo de entrada era menor que `intervalMinimum` del corte nuevo (SC-004).
   - Recorrido aleatorio con `Random(seed)` fijo: 10 000 toques al azar desde los defaults, siempre válidos.
-- [ ] T027 [US2] En `test/presentation/settings_screen_test.dart`, grupo US2. Depende de T025.
+- [X] T027 [US2] En `test/presentation/settings_screen_test.dart`, grupo US2. Depende de T025.
   - Con los defaults, `Key('intervalRange')` dice `'Cada ataque: entre 1.0 s y 2.5 s, al azar'`.
   - `dec-attackInterval` hasta desactivarse → `'1.0 s'` y `'Cada ataque: 1.0 s'`.
   - `inc-cutSpeed` seis veces → valor del intervalo `'1.3 s'`, se ve `Key('intervalAdjustedNotice')` con `'Intervalo ajustado a 1.3 s: debe ser al menos la velocidad del corte + 0.5 s'` y GUARDAR habilitado (US2-1, FR-009).
   - `dec-cutSpeed` → el intervalo sigue en `'1.3 s'` y el aviso sigue visible; `inc-attackInterval` → el aviso desaparece.
   - GUARDAR → `repo.stored.validate()` vacío (US2-6).
-- [ ] T028 [P] [US2] Validación manual (quickstart §2 pasos 5–7), también en una tablet 4:3: el aviso se ve sin desplazar a mano.
+- [X] T028 [P] [US2] Validación manual (quickstart §2 pasos 5–7), también en una tablet 4:3: el aviso se ve sin desplazar a mano.
 
 **Checkpoint**: La invariante es visible y explicada.
 

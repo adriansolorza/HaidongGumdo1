@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/settings/parameter_editor.dart';
+import '../exercise/widgets/hud_panel.dart';
 import '../providers.dart';
 import '../scene/dojang_painter.dart';
 import '../scene/scene_layout.dart';
@@ -15,11 +16,40 @@ import 'settings_draft.dart';
 /// Pantalla de configuración (Spec 005, FR-002 a FR-020; contrato §4): el
 /// dojang oscurecido de fondo, la lista de los cinco parámetros con botones
 /// − / + y la barra de acciones fija. Solo usa blancos y grises (FR-018).
-class SettingsScreen extends ConsumerWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  /// Fila del intervalo, para hacerla visible cuando aparece el aviso.
+  final _intervalRowKey = GlobalKey();
+
+  /// Con la lista desplazada (4:3), el aviso de ajuste debe verse aunque el
+  /// usuario esté editando el corte (T025).
+  void _revealIntervalRow() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final rowContext = _intervalRowKey.currentContext;
+      if (!mounted || rowContext == null) return;
+      Scrollable.ensureVisible(
+        rowContext,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+        alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen(settingsDraftProvider, (previous, next) {
+      final adjusted = next.intervalAdjustedTo;
+      if (adjusted != null && adjusted != previous?.intervalAdjustedTo) {
+        _revealIntervalRow();
+      }
+    });
     final catalog = ref.watch(catalogProvider);
     final draft = ref.watch(settingsDraftProvider);
     final notifier = ref.read(settingsDraftProvider.notifier);
@@ -32,7 +62,7 @@ class SettingsScreen extends ConsumerWidget {
             catalog.value?.patterns.first ?? SelectionScreen.backgroundPattern,
           );
           final s = layout.hudScale;
-          final rows = _rows(draft, notifier, s);
+          final rows = _rows(draft, notifier, s, _intervalRowKey);
 
           return Stack(
             fit: StackFit.expand,
@@ -68,17 +98,25 @@ class SettingsScreen extends ConsumerWidget {
                             ),
                             borderRadius: BorderRadius.circular(14 * s),
                           ),
-                          child: ListView.separated(
+                          // Cinco filas: todas construidas, para que
+                          // ensureVisible encuentre la del intervalo.
+                          child: SingleChildScrollView(
                             padding: EdgeInsets.symmetric(
                               horizontal: 24 * s,
                               vertical: 8 * s,
                             ),
-                            itemCount: rows.length,
-                            separatorBuilder: (_, _) => const Divider(
-                              color: AppColors.panelBorder,
-                              height: 1,
+                            child: Column(
+                              children: [
+                                for (final (i, row) in rows.indexed) ...[
+                                  if (i > 0)
+                                    const Divider(
+                                      color: AppColors.panelBorder,
+                                      height: 1,
+                                    ),
+                                  row,
+                                ],
+                              ],
                             ),
-                            itemBuilder: (_, i) => rows[i],
                           ),
                         ),
                       ),
@@ -114,6 +152,7 @@ class SettingsScreen extends ConsumerWidget {
     SettingsDraft draft,
     SettingsDraftNotifier notifier,
     double s,
+    Key intervalRowKey,
   ) {
     final values = draft.values;
 
@@ -121,9 +160,15 @@ class SettingsScreen extends ConsumerWidget {
       ParameterField field,
       String label,
       List<String> hints,
-      String value,
-    ) => ParameterRow(
+      String value, {
+      Key? key,
+      Key? lastHintKey,
+      Widget? footer,
+    }) => ParameterRow(
+      key: key,
       field: field,
+      lastHintKey: lastHintKey,
+      footer: footer,
       label: label,
       hints: hints,
       value: value,
@@ -163,15 +208,59 @@ class SettingsScreen extends ConsumerWidget {
             StringsEs.cutSpeedHint,
             StringsEs.cutSpeedRange,
           ], formatSeconds(values.cutSpeed)),
-          // US2 agrega el rango del sorteo y el aviso de ajuste.
+          // Rango real del sorteo y aviso de ajuste (FR-005, FR-008).
           ParameterField.attackInterval => row(
             field,
             StringsEs.attackIntervalLabel,
-            const [StringsEs.attackIntervalHint],
+            [StringsEs.attackIntervalHint, formatIntervalRange(values)],
             formatSeconds(values.attackInterval),
+            key: intervalRowKey,
+            lastHintKey: const Key('intervalRange'),
+            footer: draft.intervalAdjustedTo == null
+                ? null
+                : _AdjustedNotice(
+                    interval: draft.intervalAdjustedTo!,
+                    scale: s,
+                  ),
           ),
         },
     ];
+  }
+}
+
+/// Aviso del ajuste automático del intervalo (FR-008): panel neutro con
+/// borde fuerte e ícono de información; nunca amarillo ni rojo (FR-018).
+class _AdjustedNotice extends StatelessWidget {
+  const _AdjustedNotice({required this.interval, required this.scale});
+
+  final Duration interval;
+  final double scale;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = scale;
+    return HudPanel(
+      key: const Key('intervalAdjustedNotice'),
+      scale: s,
+      strong: true,
+      padding: EdgeInsets.symmetric(vertical: 8 * s, horizontal: 16 * s),
+      child: Row(
+        children: [
+          Icon(Icons.info_outline, color: AppColors.textPrimary, size: 22 * s),
+          SizedBox(width: 10 * s),
+          Flexible(
+            child: Text(
+              formatAdjustment(interval),
+              style: TextStyle(
+                fontSize: 16 * s,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
