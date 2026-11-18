@@ -233,20 +233,20 @@ Proyecto Flutter único: `lib/`, `test/` y `docs/` en la raíz del repositorio (
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T033 [P] Si T015, T016 o T025 agregaron colores nuevos a `AppColors`, ponerlos en el grupo `interfaceColors` de `lib/presentation/theme.dart`. Agregar a `test/presentation/palette_test.dart` una prueba que monte `SettingsScreen` con el aviso de ajuste y el error de guardado visibles y recorra todos los `Icon`, `Text`, `DecoratedBox` y `OutlinedButton` y sus estilos: ningún color usado tiene croma > 0.10 (misma función `chroma` de la Spec 004) y ninguno es `saberBlue`, `saberRed` ni `saberYellow` (FR-018, SC-006).
-- [ ] T034 [P] En `test/presentation/settings_screen_test.dart`, grupo "disposición" (FR-019, FR-001): con tamaños 1024 × 768 (4:3), 1280 × 800 (16:10) y 2400 × 1080 (20:9), y `textScaler` 1.0 y 1.3, `tester.takeException()` es `null` (sin desbordes); `saveButton`, `cancelButton` y `resetButton` están dentro de la pantalla; la lista se desplaza hasta la fila del intervalo; en la selección, `settingsButton` e INICIAR no se superponen y quedan dentro de la pantalla.
-- [ ] T035 [P] Comprobar el alcance del diff (quickstart §1):
+- [x] T033 [P] Si T015, T016 o T025 agregaron colores nuevos a `AppColors`, ponerlos en el grupo `interfaceColors` de `lib/presentation/theme.dart`. Agregar a `test/presentation/palette_test.dart` una prueba que monte `SettingsScreen` con el aviso de ajuste y el error de guardado visibles y recorra todos los `Icon`, `Text`, `DecoratedBox` y `OutlinedButton` y sus estilos: ningún color usado tiene croma > 0.10 (misma función `chroma` de la Spec 004) y ninguno es `saberBlue`, `saberRed` ni `saberYellow` (FR-018, SC-006).
+- [x] T034 [P] En `test/presentation/settings_screen_test.dart`, grupo "disposición" (FR-019, FR-001): con tamaños 1024 × 768 (4:3), 1280 × 800 (16:10) y 2400 × 1080 (20:9), y `textScaler` 1.0 y 1.3, `tester.takeException()` es `null` (sin desbordes); `saveButton`, `cancelButton` y `resetButton` están dentro de la pantalla; la lista se desplaza hasta la fila del intervalo; en la selección, `settingsButton` e INICIAR no se superponen y quedan dentro de la pantalla.
+- [x] T035 [P] Comprobar el alcance del diff (quickstart §1):
   - `git diff main --stat -- lib/domain/exercise` solo con `exercise_parameters.dart` (`copyWith`).
   - `git diff main -- lib/presentation/exercise` vacío.
   - `git diff main -- pubspec.yaml` solo con `path_provider`.
   - `Select-String -Path lib/domain -Pattern "package:flutter|path_provider" -Recurse` sin resultados.
   - `path_provider` solo importado en `lib/presentation/providers.dart`.
-- [ ] T036 [P] Actualizar los documentos de intención con lo decidido, sin cambiar su alcance:
+- [x] T036 [P] Actualizar los documentos de intención con lo decidido, sin cambiar su alcance:
   - En `docs/brief.md`, tabla "Parámetros configurables": rangos y valores por defecto (30 s a 3 min / 30 s; 1 a 5 / 5; ⅓ s a 1 s / 0.7 s; 0.3 s a 1 s / 0.5 s; tope del sorteo hasta 5 s, con mínimo = velocidad del corte + 0.5 s / 2.5 s). "Preguntas abiertas": marcarlas resueltas, con referencia a las Specs 001 y 005.
   - En `docs/000-haidonggumdo-v010.md`, RF1 (tiempo de aviso 0.33 s / 1 s / 0.7 s; intervalo aleatorio entre el piso y el valor configurado) y CL1 (el intervalo sube automáticamente; Spec 005).
-- [ ] T037 Ejecutar `flutter analyze` y `flutter test` completos: todo verde, y las pruebas existentes de las Specs 001 a 004 sin cambios en sus expectativas. `git diff main -- test/domain` solo agrega `parameter_editor_test.dart` (SC-008).
-- [ ] T038 Pruebas con personas (quickstart §3): SC-001 (3 personas, menos de 20 s) y SC-006 (3 observadores, con el aviso y el error visibles). Registrar los resultados en la descripción del PR.
-- [ ] T039 Abrir el PR de `005-configuracion` a `main` con Conventional Commits (por ejemplo `chore: add path_provider (ADR 0006)`, `feat: add parameter editor with timing invariant`, `feat: persist settings as local json`, `feat: add settings screen`, `test: cover parameter editor and settings repository`, `docs: update brief with final parameter ranges`), mencionando el ADR 0006, y verificar en el PR la revisión de cumplimiento de la constitution.
+- [x] T037 Ejecutar `flutter analyze` y `flutter test` completos: todo verde, y las pruebas existentes de las Specs 001 a 004 sin cambios en sus expectativas. `git diff main -- test/domain` solo agrega `parameter_editor_test.dart` (SC-008).
+- [ ] T038 Pruebas con personas (quickstart §3): SC-001 (3 personas, menos de 20 s) y SC-006 (3 observadores, con el aviso y el error visibles). Registrar los resultados en la descripción del PR.Pospuesta: validación en dojang
+- [x] T039 Abrir el PR de `005-configuracion` a `main` con Conventional Commits (por ejemplo `chore: add path_provider (ADR 0006)`, `feat: add parameter editor with timing invariant`, `feat: persist settings as local json`, `feat: add settings screen`, `test: cover parameter editor and settings repository`, `docs: update brief with final parameter ranges`), mencionando el ADR 0006, y verificar en el PR la revisión de cumplimiento de la constitution.
 
 ---
 

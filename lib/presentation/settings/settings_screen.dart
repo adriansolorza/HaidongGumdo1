@@ -352,36 +352,68 @@ class _Actions extends StatelessWidget {
           textStyle: outlinedText,
         ),
         onPressed: onPressed,
-        child: Text(label),
+        child: _FitLabel(label),
       ),
     );
 
+    // Con espacio de sobra cada botón tiene su ancho natural. En 4:3 con la
+    // letra grande, los textos se achican en vez de desbordar (FR-019).
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        outlined(const Key('resetButton'), StringsEs.reset, onReset),
-        const Spacer(),
-        outlined(const Key('cancelButton'), StringsEs.cancel, onCancel),
+        Flexible(
+          child: outlined(const Key('resetButton'), StringsEs.reset, onReset),
+        ),
         SizedBox(width: 24 * s),
-        SizedBox(
-          height: 64 * s,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minWidth: 260 * s),
-            child: FilledButton(
-              key: const Key('saveButton'),
-              style: FilledButton.styleFrom(
-                padding: EdgeInsets.symmetric(horizontal: 40 * s),
-                textStyle: TextStyle(
-                  fontSize: 26 * s,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 5 * s,
+        Flexible(
+          flex: 2,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: outlined(
+                  const Key('cancelButton'),
+                  StringsEs.cancel,
+                  onCancel,
                 ),
               ),
-              onPressed: onSave,
-              child: const Text(StringsEs.save),
-            ),
+              SizedBox(width: 24 * s),
+              Flexible(
+                child: SizedBox(
+                  height: 64 * s,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minWidth: 260 * s),
+                    child: FilledButton(
+                      key: const Key('saveButton'),
+                      style: FilledButton.styleFrom(
+                        padding: EdgeInsets.symmetric(horizontal: 40 * s),
+                        textStyle: TextStyle(
+                          fontSize: 26 * s,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 5 * s,
+                        ),
+                      ),
+                      onPressed: onSave,
+                      child: const _FitLabel(StringsEs.save),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ],
     );
   }
+}
+
+/// Texto de botón que se achica si no cabe, sin cortarse.
+class _FitLabel extends StatelessWidget {
+  const _FitLabel(this.label);
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) =>
+      FittedBox(fit: BoxFit.scaleDown, child: Text(label, maxLines: 1));
 }

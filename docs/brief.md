@@ -80,13 +80,15 @@ La postura **no revela** el lado del ataque. El corte transversal puede salir ha
 
 ## Parámetros configurables
 
-| Parámetro                           | Rango       | Por defecto |
-| ----------------------------------- | ----------- | ----------- |
-| Duración del ejercicio              | —           | 30 s        |
-| Máximo de repeticiones seguidas (N) | —           | 5           |
-| Tiempo de aviso                     | ⅓ s – 1 s   | _pendiente_ |
-| Velocidad del corte                 | _pendiente_ | _pendiente_ |
-| Intervalo entre ataques             | 0.5 s – 5 s | _pendiente_ |
+| Parámetro                           | Rango                                                | Por defecto |
+| ----------------------------------- | ---------------------------------------------------- | ----------- |
+| Duración del ejercicio              | 30 s – 3 min                                         | 30 s        |
+| Máximo de repeticiones seguidas (N) | 1 – 5                                                | 5           |
+| Tiempo de aviso                     | ⅓ s – 1 s                                            | 0.7 s       |
+| Velocidad del corte                 | 0.3 s – 1 s                                          | 0.5 s       |
+| Intervalo entre ataques (tope)      | hasta 5 s; mínimo = velocidad del corte + 0.5 s      | 2.5 s       |
+
+Cada ataque espera un tiempo al azar entre el mínimo (velocidad del corte + 0.5 s) y el tope configurado. Si el usuario sube la velocidad del corte por encima de lo que permite el tope, el tope sube solo y la app lo avisa (Spec 005).
 
 Referencia del tiempo de aviso: 1 s (decir "mil uno") es lento para un corte real, pero adecuado para que una cinta blanca empiece a desarrollar reacción. ⅓ s sigue siendo más lento que un corte real, pero deja tiempo suficiente para reaccionar sin volverse demasiado difícil. Bajar estos tiempos es lo que mantiene el reto para practicantes avanzados.
 
@@ -115,5 +117,5 @@ Referencia del tiempo de aviso: 1 s (decir "mil uno") es lento para un corte rea
 
 ## Preguntas abiertas
 
-1. ¿El rango de ⅓ s a 1 s es solo para el tiempo de aviso? Si es así, ¿qué rango tiene la velocidad del corte?
-2. ¿Cuáles son los valores por defecto del tiempo de aviso, la velocidad del corte y el intervalo?
+1. ~~¿El rango de ⅓ s a 1 s es solo para el tiempo de aviso? Si es así, ¿qué rango tiene la velocidad del corte?~~ **Resuelta:** sí, solo para el tiempo de aviso; la velocidad del corte va de 0.3 s a 1 s (Specs 001 y 005).
+2. ~~¿Cuáles son los valores por defecto del tiempo de aviso, la velocidad del corte y el intervalo?~~ **Resuelta:** 0.7 s, 0.5 s y 2.5 s (Specs 001 y 005).

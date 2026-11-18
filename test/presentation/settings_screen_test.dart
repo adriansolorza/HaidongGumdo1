@@ -12,6 +12,7 @@ import 'package:haidonggumdo/domain/ports/settings_repository.dart';
 import 'package:haidonggumdo/presentation/providers.dart';
 import 'package:haidonggumdo/presentation/selection/selection_screen.dart';
 import 'package:haidonggumdo/presentation/settings/settings_screen.dart';
+import 'package:haidonggumdo/presentation/strings_es.dart';
 
 import '../domain/fakes/fake_screen_wake_lock.dart';
 import '../domain/fakes/fake_voice_announcer.dart';
@@ -423,5 +424,65 @@ void main() {
       expect(_value(tester, 'attackInterval'), '1.0 s');
       expect(find.byKey(const Key('intervalAdjustedNotice')), findsNothing);
     });
+  });
+
+  group('disposición (FR-019, FR-001)', () {
+    const sizes = {
+      '4:3': Size(1024, 768),
+      '16:10': Size(1280, 800),
+      '20:9': Size(2400, 1080),
+    };
+
+    void expectInside(WidgetTester tester, Finder finder, Rect screen) {
+      final rect = tester.getRect(finder);
+      expect(
+        screen.contains(rect.topLeft) && screen.contains(rect.bottomRight),
+        isTrue,
+        reason: '$finder en $rect fuera de $screen',
+      );
+    }
+
+    for (final MapEntry(key: ratio, value: size) in sizes.entries) {
+      for (final scale in [1.0, 1.3]) {
+        testWidgets('$ratio con letra ×$scale: sin desbordes, acciones a la '
+            'vista y lista desplazable', (tester) async {
+          tester.platformDispatcher.textScaleFactorTestValue = scale;
+          addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+          await _pumpApp(tester, InMemorySettingsRepository(), size: size);
+          final screen = Offset.zero & size;
+
+          // Selección: CONFIGURACIÓN e INICIAR dentro y sin superponerse.
+          expect(tester.takeException(), isNull);
+          final settings = find.byKey(const Key('settingsButton'));
+          final start = find.widgetWithText(FilledButton, StringsEs.start);
+          expectInside(tester, settings, screen);
+          expectInside(tester, start, screen);
+          expect(
+            tester.getRect(settings).overlaps(tester.getRect(start)),
+            isFalse,
+          );
+
+          await _openSettings(tester);
+          expect(tester.takeException(), isNull);
+          for (final key in ['saveButton', 'cancelButton', 'resetButton']) {
+            expectInside(tester, find.byKey(Key(key)), screen);
+          }
+
+          // La fila del intervalo se alcanza desplazando la lista.
+          final interval = find.byKey(const Key('param-attackInterval'));
+          await tester.ensureVisible(interval);
+          await tester.pumpAndSettle();
+          final viewport = tester.getRect(find.byType(SingleChildScrollView));
+          final row = tester.getRect(interval);
+          expect(
+            viewport.top <= row.top + 0.5 &&
+                row.bottom <= viewport.bottom + 0.5,
+            isTrue,
+            reason: 'fila $row fuera de la lista $viewport',
+          );
+          expect(tester.takeException(), isNull);
+        });
+      }
+    }
   });
 }
