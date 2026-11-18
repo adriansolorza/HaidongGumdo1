@@ -16,7 +16,7 @@ Esta spec agrega el **Nivel 3 (defensa o evasión lateral, mezcladas al azar)**,
 
 **Sin señales nuevas.** El Nivel 3 usa las dos señales que ya existen, con sus mismos lados, colores, formas y reglas de colocación (Spec 001, FR-015; Spec 003, FR-006 a FR-008; Spec 004, FR-013 y FR-014). El color del sable sigue indicando el lado de la respuesta.
 
-**Principio III.** El Nivel 3 no introduce un tipo de señal nuevo. Se agrega con **datos** en el catálogo (un nivel con dos tipos de respuesta) y **una sola regla nueva en el dominio**: el tipo de respuesta de cada ataque se sortea entre los tipos del nivel, con la regla de N aplicada también a ese tipo, como ya dicen el brief y la especificación general (RN1, RN2). Hoy el motor usa siempre el primer tipo del nivel (FR-002, FR-004, FR-005).
+**Principio III.** El Nivel 3 no introduce un tipo de señal nuevo. Se agrega con **datos** en el catálogo (un nivel con dos tipos de respuesta) y **una sola regla nueva en el dominio**: el tipo de respuesta de cada ataque se sortea entre los tipos del nivel, con la regla de N aplicada también a ese tipo, como ya dicen el brief y la especificación general (RN1, RN2). Hoy el motor usa siempre el primer tipo del nivel (FR-002, FR-004, FR-005). La regla entra en la excepción (b) del Principio III (constitution 1.1.0, enmendada el 2026-11-18): es una regla de secuencia genérica, se justifica en el plan y no altera los Niveles 1 y 2.
 
 ### Hoja de ruta de la v1 (según `docs/brief.md`, rev. 3)
 
@@ -49,6 +49,7 @@ Los demás términos (_Si-jak_, _Guman_, _Chayôn-se_, _Chochôn-se_, _Sodose_, 
 - Q: Con tres tarjetas en la columna NIVEL (y cuatro cuando llegue el Nivel 4), ¿deben verse todas sin desplazar la columna en pantallas horizontales de 4:3 a 20:9? → A: Sí. Todas las tarjetas de NIVEL y PATRÓN se ven completas sin desplazar, de 4:3 a 20:9; si hace falta, las tarjetas se compactan (ícono y textos más pequeños) sin bajar de un tamaño legible.
 - Q: ¿Con qué tiempo de aviso se hace la prueba de legibilidad a 3 m del Nivel 3 (SC-006)? → A: Solo con el tiempo de aviso por defecto (0.7 s).
 - Q: ¿Agregar el Nivel 3 requiere solo datos en el catálogo (FR-002)? → A: No. FR-004 y FR-005 requieren una regla nueva en el dominio: sortear el tipo de respuesta con racha máxima N, porque hoy el motor usa siempre el primer tipo del nivel. FR-002 se corrige: el Nivel 3 requiere los datos en el catálogo y esa sola regla nueva; fuera de ella no cambia nada más del dominio.
+- Q: ¿Qué se compacta cuando las tarjetas no caben? → A: Las tarjetas, el encabezado, los márgenes y las separaciones de la selección; el pie no, y no se quita ningún texto.
 
 ## User Scenarios & Testing _(mandatory)_
 
@@ -149,7 +150,7 @@ Como practicante, quiero ver el Nivel 3 como una tarjeta más en la pantalla de 
 **Selección y HUD**
 
 - **FR-012**: La pantalla de selección MUST mostrar el Nivel 3 como una tarjeta más en la columna NIVEL, leída del catálogo y en su orden, con nombre y "respuesta — propósito" (Spec 004, FR-021). El Nivel 1 MUST seguir preseleccionado.
-- **FR-012a**: Todas las tarjetas de las columnas NIVEL y PATRÓN MUST verse completas **sin desplazar** la columna, en orientación horizontal de 4:3 a 20:9, con hasta cuatro niveles en el catálogo (previendo el Nivel 4). Si no caben a su tamaño actual, las tarjetas MUST compactarse (ícono y textos más pequeños), conservando el ícono, el nombre y "respuesta — propósito" legibles, y sin tapar el resumen de la sesión, CONFIGURACIÓN ni INICIAR (Spec 005, FR-001) (Clarifications, 2026-11-18).
+- **FR-012a**: Todas las tarjetas de las columnas NIVEL y PATRÓN MUST verse completas **sin desplazar** la columna, en orientación horizontal de 4:3 a 20:9, con hasta cuatro niveles en el catálogo (previendo el Nivel 4). Si no caben a su tamaño actual, la pantalla de selección MUST compactarse: tarjetas (ícono y textos más pequeños), encabezado, márgenes y separaciones. El pie (resumen, CONFIGURACIÓN e INICIAR) MUST NOT compactarse y MUST NOT quitarse ningún texto. Se conservan el ícono, el nombre y "respuesta — propósito" legibles, sin tapar el resumen de la sesión, CONFIGURACIÓN ni INICIAR (Spec 005, FR-001) (Clarifications, 2026-11-18).
 - **FR-013**: El ícono de la tarjeta de un nivel con **varios** tipos de respuesta MUST mostrar las señales de todos sus tipos **juntas, lado a lado**, en blanco y a menor tamaño, en el orden del catálogo (para el Nivel 3: símbolo de defensa y flecha de evasión). El ícono MUST construirse a partir de los tipos de respuesta del nivel en el catálogo, sin código propio del Nivel 3, y MUST cumplir la regla de color (sin rojo, azul ni amarillo; Spec 004). Los íconos de los Niveles 1 y 2 MUST NOT cambiar.
 - **FR-014**: El usuario MUST poder combinar el Nivel 3 con cualquier patrón, sin desbloqueos. La sesión elegida MUST mantenerse al pulsar Repetir, y el usuario MUST poder cambiar de nivel o de patrón al volver a la selección.
 - **FR-015**: Durante un ejercicio de Nivel 3, el HUD MUST mostrar "NIVEL 3" y "Defensa o evasión lateral", leídos del catálogo (Spec 004, FR-015). El HUD MUST NOT indicar la respuesta del ataque en curso; esa información la da solo la señal.
@@ -177,7 +178,7 @@ Como practicante, quiero ver el Nivel 3 como una tarjeta más en la pantalla de 
 - **SC-005**: En 1 000 ejercicios simulados de Nivel 3 con N = 5, la proporción de defensas y de evasiones está entre el 45 % y el 55 % cada una, y la de lados también, y las secuencias de dos ejercicios con la misma configuración no son necesariamente iguales (RN1).
 - **SC-006**: En una prueba a 3 m con ejercicios de Nivel 3 y el tiempo de aviso por defecto (0.7 s), al menos 2 de cada 3 observadores identifican correctamente el tipo de respuesta **y** el lado pedidos en al menos el 95 % de los ataques, incluido el final del barrido transversal.
 - **SC-007**: En la pantalla de selección, al menos 2 de cada 3 observadores reconocen en el ícono del Nivel 3 la mezcla de defensa y evasión sin leer el texto.
-- **SC-007a**: En un muestreo automático de la pantalla de selección en 20:9, 16:9, 16:10 y 4:3, con tres y con cuatro niveles en el catálogo, el 100 % de las tarjetas se ve completo sin desplazar, y ninguna se superpone al resumen, a CONFIGURACIÓN ni a INICIAR.
+- **SC-007a**: En un muestreo automático de la pantalla de selección en 20:9, 16:9, 16:10 y 4:3, incluido un teléfono en horizontal de 889 × 400 dp, con tres y con cuatro niveles en el catálogo, el 100 % de las tarjetas se ve completo sin desplazar, y ninguna se superpone al resumen, a CONFIGURACIÓN ni a INICIAR.
 - **SC-008**: Fuera de la regla nueva del sorteo del tipo de respuesta (FR-004, FR-005), agregar el Nivel 3 no cambia los tiempos, los estados, la cancelación, las voces, la configuración ni los datos de los patrones, y todas las pruebas de las Specs 001 a 005 siguen pasando sin cambiar sus expectativas sobre los Niveles 1 y 2. Solo pueden cambiar las pruebas que enumeran los niveles del catálogo, para incluir el Nivel 3.
 
 ## Assumptions
@@ -197,5 +198,5 @@ Como practicante, quiero ver el Nivel 3 como una tarjeta más en la pantalla de 
 - Proporción configurable entre defensas y evasiones, o un N separado para el tipo de respuesta.
 - Nivel 4 (evasión con contraataque), Spec 007.
 - Flechas adelante, atrás, diagonales o con giro.
-- Cambios en los tiempos, los estados, la cancelación, las voces, la configuración o la experiencia visual existente, salvo la compactación de las tarjetas de selección (FR-012a).
+- Cambios en los tiempos, los estados, la cancelación, las voces, la configuración o la experiencia visual existente, salvo la compactación de la pantalla de selección cuando las tarjetas no caben (FR-012a).
 - Backend, autenticación, detección de las respuestas del usuario y marcador app vs. usuario.

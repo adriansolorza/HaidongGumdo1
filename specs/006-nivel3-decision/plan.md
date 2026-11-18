@@ -49,7 +49,7 @@ No hay incógnitas abiertas: las decisiones están en [research.md](./research.m
 |---|---|---|
 | I. Stack | Sin cambios de SDK | ✅ |
 | II. Clean Architecture | `StreakSequencer` en el dominio, Dart puro, genérico y sin dependencias del catálogo. `SelectionDensity` en presentación | ✅ |
-| III. Datos sobre código | El Nivel 3 es un dato del catálogo, pero exige **un cambio de lógica de dominio** (el sorteo del tipo) sin introducir un tipo de señal nuevo. Queda fuera de la excepción del principio. Es un **cambio de dominio justificado**: ver [Complexity Tracking](#complexity-tracking) | ⚠️ Justificado |
+| III. Datos sobre código | El Nivel 3 es un dato del catálogo y exige **una regla de secuencia nueva** (el sorteo del tipo) sin introducir un tipo de señal nuevo. Entra en la excepción (b) del principio (constitution 1.1.0): regla de secuencia genérica (`StreakSequencer<T>`), justificada en [Complexity Tracking](#complexity-tracking) y sin efecto sobre los Niveles 1 y 2 (regresión T002) | ✅ |
 | IV. Persistencia | Sin cambios | ✅ |
 | V. Gestión de estado | Riverpod sin cambios | ✅ |
 | VI. Pruebas | La regla de N sobre los tipos y la aleatoriedad del tipo tienen pruebas de dominio (SC-004, SC-005). La aleatoriedad se sigue inyectando. Las pruebas salen de la spec, y la regresión de secuencias se graba antes del refactor (R8) | ✅ |
@@ -59,7 +59,7 @@ No hay incógnitas abiertas: las decisiones están en [research.md](./research.m
 | X. Flujo de trabajo | Rama `006-nivel3-decision` → PR a `main`; commits `refactor:` (generalización), `test:` (regresión) y `feat:` (Nivel 3) | ✅ |
 | XI. Seguridad y alcance | Sin cambios | ✅ |
 
-**Re-check post-diseño (Phase 1)**: sin cambios. La única desviación sigue siendo la de III, justificada y acotada a `streak_sequencer.dart` y a `_onSignal`.
+**Re-check post-diseño (Phase 1)**: sin violaciones. El único cambio de lógica de dominio es el de III, que cumple la excepción (b) de la constitution 1.1.0 (enmendada el 2026-11-18) y queda acotado a `streak_sequencer.dart` y a `_onSignal`.
 
 ## Decisiones de diseño
 
@@ -117,7 +117,7 @@ test/
 │   └── fakes/test_session.dart                 # + testLevel3Session / testLevel3TransversalSession
 ├── data/catalog_json_mapper_test.dart          # 3 niveles + level_3
 └── presentation/
-    ├── level_icon_test.dart                    # + (o dentro de selection_screen_test)
+    ├── level_icon_test.dart                    # +
     ├── selection_density_test.dart             # + función pura
     ├── selection_screen_test.dart              # + 7 lienzos × {3, 4} niveles
     └── exercise_screen_test.dart               # + Nivel 3: una señal por ataque, HUD
@@ -127,6 +127,6 @@ test/
 
 ## Complexity Tracking
 
-| Violation | Why Needed | Simpler Alternative Rejected Because |
+| Excepción (III, 1.1.0) | Why Needed | Simpler Alternative Rejected Because |
 |---|---|---|
-| **Principio III**: agregar el Nivel 3 cambia la lógica del dominio sin introducir un tipo de señal nuevo. Se generaliza `SideSequencer` → `StreakSequencer<T>` y el motor sortea el tipo de respuesta | FR-004 y FR-005 (brief, RN1 y RN2) piden sortear el tipo con un máximo de N. Hasta ahora el motor tomaba siempre `responseTypes.first`, porque ningún nivel tenía más de un tipo. Es la regla nueva que admite FR-002 (corregido el 2026-11-18). Por ser genérica, un nivel futuro que mezcle tipos volverá a ser solo datos | *Un `ResponseTypeSequencer` copiado*: duplica la regla de N (descartado por el responsable). *Sortear el par (lado, tipo) con `nextInt(4)`*: altera las secuencias de los Niveles 1 y 2. *Mezclar en el catálogo*: el catálogo no puede expresar aleatoriedad ni rachas sin lógica |
+| **Principio III, excepción (b)**: agregar el Nivel 3 cambia la lógica del dominio sin introducir un tipo de señal nuevo. Se generaliza `SideSequencer` → `StreakSequencer<T>` y el motor sortea el tipo de respuesta | FR-004 y FR-005 (brief, RN1 y RN2) piden sortear el tipo con un máximo de N. Hasta ahora el motor tomaba siempre `responseTypes.first`, porque ningún nivel tenía más de un tipo. Es la regla nueva que admite FR-002 (corregido el 2026-11-18). Por ser genérica, un nivel futuro que mezcle tipos volverá a ser solo datos | *Un `ResponseTypeSequencer` copiado*: duplica la regla de N (descartado por el responsable). *Sortear el par (lado, tipo) con `nextInt(4)`*: altera las secuencias de los Niveles 1 y 2. *Mezclar en el catálogo*: el catálogo no puede expresar aleatoriedad ni rachas sin lógica |
