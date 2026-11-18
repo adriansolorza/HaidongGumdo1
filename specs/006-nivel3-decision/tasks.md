@@ -37,7 +37,7 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
 
 **Purpose**: Línea base.
 
-- [ ] T001 Desde la raíz, en la rama `006-nivel3-decision`, ejecutar `flutter analyze` y `flutter test` y confirmar que todo pasa (línea base de las Specs 001 a 005). Si algo falla, detenerse y reportarlo.
+- [X] T001 Desde la raíz, en la rama `006-nivel3-decision`, ejecutar `flutter analyze` y `flutter test` y confirmar que todo pasa (línea base de las Specs 001 a 005). Si algo falla, detenerse y reportarlo.
 
 ---
 
@@ -47,21 +47,21 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
 
 ### Regresión de secuencias (ANTES de tocar `lib/domain/`)
 
-- [ ] T002 Crear `test/domain/exercise_engine_sequence_regression_test.dart` (research R8; contrato E1):
+- [X] T002 Crear `test/domain/exercise_engine_sequence_regression_test.dart` (research R8; contrato E1):
   - Una función `_record(Session session, int seed, int maxRepeats)` crea un `ExerciseEngine` con `ExerciseParameters.create(duration: 180 s, maxRepeats: maxRepeats, warningTime: 700 ms, cutSpeed: 500 ms, attackInterval: 2500 ms)` y `SeededRandomSource(seed)`. Llama a `start()` y avanza con `advanceTo` en pasos de 16 ms hasta un estado terminal, igual que `_simulate` en `exercise_engine_simulation_test.dart`.
   - Por cada `SignalShown` guarda la línea `'${a.index},${a.side.name},${a.responseType.name},${a.signalAt.inMilliseconds},${a.cutStartAt.inMilliseconds},${a.cutEndAt.inMilliseconds},${a.nextSignalAt.inMilliseconds}'`. Al final agrega la línea `'end,${endVoice.at.inMilliseconds}'`.
   - Casos: sesiones `testSession`, `testTransversalSession`, `testLevel2Session` y `testLevel2TransversalSession` (de `test/domain/fakes/test_session.dart`); semillas 1, 42 y 2026; `maxRepeats` 1 y 5. Son 24 casos, cada uno con la clave `'<level.id>/<pattern.id>/seed<seed>/n<N>'`.
   - El fixture vive en `test/domain/fixtures/sequence_regression.json` (mapa clave → lista de líneas).
   - Si existe la variable de entorno `UPDATE_SEQUENCE_REGRESSION=1`, la prueba **escribe** el fixture con `dart:io` (JSON con sangría de 2 espacios) y pasa. Si no existe, **lee** el fixture y hace `expect(actual, expected)` caso por caso. Si el fixture no existe, falla con un mensaje que diga cómo generarlo.
   - Doc-comment: "Grabado con el motor anterior a la Spec 006. NO regenerar después del refactor: si falla, el refactor cambió las secuencias de los Niveles 1 y 2."
-- [ ] T003 Generar el fixture con el código **actual**, sin cambios en `lib/`: en PowerShell, `$env:UPDATE_SEQUENCE_REGRESSION='1'; flutter test test/domain/exercise_engine_sequence_regression_test.dart; Remove-Item Env:UPDATE_SEQUENCE_REGRESSION`. Después:
+- [X] T003 Generar el fixture con el código **actual**, sin cambios en `lib/`: en PowerShell, `$env:UPDATE_SEQUENCE_REGRESSION='1'; flutter test test/domain/exercise_engine_sequence_regression_test.dart; Remove-Item Env:UPDATE_SEQUENCE_REGRESSION`. Después:
   - ejecutar `flutter test test/domain/exercise_engine_sequence_regression_test.dart` sin la variable y confirmar que pasa;
   - confirmar que `test/domain/fixtures/sequence_regression.json` tiene las 24 claves y que ninguna lista está vacía;
   - hacer commit de la prueba y el fixture **solos**: `test: grabar regresión de secuencias de los Niveles 1 y 2`.
 
 ### Sorteo genérico con racha máxima
 
-- [ ] T004 Crear `lib/domain/exercise/streak_sequencer.dart` con `final class StreakSequencer<T>` según el [contrato §1](./contracts/domain-sequencer.md#1-streaksequencert) y [data-model §2](./data-model.md#2-streaksequencert-dominio-reemplaza-a-sidesequencer):
+- [X] T004 Crear `lib/domain/exercise/streak_sequencer.dart` con `final class StreakSequencer<T>` según el [contrato §1](./contracts/domain-sequencer.md#1-streaksequencert) y [data-model §2](./data-model.md#2-streaksequencert-dominio-reemplaza-a-sidesequencer):
   - Constructor `StreakSequencer({required List<T> options, required int maxRepeats, required RandomSource random})`. Lanza `ArgumentError` si `options` está vacía, si tiene duplicados (`options.toSet().length != options.length`) o si `maxRepeats < 1`. Guarda `List.unmodifiable(options)`.
   - Getters `options`, `maxRepeats`, `T? last` (null al inicio) e `int streak` (0 al inicio).
   - `T next()`:
@@ -71,28 +71,28 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
     4. Después: `streak = result == last ? streak + 1 : 1; last = result;`.
   - Doc-comment: "Sortea con un máximo de [maxRepeats] repeticiones seguidas (Spec 001, FR-017 y FR-018; Spec 006, FR-005). Una instancia por ejercicio y por magnitud. Con una sola opción o un solo candidato no consume sorteo (Spec 006, research R2)."
   - Borrar `lib/domain/exercise/side_sequencer.dart`.
-- [ ] T005 En `lib/domain/exercise/exercise_engine.dart` (research R3; [contrato §2](./contracts/domain-sequencer.md#2-orden-de-los-sorteos-en-exerciseengine)):
+- [X] T005 En `lib/domain/exercise/exercise_engine.dart` (research R3; [contrato §2](./contracts/domain-sequencer.md#2-orden-de-los-sorteos-en-exerciseengine)):
   - Cambiar el import a `streak_sequencer.dart`.
   - `_sides` pasa a ser `StreakSequencer<Side>(options: const [Side.right, Side.left], maxRepeats: parameters.maxRepeats, random: random)`, con el comentario "Orden fijo: el sorteo 0 → right y 1 → left, igual que antes (research R2)".
   - Agregar `final StreakSequencer<ResponseType> _responseTypes`, inicializado en la lista de inicialización con `StreakSequencer(options: session.level.responseTypes, maxRepeats: parameters.maxRepeats, random: random)`.
   - En `_onSignal`, después de `final side = _sides.next();`, agregar `final responseType = _responseTypes.next();` con el comentario "Orden de sorteos: lado → tipo → intervalo. Con un solo tipo no consume sorteo, así que las secuencias de los Niveles 1 y 2 no cambian (Spec 006, research R3)". Pasar `responseType: responseType` al `Attack` en lugar de `session.level.responseTypes.first`. El sorteo del intervalo sigue dentro del constructor del `Attack`, después del tipo.
   - No cambiar nada más del archivo.
-- [ ] T006 [P] En `lib/domain/catalog/enums.dart`, corregir el comentario de `ResponseType`: "`evasion` se agregó en la Spec 003 y `counter` se agregará en la Spec 007 (excepción del Principio III: tipo de señal nuevo)". No cambiar el enum.
-- [ ] T007 Renombrar `test/domain/side_sequencer_test.dart` a `test/domain/streak_sequencer_test.dart` con `git mv`. En las 4 pruebas existentes, cambiar **solo**:
+- [X] T006 [P] En `lib/domain/catalog/enums.dart`, corregir el comentario de `ResponseType`: "`evasion` se agregó en la Spec 003 y `counter` se agregará en la Spec 007 (excepción del Principio III: tipo de señal nuevo)". No cambiar el enum.
+- [X] T007 Renombrar `test/domain/side_sequencer_test.dart` a `test/domain/streak_sequencer_test.dart` con `git mv`. En las 4 pruebas existentes, cambiar **solo**:
   - `SideSequencer(...)` → `StreakSequencer<Side>(options: const [Side.right, Side.left], ...)`;
   - `lastSide` → `last`;
   - el import a `streak_sequencer.dart`.
   Los guiones de sorteos, los `expect` y los nombres de las pruebas no cambian (contrato G1, G4).
-- [ ] T008 Ejecutar `flutter test test/domain/` y confirmar que pasa **todo**. En particular, `exercise_engine_sequence_regression_test.dart` debe pasar **sin** regenerar el fixture. Si falla, corregir T004/T005 y no tocar el fixture. Commit: `refactor: generalizar SideSequencer en StreakSequencer y sortear el tipo de respuesta`.
+- [X] T008 Ejecutar `flutter test test/domain/` y confirmar que pasa **todo**. En particular, `exercise_engine_sequence_regression_test.dart` debe pasar **sin** regenerar el fixture. Si falla, corregir T004/T005 y no tocar el fixture. Commit: `refactor: generalizar SideSequencer en StreakSequencer y sortear el tipo de respuesta`.
 
 ### Catálogo y sesiones de prueba
 
-- [ ] T009 En `assets/catalog/catalog.json`, agregar a `levels`, después de `level_2` y con el mismo formato de una línea: `{ "id": "level_3", "order": 3, "name": "Nivel 3", "responseLabel": "Defensa o evasión lateral", "purpose": "Decisión bajo presión", "responseTypes": ["defense", "evasion"] }` (research R4). El orden `["defense", "evasion"]` es obligatorio: el sorteo 0 → defensa.
-- [ ] T010 [P] En `test/domain/fakes/test_session.dart`, agregar `Level _level3()` con los mismos valores de T009 y `responseTypes: const [ResponseType.defense, ResponseType.evasion]`. Agregar también:
+- [X] T009 En `assets/catalog/catalog.json`, agregar a `levels`, después de `level_2` y con el mismo formato de una línea: `{ "id": "level_3", "order": 3, "name": "Nivel 3", "responseLabel": "Defensa o evasión lateral", "purpose": "Decisión bajo presión", "responseTypes": ["defense", "evasion"] }` (research R4). El orden `["defense", "evasion"]` es obligatorio: el sorteo 0 → defensa.
+- [X] T010 [P] En `test/domain/fakes/test_session.dart`, agregar `Level _level3()` con los mismos valores de T009 y `responseTypes: const [ResponseType.defense, ResponseType.evasion]`. Agregar también:
   - `Session testLevel3Session()`, con el patrón de `testSession()`;
   - `Session testLevel3TransversalSession()`, con el patrón de `testTransversalSession()`;
   - doc-comments que sigan el estilo de las sesiones de Nivel 2.
-- [ ] T011 En `test/data/catalog_json_mapper_test.dart` (SC-008):
+- [X] T011 En `test/data/catalog_json_mapper_test.dart` (SC-008):
   - en la prueba (a), cambiar `hasLength(2)` → `hasLength(3)` y `['level_1', 'level_2']` → `['level_1', 'level_2', 'level_3']`;
   - agregar el grupo `'Nivel 3 (Spec 006)'` con dos pruebas: (1) el asset real incluye `level_3` con nombre, respuesta, propósito y `responseTypes == [ResponseType.defense, ResponseType.evasion]` (FR-001); (2) el mapper acepta `responseTypes: ['defense', 'evasion']` y conserva el orden.
   - No cambiar ninguna otra prueba.

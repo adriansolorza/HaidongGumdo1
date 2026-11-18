@@ -67,3 +67,23 @@ Session testLevel2Session() =>
 /// [testTransversalSession].
 Session testLevel2TransversalSession() =>
     Session(level: _level2(), pattern: testTransversalSession().pattern);
+
+/// Nivel 3 (Spec 006, data-model.md): defensa o evasión lateral al azar.
+/// El orden de los tipos es significativo: el sorteo 0 → defensa.
+Level _level3() => Level(
+  id: 'level_3',
+  order: 3,
+  name: 'Nivel 3',
+  responseLabel: 'Defensa o evasión lateral',
+  purpose: 'Decisión bajo presión',
+  responseTypes: const [ResponseType.defense, ResponseType.evasion],
+);
+
+/// Sesión de Nivel 3 / Patrón frontal; el patrón es el mismo de [testSession].
+Session testLevel3Session() =>
+    Session(level: _level3(), pattern: testSession().pattern);
+
+/// Sesión de Nivel 3 / Patrón transversal; el patrón es el mismo de
+/// [testTransversalSession].
+Session testLevel3TransversalSession() =>
+    Session(level: _level3(), pattern: testTransversalSession().pattern);
