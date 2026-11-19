@@ -53,6 +53,9 @@ static ... defenseSaber(Rect box) => saber(box, angleDegrees: defenseAngleDegree
 static Rect fitDefense(Rect lane, double maxHeight) => fitSaber(lane, maxHeight, angleDegrees: defenseAngleDegrees);
 
 static const counterAngleDegrees = 90.0;
+
+/// Proporción ancho/alto de la caja del sable a [angleDegrees] (≈ 0.26 a 90°).
+static double saberAspect(double angleDegrees);
 ```
 
 ## 4. `SignalPainter`
