@@ -1,15 +1,3 @@
-<!--
-## Sync Impact Report
-- Version change: 1.0.0 → 1.1.0 (MINOR: excepción ampliada, sin quitar nada)
-- Modified principles: III. Datos sobre código (nueva excepción (b): regla
-  de secuencia genérica, justificada en el plan y sin alterar lo existente)
-- Added sections: (none)
-- Removed sections: (none)
-- Motivo: Spec 006 (Nivel 3) necesita sortear el tipo de respuesta con
-  racha máxima N; aprobado por el responsable el 2026-11-18.
-- Follow-up TODOs: (none)
--->
-
 # HaidongGumdo Constitution
 
 ## Core Principles
