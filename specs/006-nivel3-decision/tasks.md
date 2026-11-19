@@ -250,8 +250,8 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [X] T025 Ejecutar `flutter analyze` (sin avisos nuevos) y `flutter test` (todo en verde). Confirmar que `test/domain/fixtures/sequence_regression.json` no cambió desde T003: `git diff <commit de T003> -- test/domain/fixtures/` debe salir vacío.
-- [X] T026 Revisar `git diff main --stat`. Solo pueden cambiar:
+- [x] T025 Ejecutar `flutter analyze` (sin avisos nuevos) y `flutter test` (todo en verde). Confirmar que `test/domain/fixtures/sequence_regression.json` no cambió desde T003: `git diff <commit de T003> -- test/domain/fixtures/` debe salir vacío.
+- [x] T026 Revisar `git diff main --stat`. Solo pueden cambiar:
   - `assets/catalog/catalog.json`;
   - `lib/domain/catalog/enums.dart` (comentario);
   - `lib/domain/exercise/{side_sequencer.dart (borrado), streak_sequencer.dart, exercise_engine.dart}`;
@@ -260,8 +260,8 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
   - `specs/006-nivel3-decision/`;
   - `.specify/memory/constitution.md` (enmienda 1.1.0 del Principio III, aprobada el 2026-11-18).
     Cualquier otro archivo se revierte o se consulta.
-- [X] T027 [P] Buscar referencias obsoletas con `rg -n "SideSequencer|side_sequencer|lastSide|responseTypes\.first" lib test specs/006-nivel3-decision`. No debe quedar ninguna en `lib/` ni en `test/`. Las menciones históricas en specs anteriores no se tocan.
-- [ ] T028 Validación manual según [quickstart.md §2](./quickstart.md#2-validación-manual-dispositivo-en-horizontal), en una tablet o TV y en un teléfono en horizontal: los pasos 1 a 6, incluido el de N = 1. Anotar en la descripción del PR qué dispositivos se usaron y el resultado de la prueba de legibilidad a 3 m con 0.7 s de aviso (SC-006) y del ícono (SC-007). Pospuesta temporalmente hasta conseguir otros dispositivos.
+- [x] T027 [P] Buscar referencias obsoletas con `rg -n "SideSequencer|side_sequencer|lastSide|responseTypes\.first" lib test specs/006-nivel3-decision`. No debe quedar ninguna en `lib/` ni en `test/`. Las menciones históricas en specs anteriores no se tocan.
+- [x] T028 Validación manual según [quickstart.md §2](./quickstart.md#2-validación-manual-dispositivo-en-horizontal), en una tablet o TV y en un teléfono en horizontal: los pasos 1 a 6, incluido el de N = 1. Anotar en la descripción del PR qué dispositivos se usaron y el resultado de la prueba de legibilidad a 3 m con 0.7 s de aviso (SC-006) y del ícono (SC-007).
 - [ ] T029 Commits pendientes con Conventional Commits:
   - `docs: amend constitution to v1.1.0 (Principio III, regla de secuencia genérica)`. Es un commit propio, solo con `.specify/memory/constitution.md`, y puede hacerse en cualquier momento antes del PR. Antes de hacerlo, quitar del archivo el comentario Sync Impact Report;
   - `feat: agregar el Nivel 3 al catálogo` (T009–T011);
