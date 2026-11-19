@@ -73,8 +73,8 @@ void main() {
     final source = File('assets/catalog/catalog.json').readAsStringSync();
     final catalog = _mapper.fromJsonString(source);
 
-    expect(catalog.levels, hasLength(2));
-    expect(catalog.levels.map((l) => l.id), ['level_1', 'level_2']);
+    expect(catalog.levels, hasLength(3));
+    expect(catalog.levels.map((l) => l.id), ['level_1', 'level_2', 'level_3']);
     expect(catalog.patterns, hasLength(2));
     expect(catalog.glossary, hasLength(7));
     expect(catalog.levels.firstWhere((l) => l.id == 'level_1').responseTypes, [
@@ -180,6 +180,34 @@ void main() {
         'responseTypes': ['evasion'],
       };
       expect(_parse(json).levels.single.responseTypes, [ResponseType.evasion]);
+    });
+  });
+
+  group('Nivel 3 (Spec 006)', () {
+    test('el asset real incluye level_3 con defensa y evasión (FR-001)', () {
+      final source = File('assets/catalog/catalog.json').readAsStringSync();
+      final level = _mapper
+          .fromJsonString(source)
+          .levels
+          .firstWhere((l) => l.id == 'level_3');
+
+      expect(level.order, 3);
+      expect(level.name, 'Nivel 3');
+      expect(level.responseLabel, 'Defensa o evasión lateral');
+      expect(level.purpose, 'Decisión bajo presión');
+      expect(level.responseTypes, [ResponseType.defense, ResponseType.evasion]);
+    });
+
+    test('acepta responseTypes ["defense", "evasion"] y conserva el orden', () {
+      final json = _validJson();
+      (json['levels']! as List<Object?>)[0] = {
+        ..._level('level_1', 1),
+        'responseTypes': ['defense', 'evasion'],
+      };
+      expect(_parse(json).levels.single.responseTypes, [
+        ResponseType.defense,
+        ResponseType.evasion,
+      ]);
     });
   });
 

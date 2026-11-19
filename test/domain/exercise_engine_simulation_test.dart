@@ -203,6 +203,19 @@ void main() {
     testLevel2Session,
     checkMotionSide: false,
   );
+
+  _level3Simulations(
+    'Nivel 3 transversal (Spec 006, US1)',
+    testLevel3TransversalSession,
+    checkMotionSide: true,
+  );
+
+  // El frontal no se refleja: la comprobación de motion.side no aplica.
+  _level3Simulations(
+    'Nivel 3 frontal (Spec 006, US2)',
+    testLevel3Session,
+    checkMotionSide: false,
+  );
 }
 
 /// Spec 003, SC-006: las reglas de aleatoriedad, N y tiempos de la 001 con el
@@ -287,6 +300,87 @@ void _level2Simulations(
         for (final run in runs) run.sides.map((s) => s.index).join(),
       };
       expect(sequences, hasLength(_exercises));
+    });
+
+    test('el 100 % de los intervalos está en [1000 ms, 2500 ms]', () {
+      for (final run in runs) {
+        for (var i = 1; i < run.attacks.length; i++) {
+          final interval =
+              run.attacks[i].signalAt - run.attacks[i - 1].cutStartAt;
+          expect(interval.inMilliseconds, inInclusiveRange(1000, 2500));
+        }
+      }
+    });
+
+    test('Guman nunca antes de E y como máximo 1200 ms después', () {
+      for (final run in runs) {
+        final delay = run.endVoice.at - run.nominalEnd;
+        expect(delay.isNegative, isFalse);
+        expect(delay.inMilliseconds, lessThanOrEqualTo(1200));
+      }
+    });
+  });
+}
+
+/// Spec 006, SC-002 y SC-003: en cada fotograma de cada ataque del Nivel 3,
+/// la señal del tipo sorteado en su lado (defensa del lado contrario al
+/// color, evasión del lado del color) y el color del sable. Si
+/// [checkMotionSide], el costado del movimiento depende solo del color
+/// (FR-010): `motion.side == attack.side`, la misma relación que comprueba
+/// [_level2Simulations] con la evasión. Las rachas y proporciones están en
+/// exercise_engine_level3_test.dart.
+void _level3Simulations(
+  String name,
+  Session Function() session, {
+  required bool checkMotionSide,
+}) {
+  group(name, () {
+    late List<_Run> runs;
+    final violations = <String>[];
+    var attackFrames = 0;
+    final framesByType = <ResponseType, int>{};
+
+    void checkFrame(int seed, ExerciseSnapshot s) {
+      final attack = s.currentAttack;
+      if (attack == null) return;
+      attackFrames++;
+      framesByType.update(attack.responseType, (n) => n + 1, ifAbsent: () => 1);
+      final signal = s.signal;
+      final color = attack.side == Side.right
+          ? SaberColor.blue
+          : SaberColor.red;
+      final screenSide = attack.responseType == ResponseType.defense
+          ? attack.side.opposite
+          : attack.side;
+      final ok =
+          signal != null &&
+          signal.responseType == attack.responseType &&
+          signal.screenSide == screenSide &&
+          s.saberColor == color &&
+          (!checkMotionSide || s.motion.side == attack.side);
+      if (!ok && violations.length < 10) {
+        violations.add('semilla $seed, ${s.elapsed}: $attack / $signal');
+      }
+    }
+
+    setUpAll(() {
+      runs = [
+        for (var seed = 0; seed < _exercises; seed++)
+          _simulate(
+            seed,
+            session: session(),
+            onFrame: (s) => checkFrame(seed, s),
+          ),
+      ];
+    });
+
+    test('SC-002/SC-003: en cada fotograma de cada ataque, una sola señal del '
+        'tipo sorteado, en su lado y del color del sable', () {
+      final attacks = runs.fold(0, (n, run) => n + run.attacks.length);
+      expect(attacks, greaterThanOrEqualTo(200));
+      expect(attackFrames, greaterThan(0));
+      expect(framesByType.keys, containsAll(ResponseType.values));
+      expect(violations, isEmpty);
     });
 
     test('el 100 % de los intervalos está en [1000 ms, 2500 ms]', () {

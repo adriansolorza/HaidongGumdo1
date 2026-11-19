@@ -1,3 +1,4 @@
+import '../catalog/enums.dart';
 import '../ports/random_source.dart';
 import 'attack.dart';
 import 'exercise_event.dart';
@@ -6,8 +7,8 @@ import 'exercise_snapshot.dart';
 import 'exercise_status.dart';
 import 'opponent_motion.dart';
 import 'session.dart';
-import 'side_sequencer.dart';
 import 'signal.dart';
+import 'streak_sequencer.dart';
 
 /// Motor del ejercicio como línea de tiempo pura (research R2, R3): no tiene
 /// temporizadores; la presentación le pasa el tiempo transcurrido con
@@ -19,7 +20,15 @@ final class ExerciseEngine {
     required this.parameters,
     required RandomSource random,
   }) : _random = random,
-       _sides = SideSequencer(
+       // Orden fijo: el sorteo 0 → right y 1 → left, igual que antes
+       // (research R2).
+       _sides = StreakSequencer(
+         options: const [Side.right, Side.left],
+         maxRepeats: parameters.maxRepeats,
+         random: random,
+       ),
+       _responseTypes = StreakSequencer(
+         options: session.level.responseTypes,
          maxRepeats: parameters.maxRepeats,
          random: random,
        ) {
@@ -32,7 +41,8 @@ final class ExerciseEngine {
   final Session session;
   final ExerciseParameters parameters;
   final RandomSource _random;
-  final SideSequencer _sides;
+  final StreakSequencer<Side> _sides;
+  final StreakSequencer<ResponseType> _responseTypes;
 
   ExerciseStatus _status = ExerciseStatus.ready;
   Duration _elapsed = Duration.zero;
@@ -143,11 +153,15 @@ final class ExerciseEngine {
   List<ExerciseEvent> _onSignal() {
     final signalAt = _nextSignalAt!;
     final side = _sides.next();
+    // Orden de sorteos: lado → tipo → intervalo. Con un solo tipo no consume
+    // sorteo, así que las secuencias de los Niveles 1 y 2 no cambian
+    // (Spec 006, research R3).
+    final responseType = _responseTypes.next();
     final cutStartAt = signalAt + parameters.warningTime;
     final attack = Attack(
       index: _attackCount++,
       side: side,
-      responseType: session.level.responseTypes.first,
+      responseType: responseType,
       signalAt: signalAt,
       cutStartAt: cutStartAt,
       cutEndAt: cutStartAt + parameters.cutSpeed,

@@ -1,16 +1,3 @@
-<!--
-## Sync Impact Report
-- Version change: 0.0.0 → 1.0.0
-- This is the initial ratification; no previous version exists.
-- Added principles: I. Stack, II. Clean Architecture, III. Datos sobre código,
-  IV. Persistencia, V. Gestión de estado, VI. Pruebas,
-  VII. Dependencias y decisiones de la IA, VIII. Interfaz,
-  IX. Idioma y terminología, X. Flujo de trabajo, XI. Seguridad y alcance
-- Added sections: Restricciones de la v1, Flujo de desarrollo, Governance
-- Removed sections: (none)
-- Follow-up TODOs: (none)
--->
-
 # HaidongGumdo Constitution
 
 ## Core Principles
@@ -35,7 +22,13 @@
 - Patrones, niveles y glosario se definen como **datos** (JSON de solo
   lectura incluido en la app).
 - Agregar un patrón o un nivel NO DEBE requerir cambios en la lógica del
-  dominio, salvo que introduzca un tipo de señal nuevo.
+  dominio, salvo que:
+  - (a) introduzca un tipo de señal nuevo, o
+  - (b) exija una regla de secuencia que el motor todavía no tiene; en ese
+    caso, la regla DEBE ser genérica (no puede depender de un nivel ni de
+    un patrón concreto), DEBE quedar justificada en el plan de la spec y
+    NO DEBE alterar el comportamiento de los niveles y patrones
+    existentes.
 
 ### IV. Persistencia
 
@@ -120,4 +113,4 @@
 - Revisión de cumplimiento: cada Pull Request DEBE verificar que no
   contradice los principios vigentes.
 
-**Version**: 1.0.0 | **Ratified**: 2026-10-26 | **Last Amended**: 2026-10-26
+**Version**: 1.1.0 | **Ratified**: 2026-10-26 | **Last Amended**: 2026-11-18

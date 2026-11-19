@@ -1,33 +1,65 @@
+import 'dart:math' as math;
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../domain/catalog/enums.dart';
 import '../exercise/painters/signal_shapes.dart';
 import '../theme.dart';
 
-/// Ícono de un nivel: la señal de su tipo de respuesta, en blanco, sin brillo
-/// ni estela de color (Spec 004, FR-021; data-model §6, "Íconos de nivel").
+/// Ícono de un nivel: las señales de sus tipos de respuesta, lado a lado y en
+/// blanco (Spec 004, FR-021; Spec 006, FR-013). Sin brillo ni estela de
+/// color (data-model §6 de la Spec 004, "Íconos de nivel").
 class LevelIcon extends StatelessWidget {
-  const LevelIcon({super.key, required this.type, required this.size});
+  const LevelIcon({super.key, required this.types, required this.size});
 
-  final ResponseType type;
+  /// En el orden del catálogo; uno por celda.
+  final List<ResponseType> types;
   final double size;
 
   @override
   Widget build(BuildContext context) =>
-      CustomPaint(size: Size.square(size), painter: _LevelIconPainter(type));
+      CustomPaint(size: Size.square(size), painter: LevelIconPainter(types));
 }
 
-class _LevelIconPainter extends CustomPainter {
-  const _LevelIconPainter(this.type);
+/// Pintor del ícono de nivel. Público para que las pruebas lo pinten sin
+/// montar el widget.
+class LevelIconPainter extends CustomPainter {
+  const LevelIconPainter(this.types);
 
-  final ResponseType type;
+  final List<ResponseType> types;
 
   /// Margen respecto al lado del ícono.
   static const _margin = 0.10;
 
+  /// Separación entre celdas, respecto al ancho de la caja útil.
+  static const _gap = 0.08;
+
   @override
   void paint(Canvas canvas, Size size) {
     final box = (Offset.zero & size).deflate(_margin * size.shortestSide);
+    final n = types.length;
+    final gap = n > 1 ? _gap * box.width : 0.0;
+    final cellWidth = (box.width - gap * (n - 1)) / n;
+    for (final (i, type) in types.indexed) {
+      // Con n = 1 la celda es la caja completa: la imagen no cambia.
+      final cell = Rect.fromLTWH(
+        box.left + i * (cellWidth + gap),
+        box.top,
+        cellWidth,
+        box.height,
+      );
+      final side = math.min(cell.width, cell.height);
+      _paintGlyph(
+        canvas,
+        Rect.fromCenter(center: cell.center, width: side, height: side),
+        type,
+      );
+    }
+  }
+
+  /// El glifo de [type] dentro de [box], con las fórmulas de la Spec 004.
+  static void _paintGlyph(Canvas canvas, Rect box, ResponseType type) {
     final white = Paint()..color = AppColors.textPrimary;
     switch (type) {
       case ResponseType.evasion:
@@ -71,5 +103,6 @@ class _LevelIconPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_LevelIconPainter oldDelegate) => oldDelegate.type != type;
+  bool shouldRepaint(LevelIconPainter oldDelegate) =>
+      !listEquals(oldDelegate.types, types);
 }

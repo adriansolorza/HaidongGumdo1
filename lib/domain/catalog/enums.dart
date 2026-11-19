@@ -1,5 +1,5 @@
 /// Tipo de respuesta que entrena un nivel.
-/// `evasion` se agregó en la Spec 003 y `counter` se agregará en la Spec 006
+/// `evasion` se agregó en la Spec 003 y `counter` se agregará en la Spec 007
 /// (excepción del Principio III: tipo de señal nuevo).
 enum ResponseType { defense, evasion }
 
