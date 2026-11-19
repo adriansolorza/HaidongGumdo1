@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -16,6 +18,7 @@ import '../theme.dart';
 import 'level_icon.dart';
 import 'pattern_icon_painter.dart';
 import 'selection_card.dart';
+import 'selection_density.dart';
 
 /// Elección de nivel y patrón (Spec 004, FR-020 a FR-025; contrato §4): el
 /// dojang oscurecido de fondo, el encabezado, dos columnas de tarjetas, el
@@ -56,6 +59,12 @@ class SelectionScreen extends ConsumerWidget {
             catalog.value?.patterns.first ?? backgroundPattern,
           );
           final s = layout.hudScale;
+          final fit = _Fit.compute(
+            catalog: catalog.value,
+            height: size.height - MediaQuery.paddingOf(context).vertical,
+            scale: s,
+          );
+          final m = fit.density.metrics(s);
 
           return Stack(
             fit: StackFit.expand,
@@ -66,12 +75,17 @@ class SelectionScreen extends ConsumerWidget {
               const ColoredBox(color: AppColors.selectionDim),
               SafeArea(
                 child: Padding(
-                  padding: EdgeInsets.fromLTRB(56 * s, 40 * s, 56 * s, 36 * s),
+                  padding: EdgeInsets.fromLTRB(
+                    m.pagePaddingSides,
+                    m.pagePaddingTop,
+                    m.pagePaddingSides,
+                    m.pagePaddingBottom,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _Header(scale: s),
-                      SizedBox(height: 28 * s),
+                      _Header(metrics: m),
+                      SizedBox(height: m.sectionGap),
                       Expanded(
                         child: catalog.when(
                           loading: () => Center(
@@ -111,10 +125,11 @@ class SelectionScreen extends ConsumerWidget {
                                   catalog: catalog,
                                   session: session,
                                   scale: s,
+                                  fit: fit,
                                 ),
                         ),
                       ),
-                      SizedBox(height: 28 * s),
+                      SizedBox(height: m.sectionGap),
                       _Footer(
                         scale: s,
                         summary: session == null
@@ -152,21 +167,62 @@ class SelectionScreen extends ConsumerWidget {
   }
 }
 
-class _Header extends StatelessWidget {
-  const _Header({required this.scale});
+/// Densidad de la selección (Spec 006, FR-012a; research R7; tasks T021).
+final class _Fit {
+  const _Fit(this.density);
 
-  final double scale;
+  /// Se decide una sola vez con la altura total [height] (sin la `SafeArea`):
+  /// se restan las alturas regulares del encabezado, las separaciones, el pie
+  /// y los márgenes y se pregunta a [SelectionDensity.choose] si las tarjetas
+  /// caben. Mientras el catálogo carga o falla, `regular`.
+  ///
+  /// La red de seguridad no se decide aquí: ver [_CardColumn].
+  factory _Fit.compute({
+    required Catalog? catalog,
+    required double height,
+    required double scale,
+  }) {
+    if (catalog == null) return const _Fit(SelectionDensity.regular);
+    final s = scale;
+    // Márgenes, encabezado, separaciones, pie y encabezado de columna.
+    final fixedRegular =
+        40 * s +
+        36 * s +
+        46 * s +
+        2 * s +
+        20 * s * 1.3 +
+        28 * s +
+        28 * s +
+        64 * s +
+        18 * s * 1.3 +
+        14 * s;
+    final density = SelectionDensity.choose(
+      columnsHeight: height - fixedRegular,
+      scale: s,
+      maxCards: math.max(catalog.levels.length, catalog.patterns.length),
+    );
+    return _Fit(density);
+  }
+
+  final SelectionDensity density;
+}
+
+class _Header extends StatelessWidget {
+  const _Header({required this.metrics});
+
+  final SelectionMetrics metrics;
 
   @override
   Widget build(BuildContext context) {
-    final s = scale;
+    final m = metrics;
+    final s = m.decorScale;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           StringsEs.appHeader,
           style: TextStyle(
-            fontSize: 46 * s,
+            fontSize: m.headerTitleSize,
             fontWeight: FontWeight.w700,
             letterSpacing: 6 * s,
             height: 1,
@@ -177,7 +233,7 @@ class _Header extends StatelessWidget {
         Text(
           StringsEs.appSubtitle,
           style: TextStyle(
-            fontSize: 20 * s,
+            fontSize: m.headerSubtitleSize,
             fontWeight: FontWeight.w500,
             letterSpacing: 1 * s,
             color: AppColors.textSecondary,
@@ -194,15 +250,19 @@ class _Columns extends ConsumerWidget {
     required this.catalog,
     required this.session,
     required this.scale,
+    required this.fit,
   });
 
   final Catalog catalog;
   final Session session;
   final double scale;
+  final _Fit fit;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final s = scale;
+    final density = fit.density;
+    final m = density.metrics(s);
     final notifier = ref.read(selectedSessionProvider.notifier);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -210,14 +270,15 @@ class _Columns extends ConsumerWidget {
         Expanded(
           child: _CardColumn(
             header: StringsEs.levelHeader,
-            scale: s,
+            metrics: m,
             cards: [
               for (final level in catalog.levels)
                 SelectionCard(
                   scale: s,
+                  density: density,
                   icon: LevelIcon(
-                    type: level.responseTypes.first,
-                    size: 56 * s,
+                    types: level.responseTypes,
+                    size: m.iconGlyph,
                   ),
                   title: level.name.toUpperCase(),
                   lines: ['${level.responseLabel} — ${level.purpose}'],
@@ -227,15 +288,16 @@ class _Columns extends ConsumerWidget {
             ],
           ),
         ),
-        SizedBox(width: 40 * s),
+        SizedBox(width: m.columnsGap),
         Expanded(
           child: _CardColumn(
             header: StringsEs.patternHeader,
-            scale: s,
+            metrics: m,
             cards: [
               for (final pattern in catalog.patterns)
                 SelectionCard(
                   scale: s,
+                  density: density,
                   icon: CustomPaint(
                     painter: PatternIconPainter(pattern: pattern),
                   ),
@@ -268,42 +330,55 @@ class _Columns extends ConsumerWidget {
   }
 }
 
+/// Columna de tarjetas (Spec 006, FR-012a). Con la densidad que elige [_Fit],
+/// las tarjetas caben y no hay nada que desplazar. Red de seguridad (research
+/// R7, punto 4): las tarjetas van en un `SingleChildScrollView`, que solo se
+/// mueve si el contenido real no cabe (por ejemplo, con letra ampliada por
+/// accesibilidad, que ninguna fórmula puede prever). Así nunca hay
+/// desbordamiento ni contenido recortado.
 class _CardColumn extends StatelessWidget {
   const _CardColumn({
     required this.header,
-    required this.scale,
+    required this.metrics,
     required this.cards,
   });
 
   final String header;
-  final double scale;
+  final SelectionMetrics metrics;
   final List<Widget> cards;
 
   @override
   Widget build(BuildContext context) {
-    final s = scale;
+    final m = metrics;
+    final s = m.decorScale;
+    final list = Padding(
+      // Margen para el anillo de la tarjeta seleccionada.
+      padding: EdgeInsets.all(4 * s),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final (i, card) in cards.indexed) ...[
+            if (i > 0) SizedBox(height: m.cardGap),
+            card,
+          ],
+        ],
+      ),
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
           header,
           style: TextStyle(
-            fontSize: 18 * s,
+            fontSize: m.columnHeaderSize,
             fontWeight: FontWeight.w700,
             letterSpacing: 4 * s,
             color: AppColors.columnHeader,
           ),
         ),
-        SizedBox(height: 14 * s),
-        Expanded(
-          child: ListView.separated(
-            // Margen para el anillo de la tarjeta seleccionada.
-            padding: EdgeInsets.all(4 * s),
-            itemCount: cards.length,
-            separatorBuilder: (_, _) => SizedBox(height: 14 * s),
-            itemBuilder: (_, i) => cards[i],
-          ),
-        ),
+        SizedBox(height: m.columnHeaderGap),
+        Expanded(child: SingleChildScrollView(child: list)),
       ],
     );
   }

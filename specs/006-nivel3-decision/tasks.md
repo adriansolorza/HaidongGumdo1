@@ -170,26 +170,27 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
 
 ### Implementation for User Story 3
 
-- [ ] T018 [P] [US3] En `lib/presentation/selection/level_icon.dart` (research R6; [contrato §2](./contracts/selection-ui.md#2-levelicon)):
+- [X] T018 [P] [US3] En `lib/presentation/selection/level_icon.dart` (research R6; [contrato §2](./contracts/selection-ui.md#2-levelicon)):
   - Cambiar `LevelIcon({required this.type, ...})` a `LevelIcon({required this.types, required this.size})`, con `final List<ResponseType> types`. El painter recibe la lista.
   - En `paint`, `box` es igual que hoy (margen del 10 %). Con `n = types.length` y `gap = 0.08 * box.width`, cada celda mide `cellWidth = (box.width - gap * (n - 1)) / n`. La celda `i` empieza en `box.left + i * (cellWidth + gap)`, y su caja de dibujo es el cuadrado de lado `min(cellWidth, box.height)` centrado en la celda.
   - Mover el código actual de cada `case` a `void _paintGlyph(Canvas canvas, Rect box, ResponseType type)` **sin cambiar ninguna fórmula**, y llamarlo por celda.
   - Con `n = 1`, la caja de la celda debe ser exactamente `box`, para que la imagen sea idéntica a la actual.
   - `shouldRepaint` compara las listas con `listEquals` (`package:flutter/foundation.dart`).
   - Doc-comment: "Ícono de un nivel: las señales de sus tipos de respuesta, lado a lado y en blanco (Spec 004, FR-021; Spec 006, FR-013)".
-- [ ] T019 [P] [US3] Crear `lib/presentation/selection/selection_density.dart` con `enum SelectionDensity { regular, compact }` (research R7; [contrato §3](./contracts/selection-ui.md#3-densidad-de-la-selección)):
+- [X] T019 [P] [US3] Crear `lib/presentation/selection/selection_density.dart` con `enum SelectionDensity { regular, compact }` (research R7; [contrato §3](./contracts/selection-ui.md#3-densidad-de-la-selección)):
   - `static SelectionDensity choose({required double columnsHeight, required double scale, required int maxCards})`: devuelve `regular` si `maxCards * 104 * scale + (maxCards - 1) * 14 * scale + 8 * scale <= columnsHeight`; si no, `compact`.
   - Getters con las medidas de cada densidad, en dp: `regular` las calcula a partir de `scale` con los valores actuales de la Spec 004; `compact` usa los valores fijos de esta tabla:
 
     | Medida | `regular` | `compact` |
     |---|---|---|
     | `cardMinHeight` | `104 s` | `48` |
-    | `cardPaddingV` / `cardPaddingH` | `14 s` / `20 s` | `6` / `12` |
+    | `cardPaddingV` / `cardPaddingH` | `14 s` / `20 s` | `4` / `12` (implementación: con `6`, el ícono de 40 daba tarjetas de 52) |
     | `cardGap` | `14 s` | `6` |
     | `iconTile` / `iconGlyph` | `72 s` / `56 s` | `40` / `32` |
     | `iconGap` | `18 s` | `10` |
     | `titleSize` | `28 s` | `16` |
     | `detailSize` / `secondDetailSize` | `17 s` / `15 s` | `12` / `12` |
+    | `detailLineHeight` (agregada en la implementación) | la de la letra | `1.25` |
     | `checkSize` | `30 s` | `20` |
     | `columnHeaderSize` / `columnHeaderGap` | `18 s` / `14 s` | `13` / `6` |
     | `headerTitleSize` / `headerSubtitleSize` | `46 s` / `20 s` | `32` / `14` |
@@ -198,8 +199,8 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
     | `columnsGap` (entre columnas) | `40 s` | `20` |
 
   - Dart puro, salvo el import de `dart:ui` si hiciera falta; sin `BuildContext`.
-- [ ] T020 [US3] En `lib/presentation/selection/selection_card.dart`, agregar `required this.density` (`SelectionDensity`) y reemplazar cada medida fija (`104 * s`, `14 * s`, `20 * s`, `72 * s`, `56 * s`, `18 * s`, `28 * s`, `17 * s`, `15 * s`, `30 * s`, `12 * s`) por el getter correspondiente de T019. El radio, el borde y el anillo siguen escalando con `s` en `regular`; en `compact` escalan con `min(s, 0.7)`. Solo en `SelectionDensity.compact`, cada texto de detalle lleva `maxLines: 2` y `overflow: TextOverflow.ellipsis`. Con `SelectionDensity.regular`, el árbol de widgets y las medidas deben quedar **idénticos** a los de hoy, sin `maxLines`. En el teléfono de 889 × 400, ningún detalle real del catálogo debe quedar cortado; T024 lo comprueba. Depende de T019.
-- [ ] T021 [US3] En `lib/presentation/selection/selection_screen.dart` (FR-012a; research R7):
+- [X] T020 [US3] En `lib/presentation/selection/selection_card.dart`, agregar `required this.density` (`SelectionDensity`) y reemplazar cada medida fija (`104 * s`, `14 * s`, `20 * s`, `72 * s`, `56 * s`, `18 * s`, `28 * s`, `17 * s`, `15 * s`, `30 * s`, `12 * s`) por el getter correspondiente de T019. El radio, el borde y el anillo siguen escalando con `s` en `regular`; en `compact` escalan con `min(s, 0.7)`. Solo en `SelectionDensity.compact`, cada texto de detalle lleva `maxLines: 2` y `overflow: TextOverflow.ellipsis`. Con `SelectionDensity.regular`, el árbol de widgets y las medidas deben quedar **idénticos** a los de hoy, sin `maxLines`. En el teléfono de 889 × 400, ningún detalle real del catálogo debe quedar cortado; T024 lo comprueba. Depende de T019.
+- [X] T021 [US3] En `lib/presentation/selection/selection_screen.dart` (FR-012a; research R7):
   - En `_Columns`, pasar `LevelIcon(types: level.responseTypes, size: ...)` en lugar de `type: level.responseTypes.first`.
   - Calcular la densidad **una sola vez**, en el `LayoutBuilder` existente de `build`, a partir de la altura total `H = constraints.biggest.height`:
     - `insets = MediaQuery.paddingOf(context).vertical` (la `SafeArea`);
@@ -209,31 +210,33 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
     - pasar `density` a `_Header`, al `Padding` de la página, a `_Columns`, a `_CardColumn` y a cada `SelectionCard`. Con `compact`, el encabezado, los márgenes y las separaciones usan las medidas compactas de T019;
     - documentar el cálculo en un comentario.
   - En `_CardColumn`, reemplazar el `ListView.separated` por un `Column` con `mainAxisSize: MainAxisSize.min` y separaciones de `density.cardGap`, conservando el margen de `4 s` para el anillo.
-  - **Red de seguridad** (research R7, punto 4): con `compact`, calcular `fixedCompact = 16 + 12 + 32 + 14 × 1.3 + 10 + 10 + 64 s + 13 × 1.3 + 6` y, **por columna**, `needed = Σ alto(tarjeta) + (n − 1) × 6 + 8`:
+  - **Cambio en la implementación (2026-11-18):** la red de seguridad por fórmula se reemplazó por un `SingleChildScrollView` fijo en cada `_CardColumn`, que solo se mueve si el contenido real no cabe. Motivo: la prueba de la Spec 005 "4:3 con letra ×1.3" exige que no haya desbordes, y ninguna fórmula prevé la letra ampliada por accesibilidad. Con la densidad elegida no hay nada que desplazar (T024 comprueba `maxScrollExtent == 0`). El texto original queda abajo como referencia.
+  - ~~**Red de seguridad** (research R7, punto 4): con `compact`, calcular `fixedCompact = 16 + 12 + 32 + 14 × 1.3 + 10 + 10 + 64 s + 13 × 1.3 + 6` y, **por columna**, `needed = Σ alto(tarjeta) + (n − 1) × 6 + 8`:
     - `alto(tarjeta) = max(48, 12 + 16 × 1.1 + líneas × 12 × 1.25)`;
     - `líneas` es el número de textos de detalle de la tarjeta: 1 en las de nivel ("respuesta — propósito") y 1 o 2 en las de patrón (romanización y, si existe, hangul). Cada texto cuenta como una línea, porque en el teléfono de referencia ninguno ocupa dos (T024 lo comprueba).
 
-    Solo la columna con `needed > H - insets - fixedCompact` se envuelve en `SingleChildScrollView`. No medir el render. Con los lienzos de referencia, ninguna columna debe envolverse: T024 lo comprueba buscando que no haya ningún `SingleChildScrollView` en la selección.
+    Solo la columna con `needed > H - insets - fixedCompact` se envuelve en `SingleChildScrollView`. No medir el render. Con los lienzos de referencia, ninguna columna debe envolverse: T024 lo comprueba buscando que no haya ningún `SingleChildScrollView` en la selección.~~
   - Pasar `density` a cada `SelectionCard`. El pie (`_Footer`) **no cambia**.
   Depende de T018, T019 y T020.
 
 ### Tests for User Story 3 (después del código)
 
-- [ ] T022 [P] [US3] Crear `test/presentation/level_icon_test.dart`:
+- [X] T022 [P] [US3] Crear `test/presentation/level_icon_test.dart`:
   - **Un tipo**: pintar `LevelIcon(types: [defense])` y `[evasion]` a 64 × 64 con `PictureRecorder`. El área pintada (bounding box de píxeles no transparentes) coincide, con una tolerancia de 1 px, con la de un painter de referencia que copia en la prueba las fórmulas del `case` anterior.
   - **Dos tipos** `[defense, evasion]`: solo hay píxeles blancos (`AppColors.textPrimary`) o transparentes, sin rojo, azul ni amarillo. Hay píxeles pintados en la mitad izquierda y en la derecha. La mitad izquierda contiene el sable y la derecha la flecha: comparar con los bounding boxes de cada glifo dibujado solo en su celda.
-- [ ] T023 [P] [US3] Crear `test/presentation/selection_density_test.dart` con `choose`:
+- [X] T023 [P] [US3] Crear `test/presentation/selection_density_test.dart` con `choose`:
   - `scale: 1`, `maxCards: 4` y `columnsHeight: 466` → `regular`; con `465` → `compact`;
   - `scale: 0.7` y `maxCards: 3` con el alto libre del teléfono de 889 × 400 (≈ 185) → `compact`;
   - los getters de `compact` devuelven los valores de la tabla de T019;
   - con `regular` y `scale: 1`, los getters devuelven las medidas de la Spec 004.
-- [ ] T024 [US3] En `test/presentation/selection_screen_test.dart`, agregar el grupo `'Spec 006: Nivel 3 y tarjetas sin desplazar'` ([contrato §1 y §4](./contracts/selection-ui.md#4-lienzos-de-referencia-sc-007a)):
+- [X] T024 [US3] En `test/presentation/selection_screen_test.dart`, agregar el grupo `'Spec 006: Nivel 3 y tarjetas sin desplazar'` ([contrato §1 y §4](./contracts/selection-ui.md#4-lienzos-de-referencia-sc-007a)):
   - **US3-1, US3-2**: con `_realCatalog()`, la columna NIVEL muestra `NIVEL 1`, `NIVEL 2` y `NIVEL 3` en orden, con el Nivel 1 seleccionado. La tarjeta del Nivel 3 dice `Defensa o evasión lateral — Decisión bajo presión` y su `LevelIcon` tiene `types == [defense, evasion]`.
   - **US3-3**: tocar `NIVEL 3` y `Transversal` hace que el resumen diga `Nivel 3 · Transversal · 30 s`; INICIAR abre el ejercicio con `level_3`. Repetir y Volver se cubren con la prueba existente (i), parametrizada si es barato; si no, basta con este paso.
   - **US3-4, SC-007a**: para cada lienzo de la tabla del contrato §4 (1778 × 800, 1422 × 800, 1280 × 800, 1067 × 800, 1024 × 768, 2400 × 1080 y 889 × 400), y con el catálogo real (3 niveles) y con un catálogo de prueba de 4 niveles (el `_testCatalog` con un nivel más):
     - no hay excepciones de overflow (`tester.takeException()` es null);
     - el `Rect` de cada `SelectionCard` (`tester.getRect`) está completamente dentro de la vista y no se superpone a los `Rect` del resumen, de `settingsButton` ni del botón INICIAR;
-    - no hay ningún `SingleChildScrollView` dentro de la selección y no existe ningún `Scrollable` cuyo `position.maxScrollExtent > 0`;
+    - no existe ningún `Scrollable` cuyo `position.maxScrollExtent > 0` (cambio en la implementación: las columnas sí tienen un `SingleChildScrollView`, ver T021);
+    - el grupo carga Rajdhani con `FontLoader` y monta la selección con `buildAppTheme()`, para medir con la letra real;
     - ningún texto de tarjeta queda cortado con puntos suspensivos (`TextPainter.didExceedMaxLines == false` para cada detalle con `maxLines`);
     - la densidad esperada es la del contrato §4: `regular` en los lienzos de 768 dp de alto o más, y `compact` en 889 × 400. Se verifica por el tamaño del título: `28 s` frente a `16`.
   - No modificar las pruebas existentes del archivo. Si alguna usaba `ListView` para encontrar tarjetas, consultarlo antes de cambiarla.

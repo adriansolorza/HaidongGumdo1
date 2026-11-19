@@ -129,7 +129,7 @@ Con este orden, `nextInt(2)` da 0 → defensa y 1 → evasión, y el ícono mues
 
    | Elemento | Medida |
    |---|---|
-   | Tarjeta | altura mínima 48 (blanco táctil de Material), padding vertical 6 y horizontal 12, separación 6 |
+   | Tarjeta | altura mínima 48 (blanco táctil de Material), padding vertical 4 (con 6, el ícono de 40 daba 52) y horizontal 12, separación 6; detalles con altura de línea 1.25 |
    | Celda del ícono | 40, glifo de 32 |
    | Textos | título 16, detalle 12 (un texto de detalle puede ocupar dos líneas) |
    | Encabezado de columna | 13, separación 6 |
@@ -137,7 +137,7 @@ Con este orden, `nextInt(2)` da 0 → defensa y 1 → evasión, y el ícono mues
    | Márgenes | 16 arriba, 12 abajo, 24 a los lados; 10 entre encabezado, columnas y pie |
 
    El pie (resumen, CONFIGURACIÓN e INICIAR) **no** se compacta: conserva los botones de la Spec 005, con un alto de al menos 48 dp.
-4. **Red de seguridad**: si ni la densidad `compact` cabe (alturas fuera de los tamaños de referencia, por debajo de unos 360 dp con tres niveles o de unos 385 dp con cuatro), **solo la columna que no cabe** vuelve a desplazarse. La cuenta usa la altura de cada tarjeta compacta según sus líneas de detalle (48 dp con una, 60 dp con dos). Así nunca hay desbordamiento ni contenido recortado.
+4. **Red de seguridad** (cambio en la implementación, 2026-11-18): cada columna de tarjetas va siempre en un `SingleChildScrollView`, que solo se mueve si el contenido real no cabe (por ejemplo, con letra ampliada por accesibilidad: la prueba de la Spec 005 con letra ×1.3 lo exige). Con la densidad elegida no hay nada que desplazar. Texto original, como referencia: si ni la densidad `compact` cabe (alturas fuera de los tamaños de referencia, por debajo de unos 360 dp con tres niveles o de unos 385 dp con cuatro), **solo la columna que no cabe** vuelve a desplazarse. La cuenta usa la altura de cada tarjeta compacta según sus líneas de detalle (48 dp con una, 60 dp con dos). Así nunca hay desbordamiento ni contenido recortado.
 
 **Presupuesto con los lienzos de referencia** (los de la Spec 004: 1778 × 800, 1422 × 800, 1280 × 800, 1067 × 800 y el teléfono de 889 × 400; más 1024 × 768 y 2400 × 1080, de la Spec 005):
 

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../theme.dart';
+import 'selection_density.dart';
 
 /// Tarjeta de nivel o patrón de la selección (Spec 004, FR-021 a FR-023;
 /// contrato §3). La seleccionada se distingue por fondo blanco translúcido,
-/// borde blanco, un anillo exterior y una palomita; nada amarillo.
+/// borde blanco, un anillo exterior y una palomita; nada amarillo. Sus
+/// medidas dependen de la [density] (Spec 006, FR-012a): en `regular` son
+/// las de la Spec 004.
 class SelectionCard extends StatelessWidget {
   const SelectionCard({
     super.key,
@@ -14,6 +17,7 @@ class SelectionCard extends StatelessWidget {
     required this.selected,
     required this.onTap,
     required this.scale,
+    this.density = SelectionDensity.regular,
   });
 
   final Widget icon;
@@ -28,10 +32,13 @@ class SelectionCard extends StatelessWidget {
 
   /// Escala del boceto (`SceneLayout.hudScale`).
   final double scale;
+  final SelectionDensity density;
 
   @override
   Widget build(BuildContext context) {
-    final s = scale;
+    final m = density.metrics(scale);
+    // Radios, bordes, anillo y espaciado entre letras.
+    final s = m.decorScale;
     final radius = BorderRadius.circular(18 * s);
     return Semantics(
       button: true,
@@ -67,25 +74,28 @@ class SelectionCard extends StatelessWidget {
             splashColor: AppColors.cardSelectedRing,
             highlightColor: AppColors.cardSelectedRing,
             child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: 104 * s),
+              constraints: BoxConstraints(minHeight: m.cardMinHeight),
               child: Padding(
                 padding: EdgeInsets.symmetric(
-                  vertical: 14 * s,
-                  horizontal: 20 * s,
+                  vertical: m.cardPaddingV,
+                  horizontal: m.cardPaddingH,
                 ),
                 child: Row(
                   children: [
                     Container(
-                      width: 72 * s,
-                      height: 72 * s,
+                      width: m.iconTile,
+                      height: m.iconTile,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: AppColors.iconTile,
                         borderRadius: BorderRadius.circular(14 * s),
                       ),
-                      child: SizedBox.square(dimension: 56 * s, child: icon),
+                      child: SizedBox.square(
+                        dimension: m.iconGlyph,
+                        child: icon,
+                      ),
                     ),
-                    SizedBox(width: 18 * s),
+                    SizedBox(width: m.iconGap),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -94,7 +104,7 @@ class SelectionCard extends StatelessWidget {
                           Text(
                             title,
                             style: TextStyle(
-                              fontSize: 28 * s,
+                              fontSize: m.titleSize,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 2 * s,
                               height: 1.1,
@@ -104,9 +114,17 @@ class SelectionCard extends StatelessWidget {
                           for (final (i, line) in lines.indexed)
                             Text(
                               line,
+                              // Solo en compact (Spec 006, T020).
+                              maxLines: m.detailMaxLines,
+                              overflow: m.detailMaxLines == null
+                                  ? null
+                                  : TextOverflow.ellipsis,
                               style: TextStyle(
-                                fontSize: (i == 0 ? 17 : 15) * s,
+                                fontSize: i == 0
+                                    ? m.detailSize
+                                    : m.secondDetailSize,
                                 fontWeight: FontWeight.w500,
+                                height: m.detailLineHeight,
                                 color: i == 0
                                     ? AppColors.textSecondary
                                     : AppColors.textTertiary,
@@ -117,7 +135,7 @@ class SelectionCard extends StatelessWidget {
                     ),
                     if (selected) ...[
                       SizedBox(width: 12 * s),
-                      _Check(size: 30 * s),
+                      _Check(size: m.checkSize),
                     ],
                   ],
                 ),

@@ -4,11 +4,14 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:haidonggumdo/data/catalog/catalog_json_mapper.dart';
 import 'package:haidonggumdo/domain/catalog/catalog.dart';
 import 'package:haidonggumdo/domain/catalog/catalog_exception.dart';
+import 'package:haidonggumdo/domain/catalog/enums.dart';
 import 'package:haidonggumdo/domain/exercise/session.dart';
 import 'package:haidonggumdo/domain/ports/catalog_repository.dart';
 import 'package:haidonggumdo/presentation/exercise/exercise_screen.dart';
@@ -18,6 +21,7 @@ import 'package:haidonggumdo/presentation/selection/pattern_icon_painter.dart';
 import 'package:haidonggumdo/presentation/selection/selection_card.dart';
 import 'package:haidonggumdo/presentation/selection/selection_screen.dart';
 import 'package:haidonggumdo/presentation/strings_es.dart';
+import 'package:haidonggumdo/presentation/theme.dart';
 
 import '../domain/fakes/fake_screen_wake_lock.dart';
 import '../domain/fakes/fake_voice_announcer.dart';
@@ -412,4 +416,189 @@ void main() {
       expect(screen.session.pattern.id, 'transversal');
     },
   );
+
+  group('Spec 006: Nivel 3 y tarjetas sin desplazar', () {
+    // Las medidas dependen del ancho real de la letra: se carga Rajdhani y se
+    // usa el tema de la app (la fuente de prueba de Flutter mide 1 em por
+    // glifo, unas dos veces más ancha).
+    setUpAll(() async {
+      final loader = FontLoader(kFontFamily);
+      for (final weight in ['Medium', 'Bold']) {
+        final bytes = File('assets/fonts/rajdhani/Rajdhani-$weight.ttf')
+            .readAsBytesSync();
+        loader.addFont(Future.value(ByteData.sublistView(bytes)));
+      }
+      await loader.load();
+    });
+
+    Future<void> pumpAt(WidgetTester tester, Catalog catalog, Size size) async {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            catalogRepositoryProvider.overrideWithValue(
+              _FakeRepository(() => catalog),
+            ),
+            elapsedClockProvider.overrideWithValue(ManualClock()),
+            randomSourceProvider.overrideWithValue(SeededRandomSource(1)),
+            voiceAnnouncerProvider.overrideWithValue(FakeVoiceAnnouncer()),
+            screenWakeLockProvider.overrideWithValue(FakeScreenWakeLock()),
+          ],
+          child: MaterialApp(
+            theme: buildAppTheme(),
+            home: const SelectionScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('US3-1, US3-2: tres niveles en orden, Nivel 1 elegido y el '
+        'ícono del Nivel 3 con defensa y evasión (FR-012, FR-013)', (
+      tester,
+    ) async {
+      await pumpAt(tester, _realCatalog(), const Size(1600, 900));
+
+      final tops = [
+        for (final title in ['NIVEL 1', 'NIVEL 2', 'NIVEL 3'])
+          tester.getTopLeft(find.text(title)).dy,
+      ];
+      expect(tops[0], lessThan(tops[1]));
+      expect(tops[1], lessThan(tops[2]));
+      expect(_card(tester, 'NIVEL 1').selected, isTrue);
+      expect(_card(tester, 'NIVEL 3').selected, isFalse);
+      expect(
+        find.descendant(
+          of: _cardFinder('NIVEL 3'),
+          matching: find.text(
+            'Defensa o evasión lateral — Decisión bajo presión',
+          ),
+        ),
+        findsOneWidget,
+      );
+      final icon = tester.widget<LevelIcon>(
+        find.descendant(
+          of: _cardFinder('NIVEL 3'),
+          matching: find.byType(LevelIcon),
+        ),
+      );
+      expect(icon.types, [ResponseType.defense, ResponseType.evasion]);
+    });
+
+    testWidgets('US3-3: Nivel 3 + Transversal, resumen e INICIAR con level_3', (
+      tester,
+    ) async {
+      await pumpAt(tester, _realCatalog(), const Size(1600, 900));
+      await tester.tap(find.text('NIVEL 3'));
+      await tester.tap(find.text('TRANSVERSAL'));
+      await tester.pump();
+      expect(find.text('Nivel 3 · Transversal · 30 s'), findsOneWidget);
+
+      await tester.tap(find.text(StringsEs.start));
+      // El ejercicio avanza con un Ticker: no se usa pumpAndSettle.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      final screen = tester.widget<ExerciseScreen>(find.byType(ExerciseScreen));
+      expect(screen.session.level.id, 'level_3');
+      expect(screen.session.pattern.id, 'transversal');
+    });
+
+    // US3-4, SC-007a (contrato selection-ui §4).
+    const canvases = {
+      '20:9': Size(1778, 800),
+      '16:9': Size(1422, 800),
+      '16:10': Size(1280, 800),
+      '4:3': Size(1067, 800),
+      '4:3 (Spec 005)': Size(1024, 768),
+      '20:9 grande': Size(2400, 1080),
+      'teléfono 20:9': Size(889, 400),
+    };
+    final catalogs = {'3 niveles': _realCatalog, '4 niveles': _fourLevels};
+
+    for (final MapEntry(key: canvas, value: size) in canvases.entries) {
+      for (final MapEntry(key: levels, value: catalog) in catalogs.entries) {
+        testWidgets('US3-4, SC-007a: $canvas con $levels, todo a la vista y '
+            'sin desplazar', (tester) async {
+          final c = catalog();
+          await pumpAt(tester, c, size);
+          expect(tester.takeException(), isNull);
+          final screen = Offset.zero & size;
+
+          // Nada que desplazar.
+          for (final state in tester.stateList<ScrollableState>(
+            find.byType(Scrollable),
+          )) {
+            final column = find.descendant(
+              of: find.byWidget(state.widget),
+              matching: find.byType(SelectionCard),
+            );
+            expect(
+              state.position.maxScrollExtent,
+              0,
+              reason:
+                  'columna de ${tester.widget<SelectionCard>(column.first).title}'
+                  ', viewport ${state.position.viewportDimension}',
+            );
+          }
+
+          // Pie: resumen, CONFIGURACIÓN e INICIAR.
+          final footer = [
+            tester.getRect(find.text('Nivel 1 · Frontal · 30 s')),
+            tester.getRect(find.byKey(const Key('settingsButton'))),
+            tester.getRect(find.widgetWithText(FilledButton, StringsEs.start)),
+          ];
+          final cards = find.byType(SelectionCard);
+          expect(cards, findsNWidgets(c.levels.length + c.patterns.length));
+          for (final element in cards.evaluate()) {
+            final rect = tester.getRect(find.byWidget(element.widget));
+            final title = (element.widget as SelectionCard).title;
+            expect(
+              screen.contains(rect.topLeft) &&
+                  screen.contains(rect.bottomRight - const Offset(1, 1)),
+              isTrue,
+              reason: '$title en $rect fuera de $screen',
+            );
+            for (final f in footer) {
+              expect(rect.overlaps(f), isFalse, reason: '$title tapa $f');
+            }
+          }
+
+          // Ningún detalle cortado con puntos suspensivos.
+          for (final paragraph in tester.renderObjectList<RenderParagraph>(
+            find.descendant(of: cards, matching: find.byType(RichText)),
+          )) {
+            expect(
+              paragraph.didExceedMaxLines,
+              isFalse,
+              reason: paragraph.text.toPlainText(),
+            );
+          }
+
+          // Densidad esperada (contrato §4): regular desde 768 dp de alto,
+          // compact en el teléfono. Se ve en el tamaño del título.
+          final s = (size.height / 800).clamp(0.7, 1.4);
+          final title = tester.widget<Text>(find.text('NIVEL 1'));
+          expect(title.style!.fontSize, size.height >= 768 ? 28 * s : 16);
+        });
+      }
+    }
+  });
+}
+
+/// El catálogo real con un 4.º nivel de prueba (previendo el Nivel 4).
+Catalog _fourLevels() {
+  final json = jsonDecode(
+    File('assets/catalog/catalog.json').readAsStringSync(),
+  ) as Map<String, Object?>;
+  (json['levels']! as List<Object?>).add({
+    'id': 'level_4',
+    'order': 4,
+    'name': 'Nivel 4',
+    'responseLabel': 'Evasión lateral + contraataque',
+    'purpose': 'Combate',
+    'responseTypes': ['evasion'],
+  });
+  return const CatalogJsonMapper().fromJsonString(jsonEncode(json));
 }
