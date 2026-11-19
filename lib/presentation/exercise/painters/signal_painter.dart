@@ -104,12 +104,27 @@ class SignalPainter extends CustomPainter {
       lane.right - glowExtent,
       cy + SignalShapes.arrowHeadHeight * l / 2,
     );
+    _paintArrow(canvas, box, cy, l, lane.left + glowExtent, color);
+  }
+
+  /// Flecha de largo [l] en [box] (eje en [cy]) con estela hacia el centro
+  /// que no pasa de [trailLimitX], brillo, relleno, contorno y reflejo
+  /// (Spec 004, FR-013). La comparten la evasión y el contraataque.
+  void _paintArrow(
+    Canvas canvas,
+    Rect box,
+    double cy,
+    double l,
+    double trailLimitX,
+    Color color,
+  ) {
+    final sigma = _arrowGlowSigma * l;
     final arrow = SignalShapes.evasionArrow(box);
     final bodyHalf = SignalShapes.arrowBodyHeight * l / 2;
 
     // Estela: de la cola hacia el centro, del color del sable, que se
     // desvanece (85 % → 0 %).
-    final trailLength = math.min(l, box.left - (lane.left + glowExtent));
+    final trailLength = math.min(l, box.left - trailLimitX);
     if (trailLength > 0) {
       final tail = box.left;
       final end = tail - trailLength;
@@ -195,7 +210,20 @@ class SignalPainter extends CustomPainter {
     final cy = _clampedCenterY(inner, h, box.height / 2);
     box = box.shift(Offset(0, cy - box.center.dy));
 
-    final saber = SignalShapes.defenseSaber(box);
+    _paintSaber(canvas, SignalShapes.defenseSaber(box), sigma, h, color);
+  }
+
+  /// Sable con brillo de la hoja, empuñadura, hoja del color del sable,
+  /// reflejo y guarda (Spec 004, FR-014). Lo comparten la defensa y el
+  /// contraataque.
+  void _paintSaber(
+    Canvas canvas,
+    ({Path blade, Path guard, Path grip, Offset bladeBase, Offset bladeTip})
+    saber,
+    double sigma,
+    double h,
+    Color color,
+  ) {
     final outline = Paint()
       ..color = AppColors.outline
       ..style = PaintingStyle.stroke

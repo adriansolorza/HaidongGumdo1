@@ -1,9 +1,10 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
-/// Formas de las señales, sin color ni `Canvas`: solo geometría (Spec 004,
-/// data-model §6, research R10). Las usan `SignalPainter` (con color, brillo y
-/// estela) y los íconos de nivel de la selección (en blanco).
+/// Formas de las señales de defensa, evasión y contraataque, sin color ni
+/// `Canvas`: solo geometría (Spec 004, data-model §6, research R10; Spec 007,
+/// research R5). Las usan `SignalPainter` (con color, brillo y estela) y los
+/// íconos de nivel de la selección (en blanco).
 ///
 /// Cada forma se construye para el lado derecho de la pantalla; quien la
 /// dibuja la refleja en `x` para el lado izquierdo.
@@ -47,6 +48,10 @@ abstract final class SignalShapes {
   /// 30 % del alto (research R10).
   static const defenseAngleDegrees = 115.0;
 
+  /// Sable vertical, punta arriba, de la señal de contraataque (Spec 007,
+  /// Clarifications 2026-11-19).
+  static const counterAngleDegrees = 90.0;
+
   /// Tramos a lo largo del eje, como fracción del largo total: empuñadura
   /// (26 %), guarda y hoja (70 %).
   static const _gripEnd = 0.26;
@@ -69,14 +74,28 @@ abstract final class SignalShapes {
     Offset bladeBase,
     Offset bladeTip,
   })
-  defenseSaber(Rect box) {
-    final unit = _defenseUnitBounds();
+  defenseSaber(Rect box) => saber(box, angleDegrees: defenseAngleDegrees);
+
+  /// Sable visto desde arriba con su eje a [angleDegrees] sobre la horizontal
+  /// ([defenseAngleDegrees] para la defensa, [counterAngleDegrees] para el
+  /// contraataque), ajustado a [box] (centrado y con su proporción).
+  /// Devuelve la hoja, la guarda, la empuñadura y los extremos del eje de la
+  /// hoja (para el reflejo).
+  static ({
+    Path blade,
+    Path guard,
+    Path grip,
+    Offset bladeBase,
+    Offset bladeTip,
+  })
+  saber(Rect box, {required double angleDegrees}) {
+    final unit = _saberUnitBounds(angleDegrees);
     final scale = math.min(box.width / unit.width, box.height / unit.height);
     // Origen del eje (extremo de la empuñadura) en la caja.
     final offset =
         box.center - Offset(unit.center.dx * scale, unit.center.dy * scale);
     Offset at(double along, double across) {
-      final local = _axisPoint(along, across);
+      final local = _axisPoint(along, across, angleDegrees);
       return offset + local * scale;
     }
 
@@ -126,8 +145,23 @@ abstract final class SignalShapes {
 
   /// Mayor caja con la proporción del símbolo de defensa que cabe en [lane]
   /// con alto ≤ [maxHeight], centrada en [lane].
-  static Rect fitDefense(Rect lane, double maxHeight) {
-    final unit = _defenseUnitBounds();
+  static Rect fitDefense(Rect lane, double maxHeight) =>
+      fitSaber(lane, maxHeight, angleDegrees: defenseAngleDegrees);
+
+  /// Proporción ancho/alto de la caja del sable a [angleDegrees].
+  static double saberAspect(double angleDegrees) {
+    final unit = _saberUnitBounds(angleDegrees);
+    return unit.width / unit.height;
+  }
+
+  /// Mayor caja con la proporción del sable a [angleDegrees] que cabe en
+  /// [lane] con alto ≤ [maxHeight], centrada en [lane].
+  static Rect fitSaber(
+    Rect lane,
+    double maxHeight, {
+    required double angleDegrees,
+  }) {
+    final unit = _saberUnitBounds(angleDegrees);
     final aspect = unit.width / unit.height;
     var height = math.min(maxHeight, lane.height);
     if (height * aspect > lane.width) height = lane.width / aspect;
@@ -143,26 +177,29 @@ abstract final class SignalShapes {
 
   /// Punto a [along] del eje (0 = extremo de la empuñadura, 1 = punta) y a
   /// [across] de él (positivo hacia abajo a la derecha), con largo total 1.
-  static Offset _axisPoint(double along, double across) {
-    final a = defenseAngleDegrees * math.pi / 180;
+  static Offset _axisPoint(double along, double across, double angleDegrees) {
+    final a = angleDegrees * math.pi / 180;
     final dir = Offset(math.cos(a), -math.sin(a)); // arriba a la izquierda
     final normal = Offset(-dir.dy, dir.dx);
     return dir * along + normal * across;
   }
 
-  /// Caja del símbolo con largo total 1, en las coordenadas de [_axisPoint].
-  static Rect _defenseUnitBounds() {
+  /// Caja del sable a [angleDegrees] con largo total 1, en las coordenadas de
+  /// [_axisPoint].
+  static Rect _saberUnitBounds(double angleDegrees) {
     const tipStart = 1.0 - 2 * _bladeWidth;
     final guardCenter = (_gripEnd + _bladeStart) / 2;
+    Offset p(double along, double across) =>
+        _axisPoint(along, across, angleDegrees);
     final points = [
       for (final s in [-1.0, 1.0]) ...[
-        _axisPoint(0, s * _gripWidth / 2),
-        _axisPoint(_gripEnd, s * _gripWidth / 2),
-        _axisPoint(guardCenter - _guardThickness / 2, s * _guardWidth / 2),
-        _axisPoint(guardCenter + _guardThickness / 2, s * _guardWidth / 2),
-        _axisPoint(tipStart, s * _bladeWidth / 2),
+        p(0, s * _gripWidth / 2),
+        p(_gripEnd, s * _gripWidth / 2),
+        p(guardCenter - _guardThickness / 2, s * _guardWidth / 2),
+        p(guardCenter + _guardThickness / 2, s * _guardWidth / 2),
+        p(tipStart, s * _bladeWidth / 2),
       ],
-      _axisPoint(1, 0),
+      p(1, 0),
     ];
     var left = points.first.dx, right = left;
     var top = points.first.dy, bottom = top;
