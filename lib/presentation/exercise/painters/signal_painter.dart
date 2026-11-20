@@ -21,7 +21,9 @@ import 'signal_shapes.dart';
 /// - evasión: flecha corta y gruesa con estela, apuntando al borde exterior;
 /// - defensa: sable en diagonal visto desde arriba, con la punta arriba y
 ///   hacia el centro de la pantalla (hacia el oponente), hoja delgada del color del sable, guarda gris y
-///   empuñadura más gruesa.
+///   empuñadura más gruesa;
+/// - contraataque: la flecha de evasión con un sable vertical, punta arriba,
+///   casi junto a su punta y centrado en su eje (Spec 007, FR-007).
 ///
 /// Se construye la señal del lado derecho y se refleja en `x` para la
 /// izquierda.
@@ -53,6 +55,19 @@ class SignalPainter extends CustomPainter {
   /// Alto máximo del símbolo de defensa respecto al alto.
   static const _maxDefenseFraction = 0.45;
 
+  /// Alto del sable del contraataque respecto al alto de la punta de la
+  /// flecha: "igual o apenas mayor" (Spec 007, Clarifications, research R4).
+  static const _counterSaberHeightFactor = 1.10;
+
+  /// Separación entre la punta de la flecha y el sable, respecto a `Lc`
+  /// ("casi junto a la punta", Spec 007, FR-007).
+  static const _counterGapFraction = 0.10;
+
+  /// Ancho mínimo del contraataque respecto a `Lc`: brillo + sable +
+  /// separación + flecha + estela mínima + brillo (Spec 007, research R4).
+  /// Con él, `Lc ≥ 0.82 L2` en cualquier carril (FR-010).
+  static const _counterMinWidthFactor = 2.24;
+
   @override
   void paint(Canvas canvas, Size size) {
     final color = switch (saberColor) {
@@ -75,6 +90,8 @@ class SignalPainter extends CustomPainter {
         _paintDefense(canvas, size, color);
       case ResponseType.evasion:
         _paintEvasion(canvas, size, color);
+      case ResponseType.counter:
+        _paintCounter(canvas, size, color);
     }
     canvas.restore();
   }
@@ -105,6 +122,60 @@ class SignalPainter extends CustomPainter {
       cy + SignalShapes.arrowHeadHeight * l / 2,
     );
     _paintArrow(canvas, box, cy, l, lane.left + glowExtent, color);
+  }
+
+  /// Contraataque: la flecha de evasión con un sable vertical casi junto a su
+  /// punta y centrado en su eje, todo dentro del carril (Spec 007, FR-007 y
+  /// FR-010; research R4; data-model §5).
+  void _paintCounter(Canvas canvas, Size size, Color color) {
+    final lane = layout.rightLane;
+    final h = size.height;
+    // Largo de la flecha del Nivel 2 en este lienzo (misma fórmula que
+    // _paintEvasion) y del contraataque, que cabe junto con el sable.
+    final l2 = math.min(
+      _maxArrowFraction * h,
+      lane.width / (1.6 + 2 * 3 * _arrowGlowSigma),
+    );
+    final lc = math.min(l2, lane.width / _counterMinWidthFactor);
+    if (lc <= 0) return;
+    final sigma = _arrowGlowSigma * lc;
+    final glow = 3 * sigma;
+
+    final headHeight = SignalShapes.arrowHeadHeight * lc;
+    final saberHeight = _counterSaberHeightFactor * headHeight;
+    final saberWidth =
+        saberHeight *
+        SignalShapes.saberAspect(SignalShapes.counterAngleDegrees);
+
+    // El centro del sable coincide con el eje de la flecha.
+    final halfExtent = math.max(headHeight, saberHeight) / 2 + glow;
+    final cy = _clampedCenterY(lane, h, halfExtent);
+    final saberBox = Rect.fromLTWH(
+      lane.right - glow - saberWidth,
+      cy - saberHeight / 2,
+      saberWidth,
+      saberHeight,
+    );
+
+    final arrowRight = saberBox.left - _counterGapFraction * lc;
+    final box = Rect.fromLTRB(
+      arrowRight - lc,
+      cy - headHeight / 2,
+      arrowRight,
+      cy + headHeight / 2,
+    );
+
+    _paintArrow(canvas, box, cy, lc, lane.left + glow, color);
+    _paintSaber(
+      canvas,
+      SignalShapes.saber(
+        saberBox,
+        angleDegrees: SignalShapes.counterAngleDegrees,
+      ),
+      sigma,
+      h,
+      color,
+    );
   }
 
   /// Flecha de largo [l] en [box] (eje en [cy]) con estela hacia el centro

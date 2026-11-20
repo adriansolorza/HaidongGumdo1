@@ -379,7 +379,7 @@ void _level3Simulations(
       final attacks = runs.fold(0, (n, run) => n + run.attacks.length);
       expect(attacks, greaterThanOrEqualTo(200));
       expect(attackFrames, greaterThan(0));
-      expect(framesByType.keys, containsAll(ResponseType.values));
+      expect(framesByType.keys, containsAll(session().level.responseTypes));
       expect(violations, isEmpty);
     });
 

@@ -13,7 +13,8 @@
   "levels": [
     { "id": "level_1", "order": 1, "name": "Nivel 1", "responseLabel": "Defensa", "purpose": "Calentamiento", "responseTypes": ["defense"] },
     { "id": "level_2", "order": 2, "name": "Nivel 2", "responseLabel": "Evasión lateral", "purpose": "Calentamiento / base", "responseTypes": ["evasion"] },
-    { "id": "level_3", "order": 3, "name": "Nivel 3", "responseLabel": "Defensa o evasión lateral", "purpose": "Decisión bajo presión", "responseTypes": ["defense", "evasion"] }
+    { "id": "level_3", "order": 3, "name": "Nivel 3", "responseLabel": "Defensa o evasión lateral", "purpose": "Decisión bajo presión", "responseTypes": ["defense", "evasion"] },
+    { "id": "level_4", "order": 4, "name": "Nivel 4", "responseLabel": "Evasión y contraataque", "purpose": "Combate", "responseTypes": ["counter"] }
   ],
   "patterns": [
     {

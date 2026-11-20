@@ -515,7 +515,10 @@ void main() {
       '20:9 grande': Size(2400, 1080),
       'teléfono 20:9': Size(889, 400),
     };
-    final catalogs = {'3 niveles': _realCatalog, '4 niveles': _fourLevels};
+    final catalogs = {
+      'catálogo real (4 niveles)': _realCatalog,
+      '3 niveles': _threeLevels,
+    };
 
     for (final MapEntry(key: canvas, value: size) in canvases.entries) {
       for (final MapEntry(key: levels, value: catalog) in catalogs.entries) {
@@ -587,18 +590,14 @@ void main() {
   });
 }
 
-/// El catálogo real con un 4.º nivel de prueba (previendo el Nivel 4).
-Catalog _fourLevels() {
+/// El catálogo real sin el Nivel 4 (Spec 007, T020): tres niveles, como
+/// antes de la Spec 007.
+Catalog _threeLevels() {
   final json = jsonDecode(
     File('assets/catalog/catalog.json').readAsStringSync(),
   ) as Map<String, Object?>;
-  (json['levels']! as List<Object?>).add({
-    'id': 'level_4',
-    'order': 4,
-    'name': 'Nivel 4',
-    'responseLabel': 'Evasión lateral + contraataque',
-    'purpose': 'Combate',
-    'responseTypes': ['evasion'],
-  });
+  (json['levels']! as List<Object?>).removeWhere(
+    (level) => (level! as Map<String, Object?>)['id'] == 'level_4',
+  );
   return const CatalogJsonMapper().fromJsonString(jsonEncode(json));
 }

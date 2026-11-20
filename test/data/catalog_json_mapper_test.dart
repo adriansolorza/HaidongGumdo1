@@ -148,11 +148,11 @@ void main() {
       expect(() => _parse(json), _throwsCatalogException);
     });
 
-    test('con "counter" (desconocido)', () {
+    test('con "dodge" (desconocido)', () {
       final json = _validJson();
       (json['levels']! as List<Object?>)[0] = {
         ..._level('level_1', 1),
-        'responseTypes': ['counter'],
+        'responseTypes': ['dodge'],
       };
       expect(() => _parse(json), _throwsCatalogException);
     });

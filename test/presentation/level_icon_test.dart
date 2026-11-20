@@ -54,6 +54,10 @@ void _referenceGlyph(Canvas canvas, Rect box, ResponseType type) {
         ..drawPath(saber.grip, white)
         ..drawPath(saber.guard, white)
         ..drawPath(saber.blade, white);
+    case ResponseType.counter:
+      // La referencia es el ícono anterior a la Spec 006; el contraataque
+      // (Spec 007) no tiene versión anterior.
+      throw UnsupportedError('sin referencia anterior a la Spec 007');
   }
 }
 
@@ -112,7 +116,9 @@ void main() {
   // La caja útil: el ícono menos un margen del 10 % del lado.
   final box = (Offset.zero & _size).deflate(0.10 * _size.shortestSide);
 
-  for (final type in ResponseType.values) {
+  // Solo los tipos que existían antes de la Spec 006; el contraataque
+  // (Spec 007) no tiene ícono anterior con el cual comparar.
+  for (final type in const [ResponseType.defense, ResponseType.evasion]) {
     testWidgets('un tipo ($type): la misma geometría que antes (FR-013)', (
       tester,
     ) async {

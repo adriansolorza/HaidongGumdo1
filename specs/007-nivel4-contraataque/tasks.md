@@ -28,7 +28,12 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
 
 - **Niveles 1 a 3 intactos (FR-020).** Si una prueba existente de las Specs 001 a 006 falla, **no se cambian sus expectativas**: se corrige el código. Las únicas pruebas existentes que pueden cambiar son las que enumeran los niveles del catálogo real:
   - la prueba de `test/data/catalog_json_mapper_test.dart` que espera `hasLength(3)` y `['level_1', 'level_2', 'level_3']`;
-  - el mapa `catalogs` de `test/presentation/selection_screen_test.dart` (T020).
+  - el mapa `catalogs` de `test/presentation/selection_screen_test.dart` (T020; aplicado en T010: `_fourLevels` → `_threeLevels`).
+
+  Aprobadas por el responsable en T010 (2026-11-19), porque asumían que `counter` no existía; las expectativas sobre los Niveles 1 a 3 no cambian:
+  - `test/presentation/level_icon_test.dart`: `_referenceGlyph` gana `case ResponseType.counter` (lanza `UnsupportedError`), y la prueba "la misma geometría que antes" recorre `[defense, evasion]` en lugar de `ResponseType.values`;
+  - `test/data/catalog_json_mapper_test.dart`, `(e)`: el ejemplo de tipo desconocido pasa de `"counter"` a `"dodge"`;
+  - `test/domain/exercise_engine_simulation_test.dart`, `_level3Simulations`: `containsAll(ResponseType.values)` → `containsAll(session().level.responseTypes)`.
 - **`exercise_engine_sequence_regression_test.dart` y su fixture `test/domain/fixtures/sequence_regression.json` NO se tocan ni se regeneran.**
 - **Dominio acotado (FR-002, Principio III, excepción a).** En `lib/domain/` solo cambian `catalog/enums.dart` y `exercise/signal.dart`. No tocar `ExerciseEngine`, `StreakSequencer`, `Attack`, `Session`, `ExerciseParameters`, `OpponentMotion` ni los eventos. Si una tarea parece requerir otra cosa, detenerse y consultarlo.
 - **Sin cambios** en `SceneLayout`, `OpponentPainter`, `ExerciseHud`, `selection_screen.dart`, `selection_card.dart`, `selection_density.dart`, `lib/presentation/settings/` ni `strings_es.dart`.
@@ -41,7 +46,7 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
 
 **Purpose**: Línea base.
 
-- [ ] T001 Desde la raíz, en la rama `007-nivel4-contraataque`, ejecutar `flutter analyze` y `flutter test` y confirmar que todo pasa (línea base de las Specs 001 a 006). Si algo falla, detenerse y reportarlo.
+- [x] T001 Desde la raíz, en la rama `007-nivel4-contraataque`, ejecutar `flutter analyze` y `flutter test` y confirmar que todo pasa (línea base de las Specs 001 a 006). Si algo falla, detenerse y reportarlo.
 
 ---
 
@@ -51,7 +56,7 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
 
 ### Refactor sin cambio de comportamiento (plan D4)
 
-- [ ] T002 En `lib/presentation/exercise/painters/signal_shapes.dart`, generalizar el sable con el ángulo como parámetro (research R5; [contrato §3](./contracts/counter-signal.md#3-signalshapes-presentación-solo-geometría)):
+- [x] T002 En `lib/presentation/exercise/painters/signal_shapes.dart`, generalizar el sable con el ángulo como parámetro (research R5; [contrato §3](./contracts/counter-signal.md#3-signalshapes-presentación-solo-geometría)):
   - `_axisPoint(double along, double across)` y `_defenseUnitBounds()` reciben `double angleDegrees`. Renombrar `_defenseUnitBounds` a `_saberUnitBounds(double angleDegrees)`.
   - Nuevo `static ({Path blade, Path guard, Path grip, Offset bladeBase, Offset bladeTip}) saber(Rect box, {required double angleDegrees})`, con el cuerpo actual de `defenseSaber` y el ángulo como parámetro.
   - Nuevo `static Rect fitSaber(Rect lane, double maxHeight, {required double angleDegrees})`, con el cuerpo actual de `fitDefense`.
@@ -60,20 +65,20 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
   - Agregar `static const counterAngleDegrees = 90.0;` con el doc-comment "Sable vertical, punta arriba, de la señal de contraataque (Spec 007, Clarifications 2026-11-19)".
   - Ajustar el doc-comment de la clase: las formas sirven a defensa, evasión y contraataque.
   - Con 115°, las operaciones aritméticas deben ser las mismas que hoy, en el mismo orden, para dar los mismos pixeles.
-- [ ] T003 En `lib/presentation/exercise/painters/signal_painter.dart`, extraer dos métodos privados **sin cambiar ninguna operación de dibujo** (research R6):
+- [x] T003 En `lib/presentation/exercise/painters/signal_painter.dart`, extraer dos métodos privados **sin cambiar ninguna operación de dibujo** (research R6):
   - `_paintArrow(Canvas canvas, Rect box, double cy, double l, double trailLimitX, Color color)`: todo lo que `_paintEvasion` dibuja desde "Estela" hasta el reflejo blanco. `trailLimitX` es la `x` mínima hasta la que puede llegar la estela, que hoy es `lane.left + glowExtent`.
   - `_paintSaber(Canvas canvas, ({Path blade, Path guard, Path grip, Offset bladeBase, Offset bladeTip}) saber, double sigma, double h, Color color)`: todo lo que `_paintDefense` dibuja desde "Brillo de la hoja" hasta el contorno de la guarda.
   - `_paintEvasion` y `_paintDefense` calculan lo mismo que hoy y llaman a estos métodos.
-- [ ] T004 Ejecutar `flutter test test/presentation/signal_painter_test.dart test/presentation/level_icon_test.dart test/presentation/exercise_screen_test.dart` y confirmar que todo pasa **sin cambiar ninguna prueba** (FR-020, contrato P7 e I3). Si algo falla, corregir T002 o T003. Hacer commit de T002 y T003 **solos**: `refactor: generalizar el sable de las señales con el ángulo como parámetro`.
+- [x] T004 Ejecutar `flutter test test/presentation/signal_painter_test.dart test/presentation/level_icon_test.dart test/presentation/exercise_screen_test.dart` y confirmar que todo pasa **sin cambiar ninguna prueba** (FR-020, contrato P7 e I3). Si algo falla, corregir T002 o T003. Hacer commit de T002 y T003 **solos**: `refactor: generalizar el sable de las señales con el ángulo como parámetro`.
 
 ### Tipo `counter` de punta a punta
 
-- [ ] T005 En `lib/domain/catalog/enums.dart`:
+- [x] T005 En `lib/domain/catalog/enums.dart`:
   - Cambiar el enum a `enum ResponseType { defense, evasion, counter }` ([data-model §1](./data-model.md#1-responsetype-dominio-enum)).
   - Actualizar el doc-comment: "`evasion` se agregó en la Spec 003 y `counter` en la Spec 007 (excepción (a) del Principio III: tipo de señal nuevo)".
-- [ ] T006 En `lib/domain/exercise/signal.dart`, agregar a `SignalPlacement.forAttack` la rama `ResponseType.counter => Signal(responseType: attack.responseType, screenSide: attack.side)`, con el comentario "Contraataque: la señal va del lado del color del sable, como la evasión (Spec 007, FR-008)" ([data-model §3](./data-model.md#3-signal-y-signalplacement-dominio)). Actualizar el doc-comment: "una rama por tipo de respuesta" sigue siendo válido.
-- [ ] T007 [P] En `assets/catalog/catalog.json`, agregar al final de `levels`, después de `level_3`, exactamente la línea `{ "id": "level_4", "order": 4, "name": "Nivel 4", "responseLabel": "Evasión y contraataque", "purpose": "Combate", "responseTypes": ["counter"] }` ([data-model §2](./data-model.md#2-nivel-4-catálogo-assetscatalogcatalogjson)).
-- [ ] T008 En `lib/presentation/exercise/painters/signal_painter.dart`, agregar `case ResponseType.counter: _paintCounter(canvas, size, color);` en `paint`, más las constantes `_counterSaberHeightFactor = 1.10`, `_counterGapFraction = 0.10` y `_counterMinWidthFactor = 2.24`, con doc-comments (research R4; [data-model §5](./data-model.md#5-geometría-de-la-señal-de-contraataque-presentación); [contrato §4](./contracts/counter-signal.md#4-signalpainter)). `_paintCounter(Canvas canvas, Size size, Color color)` hace lo siguiente, para el lado derecho (el reflejo para el izquierdo ya lo hace `paint`):
+- [x] T006 En `lib/domain/exercise/signal.dart`, agregar a `SignalPlacement.forAttack` la rama `ResponseType.counter => Signal(responseType: attack.responseType, screenSide: attack.side)`, con el comentario "Contraataque: la señal va del lado del color del sable, como la evasión (Spec 007, FR-008)" ([data-model §3](./data-model.md#3-signal-y-signalplacement-dominio)). Actualizar el doc-comment: "una rama por tipo de respuesta" sigue siendo válido.
+- [x] T007 [P] En `assets/catalog/catalog.json`, agregar al final de `levels`, después de `level_3`, exactamente la línea `{ "id": "level_4", "order": 4, "name": "Nivel 4", "responseLabel": "Evasión y contraataque", "purpose": "Combate", "responseTypes": ["counter"] }` ([data-model §2](./data-model.md#2-nivel-4-catálogo-assetscatalogcatalogjson)).
+- [x] T008 En `lib/presentation/exercise/painters/signal_painter.dart`, agregar `case ResponseType.counter: _paintCounter(canvas, size, color);` en `paint`, más las constantes `_counterSaberHeightFactor = 1.10`, `_counterGapFraction = 0.10` y `_counterMinWidthFactor = 2.24`, con doc-comments (research R4; [data-model §5](./data-model.md#5-geometría-de-la-señal-de-contraataque-presentación); [contrato §4](./contracts/counter-signal.md#4-signalpainter)). `_paintCounter(Canvas canvas, Size size, Color color)` hace lo siguiente, para el lado derecho (el reflejo para el izquierdo ya lo hace `paint`):
   1. `lane = layout.rightLane`, `h = size.height`.
   2. Calcular el largo de la flecha:
      - `l2 = min(_maxArrowFraction * h, lane.width / (1.6 + 2 * 3 * _arrowGlowSigma))`, el mismo largo que la flecha de evasión;
@@ -86,14 +91,14 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
   7. Llamar a `_paintArrow(canvas, box, cy, lc, lane.left + glow, color)` y después a `_paintSaber(canvas, SignalShapes.saber(saberBox, angleDegrees: SignalShapes.counterAngleDegrees), sigma, h, color)`.
 
   Actualizar el doc-comment de la clase con la tercera señal: "contraataque: la flecha de evasión con un sable vertical, punta arriba, casi junto a su punta y centrado en su eje (Spec 007, FR-007)".
-- [ ] T009 En `lib/presentation/selection/level_icon.dart`, agregar `case ResponseType.counter` en `_paintGlyph` (research R7; [contrato selection-ui §2](./contracts/selection-ui.md#2-leveliconpainter)):
+- [x] T009 En `lib/presentation/selection/level_icon.dart`, agregar `case ResponseType.counter` en `_paintGlyph` (research R7; [contrato selection-ui §2](./contracts/selection-ui.md#2-leveliconpainter)):
   - `l = box.width / 1.80`.
   - Sable: `saberHeight = 1.10 * SignalShapes.arrowHeadHeight * l` y `saberWidth = saberHeight * SignalShapes.saberAspect(SignalShapes.counterAngleDegrees)`. La caja es `Rect.fromLTWH(box.right - saberWidth, box.center.dy - saberHeight / 2, saberWidth, saberHeight)`. Pintar `SignalShapes.saber(esaCaja, angleDegrees: SignalShapes.counterAngleDegrees)`: empuñadura, guarda y hoja en blanco.
   - Flecha: `SignalShapes.evasionArrow` de largo `l`, con su borde derecho a `0.10 * l` del borde izquierdo del sable, centrada en `box.center.dy`.
   - 3 líneas de movimiento a la izquierda de la flecha, con las mismas proporciones que el glifo de evasión, recortadas para que empiecen en `box.left`.
   - Todo en `AppColors.textPrimary`. Actualizar el doc-comment de la clase (Spec 007, FR-016).
-- [ ] T010 Ejecutar `flutter analyze` (sin avisos nuevos) y `flutter test`. Se espera que pase todo menos la prueba de `catalog_json_mapper_test.dart` que enumera 3 niveles; esa se corrige en T019. Si falla otra prueba existente, incluida la regresión de secuencias, corregir el código y no la prueba.
-- [ ] T011 [P] En `test/domain/fakes/test_session.dart`, agregar:
+- [x] T010 Ejecutar `flutter analyze` (sin avisos nuevos) y `flutter test`. Se espera que pase todo menos la prueba de `catalog_json_mapper_test.dart` que enumera 3 niveles; esa se corrige en T019. Si falla otra prueba existente, incluida la regresión de secuencias, corregir el código y no la prueba.
+- [x] T011 [P] En `test/domain/fakes/test_session.dart`, agregar:
   - `Level _level4()` con `id: 'level_4'`, `order: 4`, `name: 'Nivel 4'`, `responseLabel: 'Evasión y contraataque'`, `purpose: 'Combate'`, `responseTypes: const [ResponseType.counter]` y el doc-comment "Nivel 4 (Spec 007, data-model §2): evasión con contraataque";
   - `Session testLevel4Session()` (patrón de `testSession`);
   - `Session testLevel4TransversalSession()` (patrón de `testTransversalSession`).
