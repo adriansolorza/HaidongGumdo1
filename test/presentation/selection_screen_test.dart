@@ -505,6 +505,58 @@ void main() {
       expect(screen.session.pattern.id, 'transversal');
     });
 
+    group('Spec 007: Nivel 4', () {
+      testWidgets('US3-1, US3-2: cuatro niveles en orden, Nivel 1 elegido y '
+          'el ícono del Nivel 4 de contraataque (FR-014, FR-016)', (
+        tester,
+      ) async {
+        await pumpAt(tester, _realCatalog(), const Size(1600, 900));
+
+        final tops = [
+          for (final title in ['NIVEL 1', 'NIVEL 2', 'NIVEL 3', 'NIVEL 4'])
+            tester.getTopLeft(find.text(title)).dy,
+        ];
+        for (var i = 1; i < tops.length; i++) {
+          expect(tops[i - 1], lessThan(tops[i]));
+        }
+        expect(_card(tester, 'NIVEL 1').selected, isTrue);
+        expect(_card(tester, 'NIVEL 4').selected, isFalse);
+        expect(
+          find.descendant(
+            of: _cardFinder('NIVEL 4'),
+            matching: find.text('Evasión y contraataque — Combate'),
+          ),
+          findsOneWidget,
+        );
+        final icon = tester.widget<LevelIcon>(
+          find.descendant(
+            of: _cardFinder('NIVEL 4'),
+            matching: find.byType(LevelIcon),
+          ),
+        );
+        expect(icon.types, [ResponseType.counter]);
+      });
+
+      testWidgets('US3-3: Nivel 4 + Transversal, resumen e INICIAR con '
+          'level_4 (FR-017)', (tester) async {
+        await pumpAt(tester, _realCatalog(), const Size(1600, 900));
+        await tester.tap(find.text('NIVEL 4'));
+        await tester.tap(find.text('TRANSVERSAL'));
+        await tester.pump();
+        expect(find.text('Nivel 4 · Transversal · 30 s'), findsOneWidget);
+
+        await tester.tap(find.text(StringsEs.start));
+        // El ejercicio avanza con un Ticker: no se usa pumpAndSettle.
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+        final screen = tester.widget<ExerciseScreen>(
+          find.byType(ExerciseScreen),
+        );
+        expect(screen.session.level.id, 'level_4');
+        expect(screen.session.pattern.id, 'transversal');
+      });
+    });
+
     // US3-4, SC-007a (contrato selection-ui §4).
     const canvases = {
       '20:9': Size(1778, 800),
@@ -515,7 +567,10 @@ void main() {
       '20:9 grande': Size(2400, 1080),
       'teléfono 20:9': Size(889, 400),
     };
-    final catalogs = {'3 niveles': _realCatalog, '4 niveles': _fourLevels};
+    final catalogs = {
+      'catálogo real (4 niveles)': _realCatalog,
+      '3 niveles': _threeLevels,
+    };
 
     for (final MapEntry(key: canvas, value: size) in canvases.entries) {
       for (final MapEntry(key: levels, value: catalog) in catalogs.entries) {
@@ -587,18 +642,14 @@ void main() {
   });
 }
 
-/// El catálogo real con un 4.º nivel de prueba (previendo el Nivel 4).
-Catalog _fourLevels() {
+/// El catálogo real sin el Nivel 4 (Spec 007, T020): tres niveles, como
+/// antes de la Spec 007.
+Catalog _threeLevels() {
   final json = jsonDecode(
     File('assets/catalog/catalog.json').readAsStringSync(),
   ) as Map<String, Object?>;
-  (json['levels']! as List<Object?>).add({
-    'id': 'level_4',
-    'order': 4,
-    'name': 'Nivel 4',
-    'responseLabel': 'Evasión lateral + contraataque',
-    'purpose': 'Combate',
-    'responseTypes': ['evasion'],
-  });
+  (json['levels']! as List<Object?>).removeWhere(
+    (level) => (level! as Map<String, Object?>)['id'] == 'level_4',
+  );
   return const CatalogJsonMapper().fromJsonString(jsonEncode(json));
 }

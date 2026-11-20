@@ -21,7 +21,9 @@ import 'signal_shapes.dart';
 /// - evasión: flecha corta y gruesa con estela, apuntando al borde exterior;
 /// - defensa: sable en diagonal visto desde arriba, con la punta arriba y
 ///   hacia el centro de la pantalla (hacia el oponente), hoja delgada del color del sable, guarda gris y
-///   empuñadura más gruesa.
+///   empuñadura más gruesa;
+/// - contraataque: la flecha de evasión con un sable vertical, punta arriba,
+///   casi junto a su punta y centrado en su eje (Spec 007, FR-007).
 ///
 /// Se construye la señal del lado derecho y se refleja en `x` para la
 /// izquierda.
@@ -53,6 +55,27 @@ class SignalPainter extends CustomPainter {
   /// Alto máximo del símbolo de defensa respecto al alto.
   static const _maxDefenseFraction = 0.45;
 
+  /// Alto del sable del contraataque respecto al alto de la punta de la
+  /// flecha: "igual o apenas mayor" (Spec 007, Clarifications, research R4).
+  static const _counterSaberHeightFactor = 1.10;
+
+  /// Separación entre la punta de la flecha y el sable, respecto a `Lc`
+  /// ("casi junto a la punta", Spec 007, FR-007).
+  static const _counterGapFraction = 0.10;
+
+  /// Ancho mínimo del contraataque respecto a `Lc`: brillo + sable +
+  /// separación + flecha + estela mínima + brillo (Spec 007, research R4).
+  /// Con él, `Lc ≥ 0.82 L2` en cualquier carril (FR-010).
+  static const _counterMinWidthFactor = 2.24;
+
+  /// Contorno del sable del contraataque respecto a su alto, con tope en
+  /// [kOutlineWidth] (Spec 007, T014, opción A del responsable).
+  static const _counterOutlineFraction = 0.02;
+
+  /// Reflejo de la hoja del contraataque respecto al ancho de la hoja, con
+  /// tope en el reflejo de la defensa (Spec 007, T014).
+  static const _counterHighlightFraction = 0.3;
+
   @override
   void paint(Canvas canvas, Size size) {
     final color = switch (saberColor) {
@@ -75,6 +98,8 @@ class SignalPainter extends CustomPainter {
         _paintDefense(canvas, size, color);
       case ResponseType.evasion:
         _paintEvasion(canvas, size, color);
+      case ResponseType.counter:
+        _paintCounter(canvas, size, color);
     }
     canvas.restore();
   }
@@ -104,12 +129,99 @@ class SignalPainter extends CustomPainter {
       lane.right - glowExtent,
       cy + SignalShapes.arrowHeadHeight * l / 2,
     );
+    _paintArrow(canvas, box, cy, l, lane.left + glowExtent, color);
+  }
+
+  /// Contraataque: la flecha de evasión con un sable vertical casi junto a su
+  /// punta y centrado en su eje, todo dentro del carril (Spec 007, FR-007 y
+  /// FR-010; research R4; data-model §5).
+  void _paintCounter(Canvas canvas, Size size, Color color) {
+    final lane = layout.rightLane;
+    final h = size.height;
+    // Largo de la flecha del Nivel 2 en este lienzo (misma fórmula que
+    // _paintEvasion) y del contraataque, que cabe junto con el sable.
+    final l2 = math.min(
+      _maxArrowFraction * h,
+      lane.width / (1.6 + 2 * 3 * _arrowGlowSigma),
+    );
+    final lc = math.min(l2, lane.width / _counterMinWidthFactor);
+    if (lc <= 0) return;
+    final sigma = _arrowGlowSigma * lc;
+    final glow = 3 * sigma;
+
+    final headHeight = SignalShapes.arrowHeadHeight * lc;
+    final saberHeight = _counterSaberHeightFactor * headHeight;
+    final saberWidth =
+        saberHeight *
+        SignalShapes.saberAspect(SignalShapes.counterAngleDegrees);
+
+    // El centro del sable coincide con el eje de la flecha.
+    final halfExtent = math.max(headHeight, saberHeight) / 2 + glow;
+    final cy = _clampedCenterY(lane, h, halfExtent);
+    final saberBox = Rect.fromLTWH(
+      lane.right - glow - saberWidth,
+      cy - saberHeight / 2,
+      saberWidth,
+      saberHeight,
+    );
+
+    final arrowRight = saberBox.left - _counterGapFraction * lc;
+    final box = Rect.fromLTRB(
+      arrowRight - lc,
+      cy - headHeight / 2,
+      arrowRight,
+      cy + headHeight / 2,
+    );
+
+    _paintArrow(canvas, box, cy, lc, lane.left + glow, color);
+    // El sable se encoge con el carril: con el contorno fijo de 4 px y el
+    // reflejo de la defensa, en pantallas chicas la hoja se quedaría sin
+    // color y la guarda sin gris (FR-009). Contorno y reflejo escalan con el
+    // sable y nunca superan los de la defensa.
+    final bladeWidth = SignalShapes.bladeWidthFraction * saberHeight;
+    final outlineWidth = math.min(
+      kOutlineWidth,
+      _counterOutlineFraction * saberHeight,
+    );
+    // Con menos de 4 px de interior, el reflejo taparía el color: se omite.
+    final showHighlight = bladeWidth - outlineWidth >= 4;
+    _paintSaber(
+      canvas,
+      SignalShapes.saber(
+        saberBox,
+        angleDegrees: SignalShapes.counterAngleDegrees,
+      ),
+      sigma,
+      h,
+      color,
+      outlineWidth: outlineWidth,
+      highlightWidth: showHighlight
+          ? math.min(
+              math.max(0.004 * h, 1),
+              _counterHighlightFraction * bladeWidth,
+            )
+          : 0,
+    );
+  }
+
+  /// Flecha de largo [l] en [box] (eje en [cy]) con estela hacia el centro
+  /// que no pasa de [trailLimitX], brillo, relleno, contorno y reflejo
+  /// (Spec 004, FR-013). La comparten la evasión y el contraataque.
+  void _paintArrow(
+    Canvas canvas,
+    Rect box,
+    double cy,
+    double l,
+    double trailLimitX,
+    Color color,
+  ) {
+    final sigma = _arrowGlowSigma * l;
     final arrow = SignalShapes.evasionArrow(box);
     final bodyHalf = SignalShapes.arrowBodyHeight * l / 2;
 
     // Estela: de la cola hacia el centro, del color del sable, que se
     // desvanece (85 % → 0 %).
-    final trailLength = math.min(l, box.left - (lane.left + glowExtent));
+    final trailLength = math.min(l, box.left - trailLimitX);
     if (trailLength > 0) {
       final tail = box.left;
       final end = tail - trailLength;
@@ -195,11 +307,27 @@ class SignalPainter extends CustomPainter {
     final cy = _clampedCenterY(inner, h, box.height / 2);
     box = box.shift(Offset(0, cy - box.center.dy));
 
-    final saber = SignalShapes.defenseSaber(box);
+    _paintSaber(canvas, SignalShapes.defenseSaber(box), sigma, h, color);
+  }
+
+  /// Sable con brillo de la hoja, empuñadura, hoja del color del sable,
+  /// reflejo y guarda (Spec 004, FR-014). Lo comparten la defensa y el
+  /// contraataque. Sin [outlineWidth] ni [highlightWidth] dibuja exactamente
+  /// el símbolo de defensa de la Spec 004.
+  void _paintSaber(
+    Canvas canvas,
+    ({Path blade, Path guard, Path grip, Offset bladeBase, Offset bladeTip})
+    saber,
+    double sigma,
+    double h,
+    Color color, {
+    double outlineWidth = kOutlineWidth,
+    double? highlightWidth,
+  }) {
     final outline = Paint()
       ..color = AppColors.outline
       ..style = PaintingStyle.stroke
-      ..strokeWidth = kOutlineWidth
+      ..strokeWidth = outlineWidth
       ..strokeJoin = StrokeJoin.round;
     final highlightShift = Offset(
       -(saber.bladeTip - saber.bladeBase).dy,
@@ -217,15 +345,20 @@ class SignalPainter extends CustomPainter {
       ..drawPath(saber.grip, Paint()..color = AppColors.grip)
       ..drawPath(saber.grip, outline)
       ..drawPath(saber.blade, Paint()..color = color)
-      ..drawPath(saber.blade, outline)
-      ..drawLine(
+      ..drawPath(saber.blade, outline);
+    // Reflejo de la hoja; un ancho de 0 lo omite (contraataque chico).
+    final reflection = highlightWidth ?? math.max(0.004 * h, 1);
+    if (reflection > 0) {
+      canvas.drawLine(
         Offset.lerp(saber.bladeBase, saber.bladeTip, 0.1)! + highlightShift,
         Offset.lerp(saber.bladeBase, saber.bladeTip, 0.8)! + highlightShift,
         Paint()
           ..color = const Color(0xFFFFFFFF).withValues(alpha: 0.55)
-          ..strokeWidth = math.max(0.004 * h, 1)
+          ..strokeWidth = reflection
           ..strokeCap = StrokeCap.round,
-      )
+      );
+    }
+    canvas
       ..drawPath(saber.guard, Paint()..color = AppColors.tsuba)
       ..drawPath(saber.guard, outline);
   }

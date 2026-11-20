@@ -87,3 +87,22 @@ Session testLevel3Session() =>
 /// [testTransversalSession].
 Session testLevel3TransversalSession() =>
     Session(level: _level3(), pattern: testTransversalSession().pattern);
+
+/// Nivel 4 (Spec 007, data-model §2): evasión con contraataque.
+Level _level4() => Level(
+  id: 'level_4',
+  order: 4,
+  name: 'Nivel 4',
+  responseLabel: 'Evasión y contraataque',
+  purpose: 'Combate',
+  responseTypes: const [ResponseType.counter],
+);
+
+/// Sesión de Nivel 4 / Patrón frontal; el patrón es el mismo de [testSession].
+Session testLevel4Session() =>
+    Session(level: _level4(), pattern: testSession().pattern);
+
+/// Sesión de Nivel 4 / Patrón transversal; el patrón es el mismo de
+/// [testTransversalSession].
+Session testLevel4TransversalSession() =>
+    Session(level: _level4(), pattern: testTransversalSession().pattern);

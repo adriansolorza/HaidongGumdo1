@@ -67,7 +67,7 @@
             "type": "array",
             "minItems": 1,
             "uniqueItems": true,
-            "items": { "enum": ["defense"] }
+            "items": { "enum": ["defense", "evasion", "counter"] }
           }
         }
       }

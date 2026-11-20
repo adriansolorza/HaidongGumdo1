@@ -8,8 +8,9 @@ import '../exercise/painters/signal_shapes.dart';
 import '../theme.dart';
 
 /// Ícono de un nivel: las señales de sus tipos de respuesta, lado a lado y en
-/// blanco (Spec 004, FR-021; Spec 006, FR-013). Sin brillo ni estela de
-/// color (data-model §6 de la Spec 004, "Íconos de nivel").
+/// blanco (Spec 004, FR-021; Spec 006, FR-013; Spec 007, FR-016: el
+/// contraataque es la flecha con el sable vertical junto a la punta). Sin
+/// brillo ni estela de color (data-model §6 de la Spec 004, "Íconos de nivel").
 class LevelIcon extends StatelessWidget {
   const LevelIcon({super.key, required this.types, required this.size});
 
@@ -91,6 +92,53 @@ class LevelIconPainter extends CustomPainter {
             line,
           );
         }
+      case ResponseType.counter:
+        // Líneas de movimiento, flecha y sable vertical junto a la punta; el
+        // conjunto mide ≈ 1.80 L de ancho (Spec 007, research R7).
+        final l = box.width / 1.80;
+        final arrowHeight = SignalShapes.arrowHeadHeight * l;
+        final saberHeight = 1.10 * arrowHeight;
+        final saberWidth =
+            saberHeight *
+            SignalShapes.saberAspect(SignalShapes.counterAngleDegrees);
+        final saberBox = Rect.fromLTWH(
+          box.right - saberWidth,
+          box.center.dy - saberHeight / 2,
+          saberWidth,
+          saberHeight,
+        );
+        final arrow = Rect.fromLTWH(
+          saberBox.left - 0.10 * l - l,
+          box.center.dy - arrowHeight / 2,
+          l,
+          arrowHeight,
+        );
+        canvas.drawPath(SignalShapes.evasionArrow(arrow), white);
+        final line = Paint()
+          ..color = AppColors.textPrimary
+          ..strokeWidth = 0.09 * l
+          ..strokeCap = StrokeCap.round;
+        final gap = 0.04 * l;
+        for (final (dy, start) in const [
+          (-0.18, 0.10),
+          (0.0, 0.0),
+          (0.18, 0.10),
+        ]) {
+          final y = box.center.dy + dy * l;
+          canvas.drawLine(
+            Offset(box.left + start * l + line.strokeWidth / 2, y),
+            Offset(arrow.left - gap - line.strokeWidth / 2, y),
+            line,
+          );
+        }
+        final saber = SignalShapes.saber(
+          saberBox,
+          angleDegrees: SignalShapes.counterAngleDegrees,
+        );
+        canvas
+          ..drawPath(saber.grip, white)
+          ..drawPath(saber.guard, white)
+          ..drawPath(saber.blade, white);
       case ResponseType.defense:
         final saber = SignalShapes.defenseSaber(
           SignalShapes.fitDefense(box, box.height),

@@ -34,5 +34,11 @@ abstract final class SignalPlacement {
       responseType: attack.responseType,
       screenSide: attack.side,
     ),
+    // Contraataque: la señal va del lado del color del sable, como la
+    // evasión (Spec 007, FR-008).
+    ResponseType.counter => Signal(
+      responseType: attack.responseType,
+      screenSide: attack.side,
+    ),
   };
 }

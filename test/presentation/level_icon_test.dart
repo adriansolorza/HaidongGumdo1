@@ -54,6 +54,10 @@ void _referenceGlyph(Canvas canvas, Rect box, ResponseType type) {
         ..drawPath(saber.grip, white)
         ..drawPath(saber.guard, white)
         ..drawPath(saber.blade, white);
+    case ResponseType.counter:
+      // La referencia es el ícono anterior a la Spec 006; el contraataque
+      // (Spec 007) no tiene versión anterior.
+      throw UnsupportedError('sin referencia anterior a la Spec 007');
   }
 }
 
@@ -112,7 +116,9 @@ void main() {
   // La caja útil: el ícono menos un margen del 10 % del lado.
   final box = (Offset.zero & _size).deflate(0.10 * _size.shortestSide);
 
-  for (final type in ResponseType.values) {
+  // Solo los tipos que existían antes de la Spec 006; el contraataque
+  // (Spec 007) no tiene ícono anterior con el cual comparar.
+  for (final type in const [ResponseType.defense, ResponseType.evasion]) {
     testWidgets('un tipo ($type): la misma geometría que antes (FR-013)', (
       tester,
     ) async {
@@ -179,6 +185,78 @@ void main() {
       _bounds(evasion),
       'mitad derecha: flecha',
     );
+  });
+
+  group('Nivel 4 (Spec 007, contrato selection-ui §2)', () {
+    testWidgets('I1: solo blanco, sin rojo, azul ni amarillo (FR-016)', (
+      tester,
+    ) async {
+      final px = await _pixels(
+        tester,
+        (c) => const LevelIconPainter([ResponseType.counter]).paint(c, _size),
+      );
+      var painted = 0;
+      for (var i = 0; i < px.length; i += 4) {
+        if (px[i + 3] == 0) continue;
+        painted++;
+        expect(
+          [px[i], px[i + 1], px[i + 2]],
+          everyElement(greaterThanOrEqualTo(250)),
+          reason: 'píxel ${i ~/ 4}',
+        );
+      }
+      expect(painted, greaterThan(0));
+    });
+
+    testWidgets('I2: todo dentro de la caja con margen del 10 %', (
+      tester,
+    ) async {
+      final px = await _pixels(
+        tester,
+        (c) => const LevelIconPainter([ResponseType.counter]).paint(c, _size),
+      );
+      final bounds = _bounds(px)!;
+      expect(bounds.left, greaterThanOrEqualTo(box.left - 1));
+      expect(bounds.top, greaterThanOrEqualTo(box.top - 1));
+      expect(bounds.right, lessThanOrEqualTo(box.right + 1));
+      expect(bounds.bottom, lessThanOrEqualTo(box.bottom + 1));
+    });
+
+    testWidgets('el sable vertical está en el cuarto derecho: una columna '
+        'blanca de al menos la mitad del alto de la caja', (tester) async {
+      final px = await _pixels(
+        tester,
+        (c) => const LevelIconPainter([ResponseType.counter]).paint(c, _size),
+      );
+      var tallest = 0;
+      for (var x = (box.right - box.width / 4).floor(); x < _side; x++) {
+        var n = 0;
+        for (var y = 0; y < _side; y++) {
+          final i = (y * _side + x) * 4;
+          if (px[i + 3] > 200) n++;
+        }
+        tallest = math.max(tallest, n);
+      }
+      expect(tallest, greaterThanOrEqualTo(box.height / 2));
+    });
+
+    testWidgets('se distingue del ícono de evasión (lleva el sable)', (
+      tester,
+    ) async {
+      final counter = await _pixels(
+        tester,
+        (c) => const LevelIconPainter([ResponseType.counter]).paint(c, _size),
+      );
+      final evasion = await _pixels(
+        tester,
+        (c) => const LevelIconPainter([ResponseType.evasion]).paint(c, _size),
+      );
+      var different = 0;
+      for (var i = 3; i < counter.length; i += 4) {
+        if ((counter[i] > 0) != (evasion[i] > 0)) different++;
+      }
+      expect(different, greaterThan(_side * _side ~/ 20));
+    });
   });
 
   test('shouldRepaint compara las listas de tipos', () {

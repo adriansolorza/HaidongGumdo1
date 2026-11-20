@@ -56,7 +56,7 @@ La postura **no revela** el lado del ataque. El corte transversal puede salir ha
 | 1     | Defensa                                            | Calentamiento         |
 | 2     | Evasión lateral                                    | Calentamiento / base  |
 | 3     | Defensa o evasión lateral, mezcladas al azar       | Decisión bajo presión |
-| 4     | Evasión lateral + corte del usuario (contraataque) | Combate               |
+| 4     | Evasión y contraataque                             | Combate               |
 
 - El usuario elige libremente nivel y patrón, sin desbloqueos. Los atletas pueden saltarse el calentamiento.
 - Una sesión es la combinación **Nivel × Patrón**.
