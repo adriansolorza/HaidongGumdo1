@@ -63,4 +63,33 @@ void main() {
       }
     });
   });
+
+  group('contraataque (Spec 007, FR-008)', () {
+    test('con sable azul (right) → señal a la derecha', () {
+      expect(
+        SignalPlacement.forAttack(_attack(Side.right, ResponseType.counter)),
+        const Signal(responseType: ResponseType.counter, screenSide: Side.right),
+      );
+    });
+
+    test('con sable rojo (left) → señal a la izquierda (CA3)', () {
+      expect(
+        SignalPlacement.forAttack(_attack(Side.left, ResponseType.counter)),
+        const Signal(responseType: ResponseType.counter, screenSide: Side.left),
+      );
+    });
+
+    test('para un mismo lado, contraataque y evasión van del mismo lado', () {
+      for (final side in Side.values) {
+        final counter = SignalPlacement.forAttack(
+          _attack(side, ResponseType.counter),
+        );
+        final evasion = SignalPlacement.forAttack(
+          _attack(side, ResponseType.evasion),
+        );
+        expect(counter.responseType, ResponseType.counter);
+        expect(counter.screenSide, evasion.screenSide, reason: '$side');
+      }
+    });
+  });
 }

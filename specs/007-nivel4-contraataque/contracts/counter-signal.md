@@ -64,6 +64,11 @@ static double saberAspect(double angleDegrees);
 - `_paintCounter` sigue la geometría de [data-model §5](../data-model.md#5-geometría-de-la-señal-de-contraataque-presentación).
 - `_paintEvasion` y `_paintDefense` comparten con `_paintCounter` los métodos privados `_paintArrow` y `_paintSaber`, sin cambiar sus operaciones de dibujo.
 - Constantes nuevas: `_counterSaberHeightFactor = 1.10` (respecto al alto de la punta), `_counterGapFraction = 0.10`, `_counterMinWidthFactor = 2.24`.
+- **Contorno y reflejo del sable escalados (T014, opción A del responsable, 2026-11-19).** El sable del contraataque se encoge con el carril, y con el contorno fijo de 4 px la hoja se quedaba sin color y la guarda sin gris en 4:3 y en el teléfono (FR-009). Por eso:
+  - contorno del sable = `min(kOutlineWidth, 0.02 × alto del sable)`;
+  - reflejo de la hoja = `min(reflejo de la defensa, 0.3 × ancho de la hoja)`, y se omite si el interior de la hoja mide menos de 4 px.
+  
+  `_paintSaber` recibe `outlineWidth` y `highlightWidth` opcionales. Sin ellos dibuja exactamente la defensa de la Spec 004. Se expone `SignalShapes.bladeWidthFraction`.
 
 Postcondiciones (las comprueba `signal_painter_test`):
 

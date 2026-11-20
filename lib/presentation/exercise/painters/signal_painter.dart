@@ -68,6 +68,14 @@ class SignalPainter extends CustomPainter {
   /// Con él, `Lc ≥ 0.82 L2` en cualquier carril (FR-010).
   static const _counterMinWidthFactor = 2.24;
 
+  /// Contorno del sable del contraataque respecto a su alto, con tope en
+  /// [kOutlineWidth] (Spec 007, T014, opción A del responsable).
+  static const _counterOutlineFraction = 0.02;
+
+  /// Reflejo de la hoja del contraataque respecto al ancho de la hoja, con
+  /// tope en el reflejo de la defensa (Spec 007, T014).
+  static const _counterHighlightFraction = 0.3;
+
   @override
   void paint(Canvas canvas, Size size) {
     final color = switch (saberColor) {
@@ -166,6 +174,17 @@ class SignalPainter extends CustomPainter {
     );
 
     _paintArrow(canvas, box, cy, lc, lane.left + glow, color);
+    // El sable se encoge con el carril: con el contorno fijo de 4 px y el
+    // reflejo de la defensa, en pantallas chicas la hoja se quedaría sin
+    // color y la guarda sin gris (FR-009). Contorno y reflejo escalan con el
+    // sable y nunca superan los de la defensa.
+    final bladeWidth = SignalShapes.bladeWidthFraction * saberHeight;
+    final outlineWidth = math.min(
+      kOutlineWidth,
+      _counterOutlineFraction * saberHeight,
+    );
+    // Con menos de 4 px de interior, el reflejo taparía el color: se omite.
+    final showHighlight = bladeWidth - outlineWidth >= 4;
     _paintSaber(
       canvas,
       SignalShapes.saber(
@@ -175,6 +194,13 @@ class SignalPainter extends CustomPainter {
       sigma,
       h,
       color,
+      outlineWidth: outlineWidth,
+      highlightWidth: showHighlight
+          ? math.min(
+              math.max(0.004 * h, 1),
+              _counterHighlightFraction * bladeWidth,
+            )
+          : 0,
     );
   }
 
@@ -286,19 +312,22 @@ class SignalPainter extends CustomPainter {
 
   /// Sable con brillo de la hoja, empuñadura, hoja del color del sable,
   /// reflejo y guarda (Spec 004, FR-014). Lo comparten la defensa y el
-  /// contraataque.
+  /// contraataque. Sin [outlineWidth] ni [highlightWidth] dibuja exactamente
+  /// el símbolo de defensa de la Spec 004.
   void _paintSaber(
     Canvas canvas,
     ({Path blade, Path guard, Path grip, Offset bladeBase, Offset bladeTip})
     saber,
     double sigma,
     double h,
-    Color color,
-  ) {
+    Color color, {
+    double outlineWidth = kOutlineWidth,
+    double? highlightWidth,
+  }) {
     final outline = Paint()
       ..color = AppColors.outline
       ..style = PaintingStyle.stroke
-      ..strokeWidth = kOutlineWidth
+      ..strokeWidth = outlineWidth
       ..strokeJoin = StrokeJoin.round;
     final highlightShift = Offset(
       -(saber.bladeTip - saber.bladeBase).dy,
@@ -316,15 +345,20 @@ class SignalPainter extends CustomPainter {
       ..drawPath(saber.grip, Paint()..color = AppColors.grip)
       ..drawPath(saber.grip, outline)
       ..drawPath(saber.blade, Paint()..color = color)
-      ..drawPath(saber.blade, outline)
-      ..drawLine(
+      ..drawPath(saber.blade, outline);
+    // Reflejo de la hoja; un ancho de 0 lo omite (contraataque chico).
+    final reflection = highlightWidth ?? math.max(0.004 * h, 1);
+    if (reflection > 0) {
+      canvas.drawLine(
         Offset.lerp(saber.bladeBase, saber.bladeTip, 0.1)! + highlightShift,
         Offset.lerp(saber.bladeBase, saber.bladeTip, 0.8)! + highlightShift,
         Paint()
           ..color = const Color(0xFFFFFFFF).withValues(alpha: 0.55)
-          ..strokeWidth = math.max(0.004 * h, 1)
+          ..strokeWidth = reflection
           ..strokeCap = StrokeCap.round,
-      )
+      );
+    }
+    canvas
       ..drawPath(saber.guard, Paint()..color = AppColors.tsuba)
       ..drawPath(saber.guard, outline);
   }

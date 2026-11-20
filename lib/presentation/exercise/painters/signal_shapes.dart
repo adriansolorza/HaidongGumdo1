@@ -60,6 +60,9 @@ abstract final class SignalShapes {
   /// Anchos respecto al largo total.
   static const _gripWidth = 0.09;
   static const _bladeWidth = _gripWidth * 0.55;
+
+  /// Ancho de la hoja respecto al largo total del sable.
+  static const bladeWidthFraction = _bladeWidth;
   static const _guardWidth = 0.26;
   static const _guardThickness = 0.035;
 

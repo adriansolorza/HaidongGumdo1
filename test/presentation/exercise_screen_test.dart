@@ -428,6 +428,55 @@ void main() {
     },
   );
 
+  testWidgets(
+    '(l) Nivel 4 transversal: una sola señal por ataque, de contraataque, del '
+    'lado del color (Spec 007, US1, FR-006, FR-008, FR-011)',
+    (tester) async {
+      final h = _Harness();
+      await h.start(tester, level: 'Nivel 4', pattern: 'Transversal');
+      final session = tester
+          .widget<ExerciseScreen>(find.byType(ExerciseScreen))
+          .session;
+      expect(session.level.id, 'level_4');
+      expect(session.pattern.id, 'transversal');
+
+      Iterable<CustomPainter> painters() => tester
+          .widgetList<CustomPaint>(find.byType(CustomPaint))
+          .map((w) => w.painter)
+          .whereType<CustomPainter>();
+
+      // Con todos los sorteos en 0 y N = 5: ataques 1 a 5 a la derecha (azul)
+      // y el 6.º a la izquierda (rojo), forzado por la racha. Las señales
+      // llegan cada 1.7 s desde 4.0 s; aviso de 700 ms y corte de 500 ms.
+      final expected = [
+        for (var i = 0; i < 5; i++) (Side.right, SaberColor.blue),
+        (Side.left, SaberColor.red),
+      ];
+      for (final (i, (screenSide, color)) in expected.indexed) {
+        final signalAt = 4000 + 1700 * i;
+        // Durante el aviso y durante el corte: una sola señal, de
+        // contraataque, del lado del color.
+        for (final at in [signalAt + 300, signalAt + 900]) {
+          await h.advanceTo(tester, at);
+          final signals = painters().whereType<SignalPainter>().toList();
+          final opponent = painters().whereType<OpponentPainter>().single;
+          expect(signals, hasLength(1), reason: 'ataque ${i + 1}, $at ms');
+          expect(signals.single.signal.responseType, ResponseType.counter);
+          expect(signals.single.signal.screenSide, screenSide);
+          expect(signals.single.saberColor, color);
+          expect(opponent.saberColor, color);
+        }
+        // Al terminar el corte el sable vuelve a amarillo y la señal se va.
+        await h.advanceTo(tester, signalAt + 1400);
+        expect(painters().whereType<SignalPainter>(), isEmpty);
+        expect(
+          painters().whereType<OpponentPainter>().single.saberColor,
+          SaberColor.yellow,
+        );
+      }
+    },
+  );
+
   group('HUD de la Spec 004 (FR-015 a FR-019)', () {
     for (final (level, pattern, levelTitle, response, patternTitle, sequence)
         in [
@@ -460,6 +509,23 @@ void main() {
             'Transversal',
             'NIVEL 2',
             'Evasión lateral',
+            'TRANSVERSAL',
+            'Sodose → Hwengdan ilgôm begi 횡단일검베기',
+          ),
+          // Spec 007, FR-018.
+          (
+            'Nivel 4',
+            'Frontal',
+            'NIVEL 4',
+            'Evasión y contraataque',
+            'FRONTAL',
+            'Chochôn-se 초천세 → Chungmyôn begi 정면베기',
+          ),
+          (
+            'Nivel 4',
+            'Transversal',
+            'NIVEL 4',
+            'Evasión y contraataque',
             'TRANSVERSAL',
             'Sodose → Hwengdan ilgôm begi 횡단일검베기',
           ),

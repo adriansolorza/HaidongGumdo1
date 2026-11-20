@@ -113,16 +113,16 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
 
 **Independent Test**: `flutter test test/domain/signal_placement_test.dart test/domain/exercise_engine_level4_test.dart test/domain/exercise_engine_timeline_test.dart test/domain/exercise_engine_simulation_test.dart test/domain/exercise_engine_motion_test.dart test/presentation/signal_painter_test.dart test/presentation/exercise_screen_test.dart`, más el recorrido 2 de [quickstart.md](./quickstart.md).
 
-- [ ] T012 [P] [US1] En `test/domain/signal_placement_test.dart`, agregar `group('contraataque (Spec 007, FR-008)', …)`:
+- [x] T012 [P] [US1] En `test/domain/signal_placement_test.dart`, agregar `group('contraataque (Spec 007, FR-008)', …)`:
   - `counter` con `Side.right` (azul) → `screenSide == Side.right`;
   - `counter` con `Side.left` (rojo) → `Side.left`;
   - `responseType == ResponseType.counter`.
-- [ ] T013 [P] [US1] Crear `test/domain/exercise_engine_level4_test.dart`, con los helpers de `exercise_engine_level3_test.dart` (`_engine`, `_runToEnd`, `_attacks`, `_longestStreak`) copiados o adaptados, y un `group('Nivel 4 transversal (Spec 007, US1)', …)` con:
+- [x] T013 [P] [US1] Crear `test/domain/exercise_engine_level4_test.dart`, con los helpers de `exercise_engine_level3_test.dart` (`_engine`, `_runToEnd`, `_attacks`, `_longestStreak`) copiados o adaptados, y un `group('Nivel 4 transversal (Spec 007, US1)', …)` con:
   - (a) todos los ataques tienen `responseType == ResponseType.counter` (FR-004), con semillas 1, 42 y 2026;
   - (b) **≡ Nivel 2**: con la misma `SeededRandomSource(seed)` y los mismos parámetros, los ataques de `testLevel4TransversalSession()` son iguales a los de `testLevel2TransversalSession()` en `index`, `side`, `signalAt`, `cutStartAt`, `cutEndAt` y `nextSignalAt`, e igual el instante de la voz de fin (research R3). Semillas 1, 42 y 2026; N 1 y 5;
   - (c) para N de 1 a 5 y 1 000 ejercicios simulados de 180 s cada uno, ninguno tiene más de N ataques seguidos al mismo lado (SC-004);
   - (d) con N = 5 y 1 000 ejercicios, la proporción de lados `right` está en [0.45, 0.55] y dos semillas distintas no dan la misma secuencia de lados (SC-005, RN1).
-- [ ] T014 [US1] En `test/presentation/signal_painter_test.dart`, agregar `group('contraataque (Spec 007, contrato §4)', …)` sobre 7 lienzos: los 4 de `_sizes` más `'4:3 (Spec 005)': (1024, 768)`, `'20:9 grande': (2400, 1080)` y `'teléfono 20:9': (889, 400)`. Son los mismos 7 de la Spec 006, en un mapa local `_counterCanvases`. Usar el patrón transversal para el layout. Con `_sig(ResponseType.counter, side)` y el color correspondiente (azul → `Side.right`, rojo → `Side.left`), probar:
+- [x] T014 [US1] En `test/presentation/signal_painter_test.dart`, agregar `group('contraataque (Spec 007, contrato §4)', …)` sobre 7 lienzos: los 4 de `_sizes` más `'4:3 (Spec 005)': (1024, 768)`, `'20:9 grande': (2400, 1080)` y `'teléfono 20:9': (889, 400)`. Son los mismos 7 de la Spec 006, en un mapa local `_counterCanvases`. Usar el patrón transversal para el layout. Con `_sig(ResponseType.counter, side)` y el color correspondiente (azul → `Side.right`, rojo → `Side.left`), probar:
   - **P1**: ningún pixel con alfa > 0 queda fuera de `layout.laneFor(side)`;
   - **P2** (FR-010): medido en **pixeles**, no con la fórmula de T008:
     - pintar en el mismo lienzo `_sig(ResponseType.evasion, Side.right)` y `_sig(ResponseType.counter, Side.right)`, los dos con `SaberColor.blue`;
@@ -139,7 +139,7 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
   - **P7** (FR-020): las pruebas de evasión y defensa existentes siguen pasando sin cambios.
 
   Agregar también una prueba de no colisión: con el patrón transversal y en todas las fases del ataque (muestrear el progreso del corte de 0 a 1 en 20 pasos), la caja de la señal no se cruza con la del oponente ni con la de su sable. Usar los mismos helpers que la prueba existente de la Spec 004 para la evasión (SC-003, SC-009).
-- [ ] T015 [US1] En `test/presentation/exercise_screen_test.dart`, agregar un `testWidgets` con el estilo de la prueba (k) del Nivel 3: "(l) Nivel 4 transversal: una sola señal por ataque, de contraataque, del lado del color". Con `h.start(tester, level: 'Nivel 4', pattern: 'Transversal')`:
+- [x] T015 [US1] En `test/presentation/exercise_screen_test.dart`, agregar un `testWidgets` con el estilo de la prueba (k) del Nivel 3: "(l) Nivel 4 transversal: una sola señal por ataque, de contraataque, del lado del color". Con `h.start(tester, level: 'Nivel 4', pattern: 'Transversal')`:
   - `session.level.id == 'level_4'`;
   - en cada `SignalShown` durante al menos 5 ataques, el `SignalPainter` visible tiene `signal.responseType == ResponseType.counter` y `signal.screenSide == attack.side`, y hay un solo `SignalPainter`;
   - la señal desaparece cuando el sable vuelve a amarillo.

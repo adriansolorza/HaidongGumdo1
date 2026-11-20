@@ -13,6 +13,7 @@ import 'package:haidonggumdo/domain/exercise/opponent_motion.dart';
 import 'package:haidonggumdo/domain/exercise/signal.dart';
 import 'package:haidonggumdo/presentation/exercise/painters/opponent_painter.dart';
 import 'package:haidonggumdo/presentation/exercise/painters/signal_painter.dart';
+import 'package:haidonggumdo/presentation/exercise/painters/signal_shapes.dart';
 import 'package:haidonggumdo/presentation/scene/scene_layout.dart';
 import 'package:haidonggumdo/presentation/theme.dart';
 
@@ -464,4 +465,307 @@ void main() {
       }, timeout: const Timeout(Duration(minutes: 3)));
     }
   });
+
+  group('contraataque (Spec 007, contrato §4)', () {
+    final transversal = _catalog.patterns.firstWhere(
+      (p) => p.id == 'transversal',
+    );
+
+    for (final MapEntry(key: ratio, value: (w, h)) in _counterCanvases.entries) {
+      final layout = _layout(w, h, transversal);
+      SignalPainter painter(ResponseType type, Side side, SaberColor color) =>
+          SignalPainter(
+            layout: layout,
+            signal: _sig(type, side),
+            saberColor: color,
+          );
+
+      for (final (side, color) in [
+        (Side.right, SaberColor.blue),
+        (Side.left, SaberColor.red),
+      ]) {
+        test('$ratio, ${side.name}: P1, ningún píxel fuera de su carril y '
+            'del lado de su mitad', () async {
+          final px = await _render(
+            painter(ResponseType.counter, side, color),
+            w,
+            h,
+          );
+          final box = _bounds(px, w, h, (i) => _painted(px, i))!;
+          expect(
+            side == Side.right ? box.left >= w / 2 : box.right <= w / 2,
+            isTrue,
+          );
+          expect(_outside(px, w, h, layout.laneFor(side)), 0);
+        });
+
+        test('$ratio, ${side.name}: P6, flecha y hoja del color del sable, '
+            'guarda gris, sin el otro color ni amarillo', () async {
+          final px = await _render(
+            painter(ResponseType.counter, side, color),
+            w,
+            h,
+          );
+          var fill = 0, guard = 0, wrong = 0, yellow = 0;
+          for (var i = 0; i < px.length; i += 4) {
+            if (_isColor(px, i, _fill(color))) fill++;
+            if (_isColor(px, i, AppColors.tsuba)) guard++;
+            if (_isColor(px, i, _other(color))) wrong++;
+            if (_isColor(px, i, AppColors.saberYellow)) yellow++;
+          }
+          expect(fill, greaterThan(0));
+          expect(guard, greaterThan(0));
+          expect(wrong, 0);
+          expect(yellow, 0);
+        });
+      }
+
+      test('$ratio: P2, la flecha mide al menos 75 % de la flecha de evasión '
+          '(FR-010)', () async {
+        final evasion = await _render(
+          painter(ResponseType.evasion, Side.right, SaberColor.blue),
+          w,
+          h,
+        );
+        final counter = await _render(
+          painter(ResponseType.counter, Side.right, SaberColor.blue),
+          w,
+          h,
+        );
+        final le = _measureArrowLength(evasion, w, h, AppColors.saberBlue);
+        final lc = _measureArrowLength(counter, w, h, AppColors.saberBlue);
+        expect(lc, greaterThanOrEqualTo(0.75 * le - 2), reason: 'Lc $lc, L2 $le');
+        expect(lc, lessThanOrEqualTo(le + 2), reason: 'Lc $lc, L2 $le');
+      });
+
+      test('$ratio: P3 a P5, sable vertical junto a la punta y centrado en el '
+          'eje de la flecha (FR-007)', () async {
+        final px = await _render(
+          painter(ResponseType.counter, Side.right, SaberColor.blue),
+          w,
+          h,
+        );
+        final arrow = _arrowGeometry(px, w, h, AppColors.saberBlue);
+        final lc = arrow.length;
+
+        // Hoja: interior opaco y claro (relleno del color y reflejo blanco,
+        // sin el contorno oscuro) a la derecha de la punta. El reflejo va a
+        // un lado de la hoja, así que el relleno solo no está centrado. Se
+        // empieza después del contorno de la punta de la flecha, cuyos bordes
+        // suavizados también son claros.
+        bool bladeInterior(int i) =>
+            px[i + 3] > 200 && px[i] + px[i + 1] + px[i + 2] > 300;
+        final rows = <int, (int, int)>{};
+        final firstX = arrow.tipX + 2 * kOutlineWidth.ceil() + 1;
+        for (var y = 0; y < h; y++) {
+          for (var x = firstX; x < w; x++) {
+            if (!bladeInterior((y * w + x) * 4)) continue;
+            final (lo, hi) = rows[y] ?? (x, x);
+            rows[y] = (x < lo ? x : lo, x > hi ? x : hi);
+          }
+        }
+        expect(rows, isNotEmpty, reason: 'sin hoja a la derecha de la punta');
+        final ys = rows.keys.toList()..sort();
+        final top = ys.first, bottom = ys.last;
+
+        // P6 (FR-009): la hoja se ve del color del sable en casi toda su
+        // altura, no solo contorno y reflejo (pantallas chicas incluidas).
+        var blueRows = 0;
+        for (final y in ys) {
+          for (var x = firstX; x < w; x++) {
+            if (_isColor(px, (y * w + x) * 4, AppColors.saberBlue)) {
+              blueRows++;
+              break;
+            }
+          }
+        }
+        expect(
+          blueRows,
+          greaterThanOrEqualTo(0.6 * (bottom - top)),
+          reason: 'filas de la hoja con azul: $blueRows de ${bottom - top}',
+        );
+
+        // P4: el centro de la hoja tiene el mismo x en toda su altura.
+        final centers = [
+          for (final y in ys)
+            if (y > top + 0.1 * (bottom - top) &&
+                y < bottom - 0.1 * (bottom - top))
+              (rows[y]!.$1 + rows[y]!.$2) / 2,
+        ];
+        final axisX = centers.reduce((a, b) => a + b) / centers.length;
+        for (final c in centers) {
+          expect((c - axisX).abs(), lessThanOrEqualTo(1), reason: 'eje $axisX');
+        }
+
+        // P3: el eje del sable está del lado de la punta (hacia el borde) y la
+        // caja del sable (eje ± 0.15 Lc) empieza a ≤ 0.15 Lc de la punta.
+        expect(axisX, greaterThan(arrow.tipX));
+        // El relleno medido acaba antes del vértice por el contorno (3 px de
+        // trazo hacia dentro, √2 veces más en la punta de 90°).
+        expect(
+          axisX - arrow.tipX,
+          lessThanOrEqualTo(0.30 * lc + 2 * kOutlineWidth),
+        );
+
+        // P5: el sable (de la punta de la hoja al extremo de la empuñadura,
+        // sobre su eje) está centrado en el eje de la flecha.
+        final column = axisX.round();
+        int? saberTop, saberBottom;
+        for (var y = 0; y < h; y++) {
+          if (px[(y * w + column) * 4 + 3] > 200) {
+            saberTop ??= y;
+            saberBottom = y;
+          }
+        }
+        final saberCenter = (saberTop! + saberBottom! + 1) / 2;
+        expect((saberCenter - arrow.cy).abs(), lessThanOrEqualTo(2),
+            reason: 'sable $saberCenter, flecha ${arrow.cy}');
+        // Alto: igual al de la punta o apenas mayor (Clarifications). El
+        // sable se mide con su contorno (más largo en la punta afilada) y la
+        // flecha solo con su relleno.
+        final saberHeight = saberBottom - saberTop + 1;
+        expect(
+          saberHeight,
+          inInclusiveRange(
+            0.95 * arrow.headHeight,
+            1.35 * arrow.headHeight + 2 * kOutlineWidth,
+          ),
+        );
+      });
+
+      test('$ratio: P6, el contraataque izquierdo es el reflejo exacto del '
+          'derecho', () async {
+        final right = await _render(
+          painter(ResponseType.counter, Side.right, SaberColor.blue),
+          w,
+          h,
+        );
+        final left = await _render(
+          painter(ResponseType.counter, Side.left, SaberColor.blue),
+          w,
+          h,
+        );
+        expect(_mirrorMatch(right, left, w, h), greaterThanOrEqualTo(0.99));
+      });
+
+      test('$ratio: la señal no comparte píxeles con el oponente transversal '
+          'en ninguna fase del corte (SC-003, SC-009)', () async {
+        final violations = <String>[];
+        for (final (side, color) in [
+          (Side.right, SaberColor.blue),
+          (Side.left, SaberColor.red),
+        ]) {
+          final signal = await _render(
+            painter(ResponseType.counter, side, color),
+            w,
+            h,
+          );
+          // El corte sale del costado que indica el color: con azul
+          // (motion.side right), del lado contrario a la señal.
+          for (final motion in [
+            OpponentMotion.atGuard,
+            OpponentMotion(
+              from: PoseKey.guard,
+              to: PoseKey.stance,
+              progress: 0.5,
+              side: side,
+            ),
+            for (var i = 0; i <= 20; i++)
+              OpponentMotion(
+                from: PoseKey.stance,
+                to: PoseKey.cutEnd,
+                progress: i / 20,
+                side: side,
+              ),
+            OpponentMotion(
+              from: PoseKey.cutEnd,
+              to: PoseKey.guard,
+              progress: 0.5,
+              side: side,
+            ),
+          ]) {
+            final opponent = await _render(
+              _opponent(transversal, motion, w, h),
+              w,
+              h,
+            );
+            var n = 0;
+            for (var i = 0; i < signal.length; i += 4) {
+              if (_painted(signal, i) && _painted(opponent, i)) n++;
+            }
+            if (n > 0) violations.add('${side.name} $motion: $n');
+          }
+        }
+        expect(violations, isEmpty);
+      }, timeout: const Timeout(Duration(minutes: 2)));
+    }
+  });
 }
+
+/// Los 7 lienzos de referencia de la Spec 006 (Spec 007, T014).
+const _counterCanvases = {
+  ..._sizes,
+  '4:3 (Spec 005)': (1024, 768),
+  '20:9 grande': (2400, 1080),
+  'teléfono 20:9': (889, 400),
+};
+
+/// Geometría de la flecha que apunta a la derecha, medida en píxeles de
+/// relleno sólido de [color]. La flecha es el tramo de columnas contiguas con
+/// más relleno: la estela puede dejar columnas sueltas del color y el sable
+/// del contraataque queda separado por la abertura.
+({int tipX, double length, double headHeight, double cy}) _arrowGeometry(
+  Uint8List px,
+  int w,
+  int h,
+  Color color,
+) {
+  final counts = List<int>.filled(w, 0);
+  final tops = List<int>.filled(w, h);
+  final bottoms = List<int>.filled(w, -1);
+  for (var x = 0; x < w; x++) {
+    for (var y = 0; y < h; y++) {
+      if (_isColor(px, (y * w + x) * 4, color)) {
+        counts[x]++;
+        if (y < tops[x]) tops[x] = y;
+        bottoms[x] = y;
+      }
+    }
+  }
+  var startX = 0, endX = -1, best = 0;
+  for (var x = 0; x < w;) {
+    if (counts[x] == 0) {
+      x++;
+      continue;
+    }
+    final from = x;
+    var total = 0;
+    while (x < w && counts[x] > 0) {
+      total += counts[x++];
+    }
+    if (total > best) (best, startX, endX) = (total, from, x - 1);
+  }
+  final heights = counts.sublist(startX, endX + 1);
+  // Eje: centro de los bordes de arriba y abajo de la flecha (la punta es
+  // simétrica); el reflejo blanco quita relleno solo arriba.
+  var top = h, bottom = -1;
+  for (var x = startX; x <= endX; x++) {
+    if (tops[x] < top) top = tops[x];
+    if (bottoms[x] > bottom) bottom = bottoms[x];
+  }
+  final maxHeight = heights.reduce((a, b) => a > b ? a : b);
+  final headStart = heights.indexWhere((n) => n >= 0.8 * maxHeight);
+  final tipX = startX + heights.length - 1;
+  final headLength = (heights.length - headStart).toDouble();
+  return (
+    tipX: tipX,
+    length: headLength / SignalShapes.arrowHeadLength,
+    headHeight: (bottom - top + 1).toDouble(),
+    cy: (top + bottom + 1) / 2,
+  );
+}
+
+/// Largo `L` de la flecha que apunta a la derecha, medido en píxeles
+/// (Spec 007, contrato P2): largo de la punta / `arrowHeadLength`.
+double _measureArrowLength(Uint8List px, int w, int h, Color color) =>
+    _arrowGeometry(px, w, h, color).length;
