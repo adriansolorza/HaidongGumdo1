@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:haidonggumdo/domain/catalog/enums.dart';
 import 'package:haidonggumdo/domain/exercise/attack.dart';
 import 'package:haidonggumdo/domain/exercise/exercise_engine.dart';
 import 'package:haidonggumdo/domain/exercise/exercise_event.dart';
@@ -338,6 +339,19 @@ void main() {
     level2: testLevel2Session,
   );
 
+  _sameMotionAsLevel2(
+    'Nivel 4 transversal (Spec 007, US1): FR-002, FR-012, SC-003',
+    level2: testLevel2TransversalSession,
+    level4: testLevel4TransversalSession,
+  );
+
+  // US2-2: el frontal no se refleja; la postura no revela el lado (FR-013).
+  _sameMotionAsLevel2(
+    'Nivel 4 frontal (Spec 007, US2): FR-002, FR-013, US2-2',
+    level2: testLevel2Session,
+    level4: testLevel4Session,
+  );
+
   test('Nivel 2 frontal: el patrón no se refleja por lado (US2-2)', () {
     expect(testLevel2Session().pattern.cut.mirroredBySide, isFalse);
     expect(testLevel2Session().pattern, testSession().pattern);
@@ -379,6 +393,46 @@ void _sameMotionAsLevel1(
         if (attack == null) continue;
         sides.add(attack.side);
         expect(snapshot.motion.side, attack.side, reason: '$t');
+        expect(snapshot.signal!.screenSide, attack.side, reason: '$t');
+      }
+      expect(sides, Side.values.toSet());
+    });
+  });
+}
+
+/// Con la misma semilla, el Nivel 4 mueve al oponente igual que el Nivel 2
+/// en cada fotograma (Spec 007, FR-002, FR-013; research R3), y durante cada
+/// ataque `motion.side == attack.side == signal.screenSide`: el corte sale
+/// del lado contrario a la señal de contraataque, como con la flecha.
+void _sameMotionAsLevel2(
+  String name, {
+  required Session Function() level2,
+  required Session Function() level4,
+}) {
+  group(name, () {
+    test('mismo motion en cada fotograma que el Nivel 2', () {
+      for (var seed = 0; seed < 20; seed++) {
+        final a = _engine(SeededRandomSource(seed), session: level2());
+        final b = _engine(SeededRandomSource(seed), session: level4());
+        for (var t = Duration.zero; !a.status.isTerminal; t += _frame) {
+          final sa = a.advanceTo(t).snapshot;
+          final sb = b.advanceTo(t).snapshot;
+          expect(sb.motion, sa.motion, reason: 'semilla $seed, $t');
+        }
+        expect(b.status.isTerminal, isTrue, reason: 'semilla $seed');
+      }
+    });
+
+    test('motion.side == attack.side == signal.screenSide en cada ataque', () {
+      final engine = _engine(_script(first: 0), session: level4());
+      final sides = <Side>{};
+      for (var t = Duration.zero; t < _ms(20000); t += _frame) {
+        final snapshot = engine.advanceTo(t).snapshot;
+        final attack = snapshot.currentAttack;
+        if (attack == null) continue;
+        sides.add(attack.side);
+        expect(snapshot.motion.side, attack.side, reason: '$t');
+        expect(snapshot.signal!.responseType, ResponseType.counter);
         expect(snapshot.signal!.screenSide, attack.side, reason: '$t');
       }
       expect(sides, Side.values.toSet());

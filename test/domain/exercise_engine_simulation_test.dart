@@ -216,6 +216,93 @@ void main() {
     testLevel3Session,
     checkMotionSide: false,
   );
+
+  _level4Simulations(
+    'Nivel 4 transversal (Spec 007, US1)',
+    testLevel4TransversalSession,
+    checkMotionSide: true,
+  );
+
+  // El frontal no se refleja: la comprobación de motion.side no aplica.
+  _level4Simulations(
+    'Nivel 4 frontal (Spec 007, US2)',
+    testLevel4Session,
+    checkMotionSide: false,
+  );
+}
+
+/// Spec 007, SC-002 y SC-003: en cada fotograma de cada ataque del Nivel 4,
+/// la señal de contraataque del lado del color y el color del sable. Si
+/// [checkMotionSide], el costado del movimiento depende solo del color
+/// (FR-012): `motion.side == attack.side`. Las rachas, proporciones y la
+/// igualdad con el Nivel 2 están en exercise_engine_level4_test.dart.
+void _level4Simulations(
+  String name,
+  Session Function() session, {
+  required bool checkMotionSide,
+}) {
+  group(name, () {
+    late List<_Run> runs;
+    final violations = <String>[];
+    var attackFrames = 0;
+
+    void checkFrame(int seed, ExerciseSnapshot s) {
+      final attack = s.currentAttack;
+      if (attack == null) return;
+      attackFrames++;
+      final signal = s.signal;
+      final color = attack.side == Side.right
+          ? SaberColor.blue
+          : SaberColor.red;
+      final ok =
+          attack.responseType == ResponseType.counter &&
+          signal != null &&
+          signal.responseType == ResponseType.counter &&
+          signal.screenSide == attack.side &&
+          s.saberColor == color &&
+          (!checkMotionSide || s.motion.side == attack.side);
+      if (!ok && violations.length < 10) {
+        violations.add('semilla $seed, ${s.elapsed}: $attack / $signal');
+      }
+    }
+
+    setUpAll(() {
+      runs = [
+        for (var seed = 0; seed < _exercises; seed++)
+          _simulate(
+            seed,
+            session: session(),
+            onFrame: (s) => checkFrame(seed, s),
+          ),
+      ];
+    });
+
+    test('SC-002/SC-003: en cada fotograma de cada ataque, la señal de '
+        'contraataque y el color del lado correcto', () {
+      final attacks = runs.fold(0, (n, run) => n + run.attacks.length);
+      expect(attacks, greaterThanOrEqualTo(200));
+      expect(attackFrames, greaterThan(0));
+      expect(violations, isEmpty);
+    });
+
+    test('el 100 % de los intervalos está en [1000 ms, 2500 ms]', () {
+      for (final run in runs) {
+        for (var i = 1; i < run.attacks.length; i++) {
+          final interval =
+              run.attacks[i].signalAt - run.attacks[i - 1].cutStartAt;
+          expect(interval.inMilliseconds, inInclusiveRange(1000, 2500));
+        }
+      }
+    });
+
+    test('Guman nunca antes de E y como máximo 1200 ms después', () {
+      for (final run in runs) {
+        final delay = run.endVoice.at - run.nominalEnd;
+        expect(delay.isNegative, isFalse);
+        expect(delay.inMilliseconds, lessThanOrEqualTo(1200));
+      }
+    });
+  });
 }
 
 /// Spec 003, SC-006: las reglas de aleatoriedad, N y tiempos de la 001 con el

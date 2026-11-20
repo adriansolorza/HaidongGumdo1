@@ -156,8 +156,8 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
 
 **Independent Test**: `flutter test test/domain/exercise_engine_level4_test.dart test/domain/exercise_engine_timeline_test.dart test/domain/exercise_engine_motion_test.dart test/domain/exercise_engine_simulation_test.dart test/presentation/signal_painter_test.dart`, más el recorrido 3 de [quickstart.md](./quickstart.md).
 
-- [ ] T016 [US2] En `test/domain/exercise_engine_level4_test.dart`, agregar `group('Nivel 4 frontal (Spec 007, US2)', …)` con los casos (a) a (d) de T013 sobre `testLevel4Session()` y `testLevel2Session()`.
-- [ ] T017 [P] [US2] Agregar helpers **nuevos** del Nivel 4 para los dos patrones. **No modificar** `_level2Group`, `_level2Simulations`, `_level3Simulations` ni `_sameMotionAsLevel1`, ni pasarles sesiones del Nivel 4: sus expectativas son de la evasión o de la mezcla del Nivel 3 (FR-020).
+- [x] T016 [US2] En `test/domain/exercise_engine_level4_test.dart`, agregar `group('Nivel 4 frontal (Spec 007, US2)', …)` con los casos (a) a (d) de T013 sobre `testLevel4Session()` y `testLevel2Session()`.
+- [x] T017 [P] [US2] Agregar helpers **nuevos** del Nivel 4 para los dos patrones. **No modificar** `_level2Group`, `_level2Simulations`, `_level3Simulations` ni `_sameMotionAsLevel1`, ni pasarles sesiones del Nivel 4: sus expectativas son de la evasión o de la mezcla del Nivel 3 (FR-020).
   - `test/domain/exercise_engine_timeline_test.dart`: `_level4Group(String name, Session Function() session)`, con la estructura de `_level2Group`, pero cada ataque es `ResponseType.counter`, con aviso de 700 ms y corte de 500 ms. El primer ataque, el intervalo y el fin (FR-013) cumplen lo mismo que en el Nivel 2. Llamarlo con `'Nivel 4 transversal (Spec 007, US1)', testLevel4TransversalSession` y con `'Nivel 4 frontal (Spec 007, US2)', testLevel4Session`.
   - `test/domain/exercise_engine_simulation_test.dart`: `_level4Simulations(String name, Session Function() session, {required bool checkMotionSide})`, con la estructura de `_level2Simulations`. En cada fotograma con ataque:
     - `signal.responseType == ResponseType.counter` y `signal.screenSide == attack.side`;
@@ -165,7 +165,7 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
     - si `checkMotionSide`, `motion.side == attack.side` (FR-012, SC-003).
     Llamarlo con el transversal (`checkMotionSide: true`) y con el frontal (`checkMotionSide: false`).
   - `test/domain/exercise_engine_motion_test.dart`: `_sameMotionAsLevel2(String name, {required Session Function() level2, required Session Function() level4})`, con la estructura de `_sameMotionAsLevel1`. Para semillas de 0 a 19, en cada fotograma, el `motion` del Nivel 4 es igual al del Nivel 2 con la misma semilla (FR-013; research R3). Llamarlo para el frontal (`testLevel2Session`, `testLevel4Session`) y el transversal (`testLevel2TransversalSession`, `testLevel4TransversalSession`).
-- [ ] T018 [P] [US2] En `test/presentation/signal_painter_test.dart`, repetir P1 y la prueba de no colisión de T014 con el **patrón frontal**, sobre los mismos `_counterCanvases`, en las fases de *Chochôn-se*, corte y regreso (FR-013, SC-009).
+- [x] T018 [P] [US2] En `test/presentation/signal_painter_test.dart`, repetir P1 y la prueba de no colisión de T014 con el **patrón frontal**, sobre los mismos `_counterCanvases`, en las fases de *Chochôn-se*, corte y regreso (FR-013, SC-009).
 
 **Checkpoint**: US1 y US2 verificadas.
 

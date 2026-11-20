@@ -68,7 +68,10 @@ void main() {
     test('con sable azul (right) → señal a la derecha', () {
       expect(
         SignalPlacement.forAttack(_attack(Side.right, ResponseType.counter)),
-        const Signal(responseType: ResponseType.counter, screenSide: Side.right),
+        const Signal(
+          responseType: ResponseType.counter,
+          screenSide: Side.right,
+        ),
       );
     });
 

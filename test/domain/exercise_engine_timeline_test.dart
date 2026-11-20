@@ -361,4 +361,86 @@ void main() {
   );
 
   _level2Group('Nivel 2 frontal (Spec 003, US2)', testLevel2Session);
+
+  _level4Group(
+    'Nivel 4 transversal (Spec 007, US1)',
+    testLevel4TransversalSession,
+  );
+
+  _level4Group('Nivel 4 frontal (Spec 007, US2)', testLevel4Session);
+}
+
+/// Pruebas del Nivel 4 (Spec 007) con [session]; las usan el transversal
+/// (US1) y el frontal (US2). Misma estructura que [_level2Group], con la
+/// señal de contraataque (FR-004, FR-008, FR-011).
+void _level4Group(String name, Session Function() session) {
+  group(name, () {
+    late ManualClock clock;
+
+    setUp(() => clock = ManualClock()..start());
+
+    test('cada ataque es de contraataque, con aviso de 700 ms y corte de '
+        '500 ms; el 1.er ataque en 4.0 s', () {
+      final events = _run(
+        _started(_script(first: 0), session: session()),
+        clock,
+        until: _s(20),
+      );
+      final attacks = _signals(events);
+      expect(attacks, isNotEmpty);
+      expect(attacks.first.signalAt, _ms(4000));
+      for (final attack in attacks) {
+        expect(attack.responseType, ResponseType.counter);
+        expect(attack.cutStartAt - attack.signalAt, _ms(700));
+        expect(attack.cutEndAt - attack.cutStartAt, _ms(500));
+      }
+    });
+
+    test('de la señal al fin del corte: contraataque del lado del color; '
+        'fuera, sin señal (FR-008, FR-011)', () {
+      final engine = _started(_script(first: 0), session: session());
+      final sides = <Side>{};
+      for (var t = Duration.zero; t < _s(20); t += _frame) {
+        final snapshot = engine.advanceTo(t).snapshot;
+        final attack = snapshot.currentAttack;
+        final inAttack =
+            snapshot.phase == AttackPhase.warning ||
+            snapshot.phase == AttackPhase.cut;
+        if (!inAttack) {
+          expect(snapshot.signal, isNull, reason: '$t');
+          continue;
+        }
+        sides.add(attack!.side);
+        expect(
+          snapshot.signal,
+          Signal(responseType: ResponseType.counter, screenSide: attack.side),
+          reason: '$t',
+        );
+        expect(
+          snapshot.saberColor,
+          attack.side == Side.right ? SaberColor.blue : SaberColor.red,
+          reason: '$t',
+        );
+      }
+      // El guion alterna los lados: se vieron los dos.
+      expect(sides, Side.values.toSet());
+    });
+
+    test('al terminar el corte la señal desaparece y el sable vuelve a '
+        'amarillo (US1-6)', () {
+      final engine = _started(_script(first: 0), session: session());
+      // Ataque 0 → right (azul): señal en 4.0 s, corte hasta 5.2 s.
+      expect(
+        engine.advanceTo(_ms(4000)).snapshot.signal,
+        const Signal(
+          responseType: ResponseType.counter,
+          screenSide: Side.right,
+        ),
+      );
+      expect(engine.advanceTo(_ms(5199)).snapshot.signal, isNotNull);
+      final after = engine.advanceTo(_ms(5200)).snapshot;
+      expect(after.signal, isNull);
+      expect(after.saberColor, SaberColor.yellow);
+    });
+  });
 }

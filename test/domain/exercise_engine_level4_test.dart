@@ -71,20 +71,19 @@ int _longestStreak<T>(List<T> values) {
 }
 
 /// Todo menos el tipo de respuesta, para comparar con el Nivel 2.
-(int, Side, Duration, Duration, Duration, Duration) _timing(Attack a) => (
-  a.index,
-  a.side,
-  a.signalAt,
-  a.cutStartAt,
-  a.cutEndAt,
-  a.nextSignalAt,
-);
+(int, Side, Duration, Duration, Duration, Duration) _timing(Attack a) =>
+    (a.index, a.side, a.signalAt, a.cutStartAt, a.cutEndAt, a.nextSignalAt);
 
 void main() {
   _level4Tests(
     'Nivel 4 transversal (Spec 007, US1)',
     level4: testLevel4TransversalSession,
     level2: testLevel2TransversalSession,
+  );
+  _level4Tests(
+    'Nivel 4 frontal (Spec 007, US2)',
+    level4: testLevel4Session,
+    level2: testLevel2Session,
   );
 }
 
@@ -176,8 +175,7 @@ void _level4Tests(
       final right = all.where((a) => a.side == Side.right).length / all.length;
       expect(right, inInclusiveRange(0.45, 0.55));
 
-      String key(List<Attack> run) =>
-          run.map((a) => '${a.side.index}').join();
+      String key(List<Attack> run) => run.map((a) => '${a.side.index}').join();
       expect({for (final run in runs) key(run)}.length, greaterThan(1));
     });
   });

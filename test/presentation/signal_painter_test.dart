@@ -471,7 +471,8 @@ void main() {
       (p) => p.id == 'transversal',
     );
 
-    for (final MapEntry(key: ratio, value: (w, h)) in _counterCanvases.entries) {
+    for (final MapEntry(key: ratio, value: (w, h))
+        in _counterCanvases.entries) {
       final layout = _layout(w, h, transversal);
       SignalPainter painter(ResponseType type, Side side, SaberColor color) =>
           SignalPainter(
@@ -534,7 +535,11 @@ void main() {
         );
         final le = _measureArrowLength(evasion, w, h, AppColors.saberBlue);
         final lc = _measureArrowLength(counter, w, h, AppColors.saberBlue);
-        expect(lc, greaterThanOrEqualTo(0.75 * le - 2), reason: 'Lc $lc, L2 $le');
+        expect(
+          lc,
+          greaterThanOrEqualTo(0.75 * le - 2),
+          reason: 'Lc $lc, L2 $le',
+        );
         expect(lc, lessThanOrEqualTo(le + 2), reason: 'Lc $lc, L2 $le');
       });
 
@@ -618,8 +623,11 @@ void main() {
           }
         }
         final saberCenter = (saberTop! + saberBottom! + 1) / 2;
-        expect((saberCenter - arrow.cy).abs(), lessThanOrEqualTo(2),
-            reason: 'sable $saberCenter, flecha ${arrow.cy}');
+        expect(
+          (saberCenter - arrow.cy).abs(),
+          lessThanOrEqualTo(2),
+          reason: 'sable $saberCenter, flecha ${arrow.cy}',
+        );
         // Alto: igual al de la punta o apenas mayor (Clarifications). El
         // sable se mide con su contorno (más largo en la punta afilada) y la
         // flecha solo con su relleno.
@@ -686,6 +694,86 @@ void main() {
           ]) {
             final opponent = await _render(
               _opponent(transversal, motion, w, h),
+              w,
+              h,
+            );
+            var n = 0;
+            for (var i = 0; i < signal.length; i += 4) {
+              if (_painted(signal, i) && _painted(opponent, i)) n++;
+            }
+            if (n > 0) violations.add('${side.name} $motion: $n');
+          }
+        }
+        expect(violations, isEmpty);
+      }, timeout: const Timeout(Duration(minutes: 2)));
+    }
+  });
+
+  _counterFrontalGroup();
+}
+
+/// Spec 007, US2 (T018): con el patrón frontal, la señal de contraataque queda
+/// en su carril y no comparte píxeles con el oponente al subir a
+/// *Chochôn-se*, durante el corte ni al regresar (FR-013, SC-009).
+void _counterFrontalGroup() {
+  group('contraataque con el patrón frontal (Spec 007, US2)', () {
+    final frontal = _catalog.patterns.firstWhere((p) => p.id == 'frontal');
+
+    for (final MapEntry(key: ratio, value: (w, h))
+        in _counterCanvases.entries) {
+      final layout = _layout(w, h, frontal);
+
+      test('$ratio: P1 en su carril y sin píxeles compartidos con el oponente '
+          'en ninguna fase', () async {
+        final violations = <String>[];
+        for (final (side, color) in [
+          (Side.right, SaberColor.blue),
+          (Side.left, SaberColor.red),
+        ]) {
+          final signal = await _render(
+            SignalPainter(
+              layout: layout,
+              signal: _sig(ResponseType.counter, side),
+              saberColor: color,
+            ),
+            w,
+            h,
+          );
+          expect(
+            _outside(signal, w, h, layout.laneFor(side)),
+            0,
+            reason: side.name,
+          );
+          for (final motion in [
+            OpponentMotion.atGuard,
+            OpponentMotion(
+              from: PoseKey.guard,
+              to: PoseKey.stance,
+              progress: 0.5,
+              side: side,
+            ),
+            OpponentMotion(
+              from: PoseKey.stance,
+              to: PoseKey.stance,
+              progress: 0,
+              side: side,
+            ),
+            for (var i = 0; i <= 20; i++)
+              OpponentMotion(
+                from: PoseKey.stance,
+                to: PoseKey.cutEnd,
+                progress: i / 20,
+                side: side,
+              ),
+            OpponentMotion(
+              from: PoseKey.cutEnd,
+              to: PoseKey.guard,
+              progress: 0.5,
+              side: side,
+            ),
+          ]) {
+            final opponent = await _render(
+              _opponent(frontal, motion, w, h),
               w,
               h,
             );
