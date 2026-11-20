@@ -73,8 +73,13 @@ void main() {
     final source = File('assets/catalog/catalog.json').readAsStringSync();
     final catalog = _mapper.fromJsonString(source);
 
-    expect(catalog.levels, hasLength(3));
-    expect(catalog.levels.map((l) => l.id), ['level_1', 'level_2', 'level_3']);
+    expect(catalog.levels, hasLength(4));
+    expect(catalog.levels.map((l) => l.id), [
+      'level_1',
+      'level_2',
+      'level_3',
+      'level_4',
+    ]);
     expect(catalog.patterns, hasLength(2));
     expect(catalog.glossary, hasLength(7));
     expect(catalog.levels.firstWhere((l) => l.id == 'level_1').responseTypes, [
@@ -208,6 +213,41 @@ void main() {
         ResponseType.defense,
         ResponseType.evasion,
       ]);
+    });
+  });
+
+  group('Nivel 4 (Spec 007)', () {
+    test('el asset real incluye level_4 con contraataque (FR-001)', () {
+      final source = File('assets/catalog/catalog.json').readAsStringSync();
+      final level = _mapper
+          .fromJsonString(source)
+          .levels
+          .firstWhere((l) => l.id == 'level_4');
+
+      expect(level.order, 4);
+      expect(level.name, 'Nivel 4');
+      expect(level.responseLabel, 'Evasión y contraataque');
+      expect(level.purpose, 'Combate');
+      expect(level.responseTypes, [ResponseType.counter]);
+    });
+
+    test('acepta responseTypes ["counter"]', () {
+      final json = _validJson();
+      (json['levels']! as List<Object?>)[0] = {
+        ..._level('level_1', 1),
+        'responseTypes': ['counter'],
+      };
+      expect(_parse(json).levels.single.responseTypes, [ResponseType.counter]);
+    });
+
+    test('responseTypes ["counter", "counter"] lanza CatalogException por '
+        'duplicado', () {
+      final json = _validJson();
+      (json['levels']! as List<Object?>)[0] = {
+        ..._level('level_1', 1),
+        'responseTypes': ['counter', 'counter'],
+      };
+      expect(() => _parse(json), _throwsCatalogException);
     });
   });
 

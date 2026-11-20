@@ -477,6 +477,55 @@ void main() {
     },
   );
 
+  testWidgets(
+    '(m) Nivel 4: Repetir conserva nivel y patrón; Volver permite el Nivel 2, '
+    'que sigue mostrando la flecha de evasión (Spec 007, US3-3, US3-5)',
+    (tester) async {
+      final h = _Harness();
+      await h.start(tester, level: 'Nivel 4', pattern: 'Transversal');
+      Session session() =>
+          tester.widget<ExerciseScreen>(find.byType(ExerciseScreen)).session;
+      expect(
+        (session().level.id, session().pattern.id),
+        ('level_4', 'transversal'),
+      );
+
+      await h.advanceTo(tester, _finishedAt);
+      await tester.tap(find.text(StringsEs.repeat));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 16));
+      expect(find.text('3'), findsOneWidget);
+      expect(
+        (session().level.id, session().pattern.id),
+        ('level_4', 'transversal'),
+      );
+
+      await h.advanceTo(tester, _finishedAt);
+      await tester.tap(find.text(StringsEs.back));
+      await tester.pumpAndSettle();
+      _expectBackOnSelection(tester);
+
+      await tester.tap(find.text('NIVEL 2'));
+      await tester.tap(find.text('FRONTAL'));
+      await tester.pump();
+      await tester.tap(find.text(StringsEs.start));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(session().level.id, 'level_2');
+
+      // El reloj del arnés empieza de cero con el nuevo ejercicio: aviso del
+      // 1.er ataque.
+      await h.advanceTo(tester, _warningAt);
+      final signals = tester
+          .widgetList<CustomPaint>(find.byType(CustomPaint))
+          .map((w) => w.painter)
+          .whereType<SignalPainter>()
+          .toList();
+      expect(signals, hasLength(1));
+      expect(signals.single.signal.responseType, ResponseType.evasion);
+    },
+  );
+
   group('HUD de la Spec 004 (FR-015 a FR-019)', () {
     for (final (level, pattern, levelTitle, response, patternTitle, sequence)
         in [

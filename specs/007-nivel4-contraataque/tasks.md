@@ -177,19 +177,21 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
 
 **Independent Test**: `flutter test test/data/catalog_json_mapper_test.dart test/presentation/level_icon_test.dart test/presentation/selection_screen_test.dart`, más el recorrido 1 y 4 de [quickstart.md](./quickstart.md).
 
-- [ ] T019 [P] [US3] En `test/data/catalog_json_mapper_test.dart`:
+- [x] T019 [P] [US3] En `test/data/catalog_json_mapper_test.dart`:
   - cambiar la prueba que enumera los niveles del asset a `hasLength(4)` y `['level_1', 'level_2', 'level_3', 'level_4']` (es una de las excepciones permitidas);
   - agregar `group('Nivel 4 (Spec 007)', …)`: el asset real incluye `level_4` con `order` 4, `name` "Nivel 4", `responseLabel` "Evasión y contraataque", `purpose` "Combate" y `responseTypes` `[ResponseType.counter]` (FR-001);
   - agregar un JSON mínimo con `"responseTypes": ["counter"]`, que se lee sin error;
   - comprobar que `"responseTypes": ["counter", "counter"]` lanza `CatalogException` por duplicado.
-- [ ] T020 [P] [US3] En `test/presentation/selection_screen_test.dart`:
+- [x] T020 [P] [US3] En `test/presentation/selection_screen_test.dart`:
   - en el grupo de lienzos (US3-4 de la Spec 006), reemplazar el mapa `catalogs` por `{'catálogo real (4 niveles)': _realCatalog, '3 niveles': <el catálogo real sin level_4>}`. Si `_fourLevels` era un catálogo de prueba, eliminarlo o dejarlo sin uso si otras pruebas lo necesitan. Es la otra excepción permitida.
   - agregar `group('Spec 007: Nivel 4', …)` con:
     - US3-1: las tarjetas de NIVEL están en el orden "Nivel 1", "Nivel 2", "Nivel 3" y "Nivel 4", el Nivel 1 está preseleccionado y aparece el texto "Evasión y contraataque — Combate";
     - US3-2: la tarjeta del Nivel 4 contiene un `LevelIcon` con `types == [ResponseType.counter]`;
     - US3-3: Nivel 4 + Transversal muestra el resumen "Nivel 4 · Transversal · 30 s"; INICIAR crea una sesión con `level.id == 'level_4'`; Repetir la conserva;
     - US3-5: después de volver, elegir Nivel 2 + Frontal e iniciar da una sesión `level_2` cuyas señales son `evasion`.
-- [ ] T021 [P] [US3] En `test/presentation/level_icon_test.dart`, agregar `group('Nivel 4 (Spec 007, contrato selection-ui §2)', …)` sobre `_size`:
+
+  *Nota de implementación:* "Repetir la conserva" (US3-3) y US3-5 quedaron en `test/presentation/exercise_screen_test.dart`, prueba (m). Para llegar a REPETIR y VOLVER hay que terminar el ejercicio, y el arnés con reloj manual que lo permite está en ese archivo.
+- [x] T021 [P] [US3] En `test/presentation/level_icon_test.dart`, agregar `group('Nivel 4 (Spec 007, contrato selection-ui §2)', …)` sobre `_size`:
   - **I1**: `LevelIconPainter([ResponseType.counter])` no produce pixeles rojos, azules ni amarillos, y los pixeles no transparentes son blancos (`AppColors.textPrimary`, con tolerancia de antialias);
   - **I2**: todos los pixeles no transparentes quedan dentro de la caja con margen del 10 %;
   - el ícono tiene pixeles en la mitad derecha que forman una columna vertical (el sable): en el cuarto derecho existe una columna `x` con pixeles blancos en al menos el 50 % del alto de la caja;
