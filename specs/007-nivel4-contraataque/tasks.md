@@ -203,11 +203,11 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T022 [P] En `specs/001-motor-nivel1-frontal/contracts/catalog.schema.json`, cambiar `levels.items.properties.responseTypes.items.enum` a `["defense", "evasion", "counter"]` (contrato counter-signal §1). Si ya tiene `"evasion"` por la Spec 003, solo agregar `"counter"`.
+- [x] T022 [P] En `specs/001-motor-nivel1-frontal/contracts/catalog.schema.json`, cambiar `levels.items.properties.responseTypes.items.enum` a `["defense", "evasion", "counter"]` (contrato counter-signal §1). Si ya tiene `"evasion"` por la Spec 003, solo agregar `"counter"`.
 - [ ] T023 [P] *(Opcional, plan D7; confirmar con el responsable antes de hacerlo.)* Alinear el texto del Nivel 4 a "Evasión y contraataque" en la tabla de niveles de `docs/brief.md` y de `docs/000-haidonggumdo-v010.md` (RF4), sin cambiar nada más.
-- [ ] T024 Ejecutar `flutter analyze` y `flutter test` y confirmar que todo pasa, incluida `exercise_engine_sequence_regression_test.dart` sin cambios. Confirmar con `git diff --stat main -- lib/domain` que en `lib/domain/` solo cambiaron `catalog/enums.dart` y `exercise/signal.dart`.
+- [x] T024 Ejecutar `flutter analyze` y `flutter test` y confirmar que todo pasa, incluida `exercise_engine_sequence_regression_test.dart` sin cambios. Confirmar con `git diff --stat main -- lib/domain` que en `lib/domain/` solo cambiaron `catalog/enums.dart` y `exercise/signal.dart`.
 - [ ] T025 Recorrido manual de [quickstart.md](./quickstart.md) §2 (pasos 1 a 5) en un dispositivo o emulador Android en horizontal. Anotar en el PR cualquier diferencia visual con el boceto, además del sable vertical, que es deliberado. Las pruebas con observadores de §3 (SC-001, SC-006 y SC-007) las hace el responsable; dejarlas como pendientes en el PR si no se hicieron.
-- [ ] T026 Commits con Conventional Commits, sobre el commit `refactor:` de T004:
+- [x] T026 Commits con Conventional Commits, sobre el commit `refactor:` de T004:
   - `feat: Nivel 4 con señal de contraataque` (T005–T009, T011);
   - `test: pruebas del Nivel 4` (T012–T021);
   - `docs: esquema del catálogo con counter` (T022 y, si se hizo, T023).
