@@ -11,6 +11,7 @@ description: "Task list for Spec 007: Nivel 4, evasión con contraataque"
 **Tests**: Incluidas. El Principio VI exige pruebas para la aleatoriedad y el máximo de N, y el plan las detalla (research R9). Se escriben después del código y se derivan de la spec. La única excepción es la verificación de no regresión del refactor de presentación (plan D4): **las pruebas existentes se corren antes y después del refactor sin cambiarlas**.
 
 **Organization**:
+
 - La **Foundational** hace el refactor sin cambio de comportamiento y luego agrega `counter` de punta a punta: dominio, catálogo, señal e ícono. Esto va junto porque los `switch` sobre `ResponseType` son exhaustivos y el proyecto no compila con el enum a medias. Al terminar esta fase, el Nivel 4 ya se juega.
 - **US1** (transversal) y **US2** (frontal) lo verifican con pruebas del dominio, de la señal y de la pantalla.
 - **US3** verifica el catálogo, el ícono y la selección con cuatro niveles reales.
@@ -34,6 +35,7 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
   - `test/presentation/level_icon_test.dart`: `_referenceGlyph` gana `case ResponseType.counter` (lanza `UnsupportedError`), y la prueba "la misma geometría que antes" recorre `[defense, evasion]` en lugar de `ResponseType.values`;
   - `test/data/catalog_json_mapper_test.dart`, `(e)`: el ejemplo de tipo desconocido pasa de `"counter"` a `"dodge"`;
   - `test/domain/exercise_engine_simulation_test.dart`, `_level3Simulations`: `containsAll(ResponseType.values)` → `containsAll(session().level.responseTypes)`.
+
 - **`exercise_engine_sequence_regression_test.dart` y su fixture `test/domain/fixtures/sequence_regression.json` NO se tocan ni se regeneran.**
 - **Dominio acotado (FR-002, Principio III, excepción a).** En `lib/domain/` solo cambian `catalog/enums.dart` y `exercise/signal.dart`. No tocar `ExerciseEngine`, `StreakSequencer`, `Attack`, `Session`, `ExerciseParameters`, `OpponentMotion` ni los eventos. Si una tarea parece requerir otra cosa, detenerse y consultarlo.
 - **Sin cambios** en `SceneLayout`, `OpponentPainter`, `ExerciseHud`, `selection_screen.dart`, `selection_card.dart`, `selection_density.dart`, `lib/presentation/settings/` ni `strings_es.dart`.
@@ -91,6 +93,7 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
   7. Llamar a `_paintArrow(canvas, box, cy, lc, lane.left + glow, color)` y después a `_paintSaber(canvas, SignalShapes.saber(saberBox, angleDegrees: SignalShapes.counterAngleDegrees), sigma, h, color)`.
 
   Actualizar el doc-comment de la clase con la tercera señal: "contraataque: la flecha de evasión con un sable vertical, punta arriba, casi junto a su punta y centrado en su eje (Spec 007, FR-007)".
+
 - [x] T009 En `lib/presentation/selection/level_icon.dart`, agregar `case ResponseType.counter` en `_paintGlyph` (research R7; [contrato selection-ui §2](./contracts/selection-ui.md#2-leveliconpainter)):
   - `l = box.width / 1.80`.
   - Sable: `saberHeight = 1.10 * SignalShapes.arrowHeadHeight * l` y `saberWidth = saberHeight * SignalShapes.saberAspect(SignalShapes.counterAngleDegrees)`. La caja es `Rect.fromLTWH(box.right - saberWidth, box.center.dy - saberHeight / 2, saberWidth, saberHeight)`. Pintar `SignalShapes.saber(esaCaja, angleDegrees: SignalShapes.counterAngleDegrees)`: empuñadura, guarda y hoja en blanco.
@@ -139,6 +142,7 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
   - **P7** (FR-020): las pruebas de evasión y defensa existentes siguen pasando sin cambios.
 
   Agregar también una prueba de no colisión: con el patrón transversal y en todas las fases del ataque (muestrear el progreso del corte de 0 a 1 en 20 pasos), la caja de la señal no se cruza con la del oponente ni con la de su sable. Usar los mismos helpers que la prueba existente de la Spec 004 para la evasión (SC-003, SC-009).
+
 - [x] T015 [US1] En `test/presentation/exercise_screen_test.dart`, agregar un `testWidgets` con el estilo de la prueba (k) del Nivel 3: "(l) Nivel 4 transversal: una sola señal por ataque, de contraataque, del lado del color". Con `h.start(tester, level: 'Nivel 4', pattern: 'Transversal')`:
   - `session.level.id == 'level_4'`;
   - en cada `SignalShown` durante al menos 5 ataques, el `SignalPainter` visible tiene `signal.responseType == ResponseType.counter` y `signal.screenSide == attack.side`, y hay un solo `SignalPainter`;
@@ -163,9 +167,9 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
     - `signal.responseType == ResponseType.counter` y `signal.screenSide == attack.side`;
     - el color del sable es azul con `Side.right` y rojo con `Side.left` (SC-002);
     - si `checkMotionSide`, `motion.side == attack.side` (FR-012, SC-003).
-    Llamarlo con el transversal (`checkMotionSide: true`) y con el frontal (`checkMotionSide: false`).
+      Llamarlo con el transversal (`checkMotionSide: true`) y con el frontal (`checkMotionSide: false`).
   - `test/domain/exercise_engine_motion_test.dart`: `_sameMotionAsLevel2(String name, {required Session Function() level2, required Session Function() level4})`, con la estructura de `_sameMotionAsLevel1`. Para semillas de 0 a 19, en cada fotograma, el `motion` del Nivel 4 es igual al del Nivel 2 con la misma semilla (FR-013; research R3). Llamarlo para el frontal (`testLevel2Session`, `testLevel4Session`) y el transversal (`testLevel2TransversalSession`, `testLevel4TransversalSession`).
-- [x] T018 [P] [US2] En `test/presentation/signal_painter_test.dart`, repetir P1 y la prueba de no colisión de T014 con el **patrón frontal**, sobre los mismos `_counterCanvases`, en las fases de *Chochôn-se*, corte y regreso (FR-013, SC-009).
+- [x] T018 [P] [US2] En `test/presentation/signal_painter_test.dart`, repetir P1 y la prueba de no colisión de T014 con el **patrón frontal**, sobre los mismos `_counterCanvases`, en las fases de _Chochôn-se_, corte y regreso (FR-013, SC-009).
 
 **Checkpoint**: US1 y US2 verificadas.
 
@@ -190,7 +194,8 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
     - US3-3: Nivel 4 + Transversal muestra el resumen "Nivel 4 · Transversal · 30 s"; INICIAR crea una sesión con `level.id == 'level_4'`; Repetir la conserva;
     - US3-5: después de volver, elegir Nivel 2 + Frontal e iniciar da una sesión `level_2` cuyas señales son `evasion`.
 
-  *Nota de implementación:* "Repetir la conserva" (US3-3) y US3-5 quedaron en `test/presentation/exercise_screen_test.dart`, prueba (m). Para llegar a REPETIR y VOLVER hay que terminar el ejercicio, y el arnés con reloj manual que lo permite está en ese archivo.
+  _Nota de implementación:_ "Repetir la conserva" (US3-3) y US3-5 quedaron en `test/presentation/exercise_screen_test.dart`, prueba (m). Para llegar a REPETIR y VOLVER hay que terminar el ejercicio, y el arnés con reloj manual que lo permite está en ese archivo.
+
 - [x] T021 [P] [US3] En `test/presentation/level_icon_test.dart`, agregar `group('Nivel 4 (Spec 007, contrato selection-ui §2)', …)` sobre `_size`:
   - **I1**: `LevelIconPainter([ResponseType.counter])` no produce pixeles rojos, azules ni amarillos, y los pixeles no transparentes son blancos (`AppColors.textPrimary`, con tolerancia de antialias);
   - **I2**: todos los pixeles no transparentes quedan dentro de la caja con margen del 10 %;
@@ -204,9 +209,9 @@ Proyecto Flutter único: `lib/`, `test/` y `assets/` en la raíz del repositorio
 ## Phase 6: Polish & Cross-Cutting Concerns
 
 - [x] T022 [P] En `specs/001-motor-nivel1-frontal/contracts/catalog.schema.json`, cambiar `levels.items.properties.responseTypes.items.enum` a `["defense", "evasion", "counter"]` (contrato counter-signal §1). Si ya tiene `"evasion"` por la Spec 003, solo agregar `"counter"`.
-- [ ] T023 [P] *(Opcional, plan D7; confirmar con el responsable antes de hacerlo.)* Alinear el texto del Nivel 4 a "Evasión y contraataque" en la tabla de niveles de `docs/brief.md` y de `docs/000-haidonggumdo-v010.md` (RF4), sin cambiar nada más.
+- [x] T023 [P] _(Opcional, plan D7; confirmar con el responsable antes de hacerlo.)_ Alinear el texto del Nivel 4 a "Evasión y contraataque" en la tabla de niveles de `docs/brief.md` y de `docs/000-haidonggumdo-v010.md` (RF4), sin cambiar nada más.
 - [x] T024 Ejecutar `flutter analyze` y `flutter test` y confirmar que todo pasa, incluida `exercise_engine_sequence_regression_test.dart` sin cambios. Confirmar con `git diff --stat main -- lib/domain` que en `lib/domain/` solo cambiaron `catalog/enums.dart` y `exercise/signal.dart`.
-- [ ] T025 Recorrido manual de [quickstart.md](./quickstart.md) §2 (pasos 1 a 5) en un dispositivo o emulador Android en horizontal. Anotar en el PR cualquier diferencia visual con el boceto, además del sable vertical, que es deliberado. Las pruebas con observadores de §3 (SC-001, SC-006 y SC-007) las hace el responsable; dejarlas como pendientes en el PR si no se hicieron.
+- [x] T025 Recorrido manual de [quickstart.md](./quickstart.md) §2 (pasos 1 a 5) en un dispositivo o emulador Android en horizontal. Anotar en el PR cualquier diferencia visual con el boceto, además del sable vertical, que es deliberado. Las pruebas con observadores de §3 (SC-001, SC-006 y SC-007) las hace el responsable; dejarlas como pendientes en el PR si no se hicieron.
 - [x] T026 Commits con Conventional Commits, sobre el commit `refactor:` de T004:
   - `feat: Nivel 4 con señal de contraataque` (T005–T009, T011);
   - `test: pruebas del Nivel 4` (T012–T021);
